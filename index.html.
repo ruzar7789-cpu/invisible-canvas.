@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Invisible Canvas AR</title>
+    <style>
+        body { margin: 0; overflow: hidden; background: #000; font-family: 'Space Mono', monospace; color: #00ffcc; }
+        #video-preview { width: 100vw; height: 100vh; object-fit: cover; position: fixed; top: 0; left: 0; z-index: -1; }
+        .ui-overlay { position: absolute; bottom: 30px; width: 100%; display: flex; flex-direction: column; align-items: center; gap: 15px; }
+        .ar-label { background: rgba(0, 0, 0, 0.7); padding: 15px 25px; border: 1px solid #00ffcc; border-radius: 10px; font-size: 1.2rem; text-align: center; box-shadow: 0 0 15px #00ffcc; }
+        input { padding: 12px; border-radius: 5px; border: 1px solid #00ffcc; background: #111; color: #fff; width: 80%; }
+        button { padding: 12px 25px; background: #00ffcc; color: #000; border: none; border-radius: 5px; font-weight: bold; cursor: pointer; }
+    </style>
+</head>
+<body>
+    <video id="video-preview" autoplay playsinline></video>
+    
+    <div class="ui-overlay">
+        <div id="display-msg" class="ar-label">SYSTÉM PŘIPRAVEN...</div>
+        <input type="text" id="user-input" placeholder="Napiš vzkaz do prostoru...">
+        <button onclick="updateMessage()">UMÍSTIT VZKAZ</button>
+    </div>
+
+    <script>
+        // Spuštění zadní kamery
+        async function initCamera() {
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({ 
+                    video: { facingMode: "environment" } 
+                });
+                document.getElementById('video-preview').srcObject = stream;
+            } catch (err) {
+                alert("Chyba kamery: " + err.message);
+            }
+        }
+
+        function updateMessage() {
+            const input = document.getElementById('user-input');
+            const display = document.getElementById('display-msg');
+            if(input.value) {
+                display.innerText = input.value;
+                input.value = '';
+            }
+        }
+
+        window.onload = initCamera;
+    </script>
+</body>
+</html>
