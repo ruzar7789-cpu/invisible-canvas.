@@ -11,37 +11,64 @@
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     
     <style>
-        :root { --neon: #00f2ff; --tmavy: #0a0a0a; --zlata: #ffd700; }
-        body, html { margin: 0; padding: 0; width: 100%; height: 100%; background: var(--tmavy); color: white; font-family: sans-serif; overflow: hidden; }
+        :root { --neon: #00f2ff; --tmavy: #0a0a0a; --zlata: #ffd700; --bublina: rgba(0,242,255,0.2); }
+        body, html { margin: 0; padding: 0; width: 100%; height: 100%; background: var(--tmavy); color: white; font-family: 'Segoe UI', sans-serif; overflow: hidden; }
         
-        /* Úvodní obrazovka */
+        /* 1. Úvodní obrazovka */
         #splash { position: fixed; inset: 0; z-index: 1000; background: radial-gradient(circle, #002d30 0%, #000 100%); display: flex; flex-direction: column; align-items: center; justify-content: center; }
         .logo { font-size: 60px; font-weight: 900; color: var(--neon); text-shadow: 0 0 20px var(--neon); margin: 0; }
-        .btn-vstup { background: var(--neon); color: black; border-radius: 50px; padding: 15px 45px; font-weight: bold; cursor: pointer; margin-top: 30px; border: none; text-transform: uppercase; }
+        .slogan { font-size: 18px; color: #ccc; margin-top: 10px; }
+        .btn-vstup { background: var(--neon); color: black; border-radius: 50px; padding: 15px 45px; font-weight: bold; cursor: pointer; margin-top: 30px; border: none; text-transform: uppercase; transition: transform 0.2s; }
+        .btn-vstup:active { transform: scale(0.95); }
 
-        /* Kontejnery */
+        /* 2. Kontejnery pro AR a Mapu */
         #AR-view, #mapa-view { display: none; width: 100%; height: 100vh; position: absolute; top: 0; left: 0; }
         #map-container { width: 100%; height: 100%; }
 
-        /* Spodní Menu */
-        .hlavni-menu { position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%); display: flex; gap: 40px; background: rgba(0,0,0,0.9); padding: 15px 35px; border-radius: 50px; border: 1px solid var(--neon); z-index: 100; align-items: center; }
-        .menu-ikona { color: var(--neon); font-size: 24px; cursor: pointer; }
+        /* 3. Spodní Menu */
+        .hlavni-menu { position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%); display: flex; gap: 40px; background: rgba(0,0,0,0.9); padding: 15px 35px; border-radius: 50px; border: 1px solid var(--neon); z-index: 100; align-items: center; box-shadow: 0 0 15px rgba(0,242,255,0.3); }
+        .menu-ikona { color: var(--neon); font-size: 24px; cursor: pointer; opacity: 0.7; transition: opacity 0.2s, transform 0.2s; }
+        .menu-ikona:hover, .menu-ikona:active { opacity: 1; transform: scale(1.1); text-shadow: 0 0 8px var(--neon); }
 
-        /* Tlačítko PLUS */
-        .btn-pridat { position: fixed; bottom: 120px; right: 25px; width: 65px; height: 65px; background: var(--neon); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: black; font-size: 35px; font-weight: bold; z-index: 100; box-shadow: 0 0 20px var(--neon); border: none; cursor: pointer; }
+        /* 4. Tlačítko PLUS */
+        .btn-pridat { position: fixed; bottom: 120px; right: 25px; width: 65px; height: 65px; background: var(--neon); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: black; font-size: 35px; font-weight: bold; z-index: 100; box-shadow: 0 0 20px var(--neon); border: none; cursor: pointer; transition: transform 0.2s; }
+        .btn-pridat:active { transform: scale(0.9); }
 
-        /* Platební brána / Editor */
+        /* 5. Platební brána / Editor stopy */
         #editor-stop { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.95); z-index: 2000; padding: 20px; flex-direction: column; align-items: center; justify-content: center; }
-        .karta { background: #1a1a1a; border: 2px solid var(--neon); padding: 25px; border-radius: 20px; width: 85%; max-width: 400px; text-align: center; }
-        textarea { width: 100%; height: 100px; background: #000; border: 1px solid var(--neon); color: white; padding: 10px; margin: 15px 0; border-radius: 10px; box-sizing: border-box; font-size: 16px; }
-        .btn-akce { background: var(--zlata); color: black; padding: 15px; border-radius: 10px; border: none; font-weight: bold; width: 100%; cursor: pointer; margin-top: 10px; font-size: 16px; }
+        .karta { background: #1a1a1a; border: 2px solid var(--neon); padding: 25px; border-radius: 20px; width: 85%; max-width: 400px; text-align: center; box-shadow: 0 0 25px rgba(0,242,255,0.4); }
+        textarea { width: 100%; height: 100px; background: #000; border: 1px solid var(--neon); color: white; padding: 10px; margin: 15px 0; border-radius: 10px; box-sizing: border-box; font-size: 16px; resize: none; }
+        .btn-akce { background: var(--zlata); color: black; padding: 15px; border-radius: 10px; border: none; font-weight: bold; width: 100%; cursor: pointer; margin-top: 10px; font-size: 16px; transition: background 0.2s, transform 0.2s; }
+        .btn-akce:hover { background: #e0c200; }
+        .btn-akce:active { transform: scale(0.98); }
+
+        /* Styl pro AR objekty (Digitální světlušky) */
+        .ar-objekt {
+            position: absolute;
+            background: var(--bublina);
+            border: 1px solid var(--neon);
+            border-radius: 15px;
+            padding: 10px 15px;
+            font-size: 16px;
+            text-align: center;
+            backdrop-filter: blur(5px);
+            box-shadow: 0 0 10px var(--neon);
+            animation: pulse 2s infinite alternate; /* Pulzující efekt */
+            opacity: 0.9;
+            color: white; /* Barva textu ve vzkazu */
+        }
+
+        @keyframes pulse {
+            from { transform: scale(1); box-shadow: 0 0 10px var(--neon); }
+            to { transform: scale(1.03); box-shadow: 0 0 20px var(--neon); }
+        }
     </style>
 </head>
 <body>
 
     <div id="splash">
         <h1 class="logo">TADY</h1>
-        <p>všechno důležité je tady</p>
+        <p class="slogan">Tvoř svůj digitální svět!</p>
         <button class="btn-vstup" onclick="startApp()">VSTOUPIT</button>
     </div>
 
@@ -50,10 +77,18 @@
         <div class="hlavni-menu">
             <span onclick="prepniNaMapu()" class="menu-ikona">🔍</span>
             <span onclick="prepniNaAR()" class="menu-ikona">💬</span>
-            <span onclick="alert('Profil projektu TADY')" class="menu-ikona">👤</span>
+            <span onclick="alert('Profil a nastavení TADY')" class="menu-ikona">👤</span>
         </div>
-        <a-scene embedded arjs="sourceType: webcam; debugUIEnabled: false;">
-            <a-entity camera></a-entity>
+        <a-scene embedded arjs="sourceType: webcam; debugUIEnabled: false; debug: false;">
+            <a-camera gps-camera rotation-reader></a-camera>
+            
+            <a-text value="Restaurace U TADY: Dnes Svíčková! 250 Kc" 
+                     look-at="[gps-camera]" 
+                     gps-entity-place="latitude: 50.9100; longitude: 14.6200;" 
+                     scale="20 20 20" 
+                     color="#ffd700" 
+                     position="0 1 -10"></a-text>
+
             </a-scene>
     </div>
 
@@ -62,34 +97,52 @@
         <div class="hlavni-menu">
             <span onclick="prepniNaMapu()" class="menu-ikona">🔍</span>
             <span onclick="prepniNaAR()" class="menu-ikona">💬</span>
-            <span onclick="alert('Profil projektu TADY')" class="menu-ikona">👤</span>
+            <span onclick="alert('Profil a nastavení TADY')" class="menu-ikona">👤</span>
         </div>
     </div>
 
     <div id="editor-stop">
         <div class="karta">
-            <h2 style="color:var(--neon)">POTVRDIT UMÍSTĚNÍ</h2>
-            <p style="font-size: 14px;">Zadej text tvé digitální stopy (vzkaz nebo menu).</p>
-            <textarea id="obsah" placeholder="Napiš vzkaz nebo denní menu..."></textarea>
+            <h2 style="color:var(--neon)">UMÍSTIT DIGITÁLNÍ STOPU</h2>
+            <p style="font-size: 14px;">Napiš vzkaz, reklamu, menu nebo hádanku. Zůstane TADY 24 hodin!</p>
+            <textarea id="obsah" placeholder="Dnes sleva 10% na vše! / Ahoj, zítra tu budu ve 3..."></textarea>
             
             <div style="background: white; padding: 10px; margin: 15px auto; width: 160px; border-radius: 12px;">
                 <img src="https://api.qrserver.com/v1/create-qr-code/?size=160x160&data=SPD*1.0*ACC:LT533250082844018353*BIC:REVOLT21*AM:29.00*CC:CZK*MSG:TADY_STOPA" 
                      alt="Platební QR" style="width:100%">
             </div>
             
-            <div style="color:var(--zlata); font-size: 22px; font-weight:bold;">29 Kč</div>
+            <div style="color:var(--zlata); font-size: 22px; font-weight:bold;">29 Kč / 24 hodin</div>
             <p style="font-size: 12px; color: #aaa; margin: 5px 0;">
                 Naskenuj QR kód ve své bankovní aplikaci.<br>
                 <strong>IBAN:</strong> LT53...8353
             </p>
             
-            <button class="btn-akce" onclick="overitPlatbu()">MÁM ZAPLACENO</button>
+            <button class="btn-akce" onclick="overitPlatbu()">MÁM ZAPLACENO A UMÍSTIT</button>
             <button onclick="zavritEditor()" style="background:none; border:none; color:white; margin-top:15px; cursor:pointer;">Zrušit</button>
         </div>
     </div>
 
     <script>
         let mapa;
+        let uzivatelLat = 50.91; // Výchozí GPS pro test, bude aktualizováno
+        let uzivatelLon = 14.62; // Výchozí GPS pro test, bude aktualizováno
+
+        // Získání aktuální GPS polohy uživatele
+        if (navigator.geolocation) {
+            navigator.geolocation.watchPosition(function(position) {
+                uzivatelLat = position.coords.latitude;
+                uzivatelLon = position.coords.longitude;
+                // console.log("Aktuální GPS: ", uzivatelLat, uzivatelLon);
+            }, function(error) {
+                console.warn('Geolocation error:', error);
+                alert('Povolte prosím přístup k poloze pro plnou funkci TADY.');
+            }, {
+                enableHighAccuracy: true,
+                maximumAge: 0,
+                timeout: 27000
+            });
+        }
 
         function startApp() {
             document.getElementById('splash').style.display = 'none';
@@ -105,10 +158,13 @@
             document.getElementById('AR-view').style.display = 'none';
             document.getElementById('mapa-view').style.display = 'block';
             if (!mapa) {
-                mapa = L.map('map-container').setView([50.91, 14.62], 15);
+                mapa = L.map('map-container').setView([uzivatelLat, uzivatelLon], 15);
                 L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(mapa);
-                // Ukázka bodu na mapě
-                L.marker([50.91, 14.62]).addTo(mapa).bindPopup('TADY se tvoří svět!');
+                // Ukázka bodu na mapě s reálnou pozicí
+                L.marker([uzivatelLat, uzivatelLon]).addTo(mapa).bindPopup('Tvoje pozice TADY!');
+                // Zde se budou načítat body z Neon DB
+            } else {
+                mapa.setView([uzivatelLat, uzivatelLon], mapa.getZoom()); // Aktualizuj pozici mapy
             }
         }
 
@@ -117,11 +173,33 @@
 
         function overitPlatbu() {
             const text = document.getElementById('obsah').value;
-            if(!text) return alert("Nejdříve napiš obsah vzkazu!");
+            if(!text) return alert("Nejdříve napiš obsah své digitální stopy!");
             
-            alert("Děkujeme! Tvoje stopa 'TADY' byla právě zaznamenána. Po ověření platby se zobrazí v prostoru.");
-            // Tady proběhne zápis do tvé Neon DB (Red-Thunder)
-            console.log("Ukládám do Neonu: " + text);
+            alert("Platba 29 Kč potvrzena! Tvoje digitální stopa se nyní umísťuje v AR prostoru.");
+            
+            // TADY se teď budou odesílat data do tvého Neon DB (Red-Thunder)
+            // Budeš potřebovat API endpoint pro Neon, aby se uložil text, GPS a čas.
+            // console.log("Ukládám do Neonu:", {
+            //     text: text,
+            //     latitude: uzivatelLat,
+            //     longitude: uzivatelLon,
+            //     timestamp: new Date().toISOString(),
+            //     cena: "29 Kc",
+            //     platnost: "24 hodin"
+            // });
+
+            // Dynamické vytvoření AR objektu po platbě
+            // Toto je jen demo, reálně by to mělo přijít z databáze
+            const newEntity = document.createElement('a-text');
+            newEntity.setAttribute('value', text);
+            newEntity.setAttribute('look-at', '[gps-camera]');
+            newEntity.setAttribute('gps-entity-place', `latitude: ${uzivatelLat}; longitude: ${uzivatelLon};`);
+            newEntity.setAttribute('scale', '15 15 15');
+            newEntity.setAttribute('color', '#00f2ff'); // Neon barva pro vzkazy
+            newEntity.setAttribute('position', '0 0 -10'); // Lehký posun, aby nebyl na nule
+
+            document.querySelector('a-scene').appendChild(newEntity);
+
             zavritEditor();
         }
     </script>
