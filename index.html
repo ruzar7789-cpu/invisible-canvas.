@@ -10,16 +10,15 @@
         h1 { color: #1a73e8; margin-bottom: 5px; }
         input, textarea { width: 100%; padding: 12px; margin: 10px 0; border: 1px solid #dadce0; border-radius: 8px; box-sizing: border-box; }
         button { background: #28a745; color: white; border: none; padding: 15px; width: 100%; font-size: 18px; border-radius: 8px; cursor: pointer; font-weight: bold; }
-        #nastenka { margin-top: 30px; text-align: left; border-top: 2px solid #eee; padding-top: 20px; }
-        .vzkaz-item { background: #f8f9fa; padding: 15px; border-radius: 10px; margin-bottom: 10px; border-left: 5px solid #1a73e8; }
         #status { margin-top: 20px; padding: 15px; border-radius: 10px; display: none; background: #fff3cd; border: 1px solid #ffeeba; }
-        .qr-box img { width: 220px; height: 220px; margin: 15px 0; border: 5px solid white; box-shadow: 0 0 10px rgba(0,0,0,0.1); background-color: #eee; }
+        .vzkaz-item { background: #f8f9fa; padding: 15px; border-radius: 10px; margin-bottom: 10px; border-left: 5px solid #1a73e8; text-align: left; }
+        .platebni-udaje { background: #eee; padding: 15px; border-radius: 8px; margin: 15px 0; font-family: monospace; font-size: 14px; }
     </style>
 </head>
 <body>
     <div class="container">
         <h1>Neviditelné Plátno</h1>
-        <p>Zakupte si prostor pro reklamu nebo vzkaz (500 Kč).</p>
+        <p>Zakupte si reklamu nebo vzkaz (500 Kč).</p>
         
         <input type="text" id="jmeno" placeholder="Vaše jméno / Firma">
         <textarea id="vzkaz" rows="3" placeholder="Váš vzkaz nebo reklama"></textarea>
@@ -27,7 +26,7 @@
         
         <div id="status"></div>
 
-        <div id="nastenka">
+        <div id="nastenka" style="margin-top:30px; border-top:1px solid #eee; padding-top:20px;">
             <h3>Aktuálně na plátně:</h3>
             <div id="seznam-vzkazu">
                 <div class="vzkaz-item"><b>Ukázka</b><br>Zde bude váš placený vzkaz!</div>
@@ -43,41 +42,37 @@
             
             if (!jmeno || !vzkaz) { alert("Prosím vyplňte jméno i vzkaz."); return; }
 
-            // Vaše údaje a opravený odkaz na QR generátor
-            const iban = "LT533250082844018353"; 
-            const castka = "500.00"; 
-            const msg = encodeURIComponent("Reklama: " + jmeno);
-            
-            // Finální stabilní URL pro QR kód
-            const qrUrl = "https://api.paylibo.com/paylibo/generator/czech/image?iban=" + iban + "&amount=" + castka + "&currency=CZK&message=" + msg;
+            // Vaše údaje z Revolutu
+            const iban = "LT53 3250 0828 4401 8353"; 
+            const majitel = "Bozena Tandarova Tandarova";
 
             status.style.display = "block";
-            status.style.background = "#fff3cd";
-            status.innerHTML = "<h4>Pro zveřejnění naskenujte a zaplaťte 500 Kč:</h4>" +
-                               "<div class='qr-box'><img src='" + qrUrl + "' alt='Platební QR kód'></div>" +
-                               "<p>Peníze jdou na účet Revolut: <b>...8353</b></p>" +
-                               "<button onclick='potvrdit()' style='background:#1a73e8; font-size:14px; padding:12px; color:white; border:none; border-radius:8px; cursor:pointer;'>JIŽ JSEM ZAPLATIL</button>";
+            status.innerHTML = "<h4>Pro zveřejnění odešlete 500 Kč:</h4>" +
+                               "<div class='platebni-udaje'>" +
+                               "Účet (IBAN):<br><b>" + iban + "</b><br><br>" +
+                               "Příjemce:<br><b>" + majitel + "</b><br><br>" +
+                               "Zpráva pro příjemce:<br><b>Reklama - " + jmeno + "</b>" +
+                               "</div>" +
+                               "<p>Jakmile platbu odešlete, klikněte níže:</p>" +
+                               "<button onclick='potvrdit()' style='background:#1a73e8; font-size:14px; padding:12px; color:white; border:none; border-radius:8px; cursor:pointer;'>HOTOVO, ODESLAL JSEM PLATBU</button>";
         }
 
         function potvrdit() {
             const jmeno = document.getElementById('jmeno').value;
             const vzkaz = document.getElementById('vzkaz').value;
             const seznam = document.getElementById('seznam-vzkazu');
-            const status = document.getElementById('status');
             
-            status.style.background = "#d4edda";
-            status.innerHTML = "✅ <b>Děkujeme za platbu!</b><br>Vzkaz byl odeslán do databáze red-thunder a po ověření platby zůstane trvale zveřejněn.";
+            document.getElementById('status').innerHTML = "✅ <b>Děkujeme!</b><br>Váš vzkaz byl přijat a bude trvale zveřejněn po ověření platby na Revolutu.";
             
             const novy = document.createElement('div');
             novy.className = 'vzkaz-item';
             novy.innerHTML = "<b>" + jmeno + "</b><br>" + vzkaz;
             seznam.prepend(novy);
-            
+
             document.getElementById('jmeno').value = "";
             document.getElementById('vzkaz').value = "";
         }
     </script>
 </body>
 </html>
-
 
