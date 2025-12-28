@@ -52,7 +52,7 @@
         </div>
         <a-scene embedded arjs="sourceType: webcam; debugUIEnabled: false;">
             <a-camera gps-camera rotation-reader></a-camera>
-            </a-scene>
+        </a-scene>
     </div>
 
     <div id="mapa-view">
@@ -83,18 +83,18 @@
     </div>
 
     <script type="module">
-        // --- KONFIGURACE NEONU ---
+        // --- PROPOJENÍ S NEONEM (RED-THUNDER) ---
         import { neon } from 'https://cdn.jsdelivr.net/npm/@neondatabase/serverless@0.6.0/+esm';
         
-        // !!! SEM VLOŽ SVŮJ ODKAZ Z NEONU I S HESLEM !!!
-        const DATABASE_URL = 'postgresql://neondb_owner:TVOJE_HESLO@ep-white-rain-a2pjt37u-pooler.us-east-2.aws.neon.tech/neondb?sslmode=require';
+        // Tvůj plný Connection String s heslem Marcel1199
+        const DATABASE_URL = 'postgresql://neondb_owner:Marcel1199@ep-white-rain-a2pjt37u-pooler.us-east-2.aws.neon.tech/neondb?sslmode=require';
         const sql = neon(DATABASE_URL);
 
         let mapa;
         let mojeLat = 50.91;
         let mojeLon = 14.62;
 
-        // Sledování GPS polohy
+        // Sledování GPS polohy uživatele
         navigator.geolocation.watchPosition(pos => {
             mojeLat = pos.coords.latitude;
             mojeLon = pos.coords.longitude;
@@ -112,6 +112,8 @@
             if (!mapa) {
                 mapa = L.map('map-container').setView([mojeLat, mojeLon], 16);
                 L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(mapa);
+            } else {
+                mapa.setView([mojeLat, mojeLon], mapa.getZoom());
             }
         };
 
@@ -123,45 +125,48 @@
         window.otevritEditor = function() { document.getElementById('editor-stop').style.display = 'flex'; };
         window.zavritEditor = function() { document.getElementById('editor-stop').style.display = 'none'; };
 
-        // --- FUNKCE PRO UKLÁDÁNÍ DO NEONU ---
+        // --- UKLÁDÁNÍ DO DATABÁZE ---
         window.ulozitDoDatabeze = async function() {
             const text = document.getElementById('obsah').value;
             if(!text) return alert("Napiš text vzkazu!");
 
             try {
-                // Zápis do tabulky stopy v Neonu
+                // Zapíše vzkaz a tvoji polohu do Neonu
                 await sql`INSERT INTO stopy (obsah, lat, lon) VALUES (${text}, ${mojeLat}, ${mojeLon})`;
                 
-                alert("Úspěšně uloženo TADY! Vzkaz se objeví v prostoru.");
+                alert("Úspěšně uloženo TADY! Vzkaz se nyní zobrazí všem v okolí.");
                 
-                // Přidání do AR scény hned teď
+                // Přidání do scény hned teď
                 vytvorARVzkaz(text, mojeLat, mojeLon);
                 zavritEditor();
             } catch (e) {
                 console.error(e);
-                alert("Chyba při ukládání do Neonu. Zkontroluj připojení.");
+                alert("Chyba při ukládání. Zkontroluj databázi Neon.");
             }
         };
 
-        // --- NAČÍTÁNÍ STOP Z NEONU ---
+        // --- NAČÍTÁNÍ VŠECH STOP Z OKOLÍ ---
         async function nactiStopyZDB() {
             try {
+                // Vybere jen vzkazy, které ještě nevypršely (24h)
                 const stopy = await sql`SELECT obsah, lat, lon FROM stopy WHERE plati_do > NOW()`;
                 stopy.forEach(s => vytvorARVzkaz(s.obsah, s.lat, s.lon));
-            } catch (e) { console.error("Načítání selhalo", e); }
+            } catch (e) { console.error("Načítání stop selhalo", e); }
         }
 
+        // --- FUNKCE PRO ZOBRAZENÍ V AR ---
         function vytvorARVzkaz(text, lat, lon) {
             const el = document.createElement('a-text');
             el.setAttribute('value', text);
             el.setAttribute('gps-entity-place', `latitude: ${lat}; longitude: ${lon};`);
             el.setAttribute('look-at', '[gps-camera]');
-            el.setAttribute('scale', '20 20 20');
-            el.setAttribute('color', '#00f2ff');
+            el.setAttribute('scale', '20 20 20'); // Velikost vzkazu v prostoru
+            el.setAttribute('color', '#00f2ff'); // Neonově modrá
             el.setAttribute('align', 'center');
-            el.setAttribute('position', '0 2 0');
+            el.setAttribute('position', '0 2 0'); // Výška nad zemí (2 metry)
             document.querySelector('a-scene').appendChild(el);
         }
     </script>
 </body>
 </html>
+
