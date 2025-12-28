@@ -1,40 +1,62 @@
 <!DOCTYPE html>
-<html lang="cs">
+<html jazyk="cs">
 <head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <meta znaková sada="utf-8">
+    <meta jméno="výřez" obsah="šířka=šířka zařízení, počáteční škálování=1.0, škálovatelný uživatelem=ne">
     <title>TADY - Vše důležité je tady</title>
-    <script src="https://aframe.io/releases/1.3.0/aframe.min.js"></script>
-    <script src="https://raw.githack.com/AR-js-org/AR.js/master/aframe/build/aframe-ar-nft.js"></script>
+    <script zdroj="https://aframe.io/releases/1.3.0/aframe.min.js"></script>
+    <script zdroj="https://raw.githack.com/AR-js-org/AR.js/master/aframe/build/aframe-ar-nft.js"></script>
     <style>
-        :root { --neon: #00f2ff; --dark: #0a0a0a; }
-        body { margin: 0; background: var(--dark); color: white; font-family: sans-serif; overflow: hidden; }
-        #splash { position: fixed; inset: 0; z-index: 100; background: radial-gradient(circle at center, #002d30 0%, #000 100%); display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; }
-        .logo { font-size: 60px; font-weight: 900; color: var(--neon); letter-spacing: 8px; text-shadow: 0 0 15px var(--neon); margin: 0; }
-        .btn-vstup { background: var(--neon); color: black; border: none; padding: 20px 50px; border-radius: 50px; font-weight: bold; margin-top: 30px; cursor: pointer; box-shadow: 0 0 20px rgba(0,242,255,0.5); }
+        :root { --neon: #00f2ff; --tmavy: #0a0a0a; --sklo: rgba(0, 242, 255, 0.1); }
+        tělo { okraj: 0; pozadí: var(--tmavy); barva: bílý; rodina-písmen: bezpatkové písmo; přetákat: skrytý; }
+        
+        /* Úvodní obrazovka */
+        #šplouchnutí { pozice: pevná; vložka: 0; z-index: 100; pozadí: radiální gradient(kruh uprostřed, #002d30 0%, #000 100%); zobrazení: flex; flex-směr: sloupec; zarovnat-položky: střed; ospravedlnit-obsah: střed; }
+        .logo { velikost písma: 60pixelů; tloušťka písma: 900; barva: var(--neon); textový-stín: 0 0 20px var(--neon); }
+        .btn-vstup { pozadí: var(--neon); barva: černý; okraj-poloměr: 30px; polstrování: 15px 40px; tloušťka písma: tučné; kurzor: ukazatel; okraj-top: 20px; }
+
+        /* AR Rozhraní */
+        #AR-view { zobrazení: žádný; }
+        
+        /* Spodní Menu - Podle obrázku */
+        .hlavni-menu { pozice: pevná; dole: 20px; vlevo: 50%; transformovat: translateX(-50%); zobrazení: flex; mezera: 30px; pozadí: rgba(0,0,0,0.8); polstrování: 15px 30px; okraj-poloměr: 50px; ohraničení: 1px solid var(--neon); z-index: 10; }
+        .menu-ikona { barva: var(--neon); velikost písma: 24px; kurzor: ukazatel; }
+
+        /* Tlačítko pro přidání vzkazu/reklamy */
+        .btn-pridat { pozice: pevná; dole: 100px; vpravo: 20px; šířka: 60px; výška: 60px; pozadí: var(--neon); okraj-poloměr: 50%; zobrazení: flex; zarovnat-položky: střed; ospravedlnit-obsah: střed; barva: černý; velikost písma: 30px; tloušťka písma: tučné; z-index: 10; stín-boxu: 0 0 15px var(--neon); }
+
+        /* Styl pro digitální karty (Denní menu/Reklama) */
+        .ar-karta { pozadí: var(--sklo); ohraničení: 1px solid var(--neon); polstrování: 20px; okraj-poloměr: 15px; backdrop-filter: blur(5px); }
     </style>
 </head>
 <body>
-    <div id="splash">
-        <h1 class="logo">TADY</h1>
-        <p>všechno důležité je tady</p>
-        <button class="btn-vstup" onclick="startApp()">VSTOUPIT</button>
+    <div identifikacni-cislo="šplouchnutí">
+        <h1 třída="logo">TADY</h1>
+        <span>všechno důležité je tady</span>
+        <div třída="btn-vstup" onclick="startApp()">VSTOUPIT</div>
     </div>
-    <div id="ar-view" style="display:none;">
-        <a-scene embedded arjs="sourceType: webcam; debugUIEnabled: false;" vr-mode-ui="enabled: false">
-            <a-entity camera>
-                <a-entity position="0 0 -2">
-                    <a-plane width="1.5" height="0.8" color="#000" opacity="0.9">
-                        <a-text value="TADY SE DEJE\nVSECHNO" align="center" color="#00f2ff" width="2"></a-text>
-                    </a-plane>
-                </a-entity>
-            </a-entity>
-        </a-scene>
+
+    <div identifikacni-cislo="AR-view">
+        <div třída="btn-pridat" onclick="otevritEditor()">+</div>
+        
+        <div třída="hlavni-menu">
+            <div třída="menu-ikona">🔍</div> <div třída="menu-ikona">💬</div> <div třída="menu-ikona">👤</div> </div>
+
+        <scéna A vloženy AR.js="sourceType: webkamera; debugUIEnabled: false;">
+            <entita fotoaparát>
+                </entita>
+        </scéna>
     </div>
+
     <script>
-        function startApp() {
-            document.getElementById('splash').style.display = 'none';
-            document.getElementById('ar-view').style.display = 'block';
+        funkce startApp() {
+            dokument.získatElementById('šplouchnutí').styl.zobrazit = 'žádný';
+            dokument.získatElementById('AR-view').styl.zobrazit = 'blok';
+        }
+        
+        funkce otevritEditor() {
+            alert("Zde se otevře rozhraní pro umístění vzkazu nebo placené reklamy.");
+            // Zde propojíme tvou platební bránu a Neon DB
         }
     </script>
 </body>
