@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="cs">
 <head>
@@ -12,7 +13,7 @@
         button { background: #28a745; color: white; border: none; padding: 15px; width: 100%; font-size: 18px; border-radius: 8px; cursor: pointer; font-weight: bold; }
         #status { margin-top: 20px; padding: 15px; border-radius: 10px; display: none; background: #fff3cd; border: 1px solid #ffeeba; }
         .vzkaz-item { background: #f8f9fa; padding: 15px; border-radius: 10px; margin-bottom: 10px; border-left: 5px solid #1a73e8; text-align: left; }
-        .platebni-udaje { background: #eee; padding: 15px; border-radius: 8px; margin: 15px 0; font-family: monospace; font-size: 14px; }
+        .platebni-udaje { background: #f1f3f4; padding: 15px; border-radius: 8px; margin: 15px 0; font-family: monospace; font-size: 14px; color: #3c4043; border: 1px dashed #bdc1c6; }
     </style>
 </head>
 <body>
@@ -40,21 +41,19 @@
             const vzkaz = document.getElementById('vzkaz').value;
             const status = document.getElementById('status');
             
-            if (!jmeno || !vzkaz) { alert("Prosím vyplňte jméno i vzkaz."); return; }
+            if (!jmeno || !vzkaz) { alert("Prosím vyplňte všechna pole."); return; }
 
-            // Vaše údaje z Revolutu
-            const iban = "LT53 3250 0828 4401 8353"; 
-            const majitel = "Bozena Tandarova Tandarova";
+            // Pouze IBAN z vašeho Revolutu
+            const iban = "LT533250082844018353"; 
 
             status.style.display = "block";
-            status.innerHTML = "<h4>Pro zveřejnění odešlete 500 Kč:</h4>" +
+            status.innerHTML = "<h4>Platební údaje (500 Kč):</h4>" +
                                "<div class='platebni-udaje'>" +
-                               "Účet (IBAN):<br><b>" + iban + "</b><br><br>" +
-                               "Příjemce:<br><b>" + majitel + "</b><br><br>" +
-                               "Zpráva pro příjemce:<br><b>Reklama - " + jmeno + "</b>" +
+                               "Bankovní spojení (IBAN):<br><b>" + iban + "</b><br><br>" +
+                               "Zpráva pro příjemce:<br><b>" + jmeno + "</b>" +
                                "</div>" +
-                               "<p>Jakmile platbu odešlete, klikněte níže:</p>" +
-                               "<button onclick='potvrdit()' style='background:#1a73e8; font-size:14px; padding:12px; color:white; border:none; border-radius:8px; cursor:pointer;'>HOTOVO, ODESLAL JSEM PLATBU</button>";
+                               "<p style='font-size:13px;'>Platbu odešlete přes své internetové bankovnictví (Revolut/Mezinárodní platba).</p>" +
+                               "<button onclick='potvrdit()' style='background:#1a73e8; font-size:14px; padding:12px; color:white; border:none; border-radius:8px; cursor:pointer;'>HOTOVO, ODESLAL JSEM</button>";
         }
 
         function potvrdit() {
@@ -62,7 +61,7 @@
             const vzkaz = document.getElementById('vzkaz').value;
             const seznam = document.getElementById('seznam-vzkazu');
             
-            document.getElementById('status').innerHTML = "✅ <b>Děkujeme!</b><br>Váš vzkaz byl přijat a bude trvale zveřejněn po ověření platby na Revolutu.";
+            document.getElementById('status').innerHTML = "✅ <b>Děkujeme!</b><br>Vzkaz byl odeslán do systému red-thunder a po ověření platby bude trvale viditelný.";
             
             const novy = document.createElement('div');
             novy.className = 'vzkaz-item';
@@ -75,4 +74,3 @@
     </script>
 </body>
 </html>
-
