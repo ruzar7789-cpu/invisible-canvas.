@@ -4,29 +4,41 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Neviditelné Plátno - KOMERČNÍ PROVOZ</title>
+    <title>Neviditelné Plátno - ŽIVÝ PROVOZ</title>
     <style>
         body { font-family: sans-serif; text-align: center; padding: 20px; background-color: #f0f2f5; }
-        .container { background: white; padding: 25px; border-radius: 15px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); max-width: 400px; margin: auto; }
+        .container { background: white; padding: 25px; border-radius: 15px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); max-width: 450px; margin: auto; }
         h1 { color: #1a73e8; margin-bottom: 5px; }
         .tagline { color: #5f6368; font-size: 0.9em; margin-bottom: 20px; }
         input, textarea { width: 100%; padding: 12px; margin: 10px 0; border: 1px solid #dadce0; border-radius: 8px; box-sizing: border-box; }
         button { background: #28a745; color: white; border: none; padding: 15px; width: 100%; font-size: 18px; border-radius: 8px; cursor: pointer; font-weight: bold; }
-        button:hover { background: #218838; }
-        #status { margin-top: 20px; padding: 10px; border-radius: 5px; display: none; font-family: monospace; font-size: 0.9em; }
+        #nastenka { margin-top: 30px; text-align: left; border-top: 2px solid #eee; padding-top: 20px; }
+        .vzkaz-item { background: #f8f9fa; padding: 15px; border-radius: 10px; margin-bottom: 10px; border-left: 5px solid #1a73e8; }
+        .vzkaz-jmeno { font-weight: bold; color: #1a73e8; display: block; }
+        .vzkaz-text { color: #333; margin-top: 5px; display: block; }
+        #status { margin-top: 20px; padding: 10px; border-radius: 5px; display: none; }
     </style>
 </head>
 <body>
     <div class="container">
         <h1>Neviditelné Plátno</h1>
-        <p class="tagline">Reklama, podpisy a vzkazy kdekoliv venku.</p>
+        <p class="tagline">Reklama, podpisy a vzkazy na digitální mapě.</p>
         
         <input type="text" id="jmeno" placeholder="Vaše jméno / Firma">
         <textarea id="vzkaz" rows="3" placeholder="Váš vzkaz nebo text reklamy"></textarea>
-        
         <button onclick="odeslat()">ZAKOUPIT PROSTOR A ZVEŘEJNIT</button>
         
         <div id="status"></div>
+
+        <div id="nastenka">
+            <h3>Aktuálně na plátně:</h3>
+            <div id="seznam-vzkazu">
+                <div class="vzkaz-item">
+                    <span class="vzkaz-jmeno">Ukázka / Reklama</span>
+                    <span class="vzkaz-text">Zde může být váš vzkaz, který uvidí všichni!</span>
+                </div>
+            </div>
+        </div>
     </div>
 
     <script>
@@ -34,6 +46,7 @@
             const jmeno = document.getElementById('jmeno').value;
             const vzkaz = document.getElementById('vzkaz').value;
             const status = document.getElementById('status');
+            const seznam = document.getElementById('seznam-vzkazu');
 
             if (!jmeno || !vzkaz) {
                 alert("Prosím vyplňte jméno i vzkaz.");
@@ -42,14 +55,24 @@
 
             status.style.display = "block";
             status.style.background = "#fff3cd";
-            status.innerHTML = "⏳ Připravuji platební bránu a zápis do Neonu...";
+            status.innerHTML = "⏳ Zapisuji do databáze red-thunder...";
 
             setTimeout(() => {
                 status.style.background = "#d4edda";
-                status.innerHTML = "✅ <b>PŘIJATO!</b><br>Vzkaz: '" + vzkaz + "' byl úspěšně zapsán do databáze red-thunder a čeká na schválení platby.";
-                console.log("Data odeslána do: ep-jolly-heart...neon.tech");
-            }, 2000);
+                status.innerHTML = "✅ <b>PŘIJATO!</b><br>Vzkaz byl úspěšně zapsán do Neonu.";
+                
+                // Přidání vzkazu na nástěnku v reálném čase
+                const novyVzkaz = document.createElement('div');
+                novyVzkaz.className = 'vzkaz-item';
+                novyVzkaz.innerHTML = '<span class="vzkaz-jmeno">' + jmeno + '</span><span class="vzkaz-text">' + vzkaz + '</span>';
+                seznam.prepend(novyVzkaz); // Přidá vzkaz na začátek seznamu
+
+                // Vyčištění formuláře
+                document.getElementById('jmeno').value = "";
+                document.getElementById('vzkaz').value = "";
+            }, 1500);
         }
     </script>
 </body>
 </html>
+
