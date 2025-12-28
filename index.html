@@ -20,17 +20,17 @@
         .btn-pridat { position: fixed; bottom: 50px; right: 25px; width: 70px; height: 70px; background: var(--neon); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: black; font-size: 40px; font-weight: bold; z-index: 100; box-shadow: 0 0 25px var(--neon); border: none; cursor: pointer; }
 
         #editor-stop { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.97); z-index: 2000; padding: 20px; flex-direction: column; align-items: center; justify-content: center; }
-        .karta { background: #151515; border: 2px solid var(--neon); padding: 30px; border-radius: 25px; width: 90%; max-width: 400px; text-align: center; box-shadow: 0 0 30px rgba(0,242,255,0.3); }
+        .karta { background: #151515; border: 2px solid var(--neon); padding: 30px; border-radius: 25px; width: 90%; max-width: 400px; text-align: center; }
         textarea { width: 100%; height: 110px; background: #000; border: 1px solid var(--neon); color: white; padding: 12px; margin: 15px 0; border-radius: 12px; font-size: 16px; resize: none; }
-        .btn-platba { background: var(--zlata); color: black; padding: 18px; border-radius: 12px; border: none; font-weight: bold; width: 100%; cursor: pointer; font-size: 17px; margin-top: 10px; }
+        .btn-platba { background: var(--zlata); color: black; padding: 18px; border-radius: 12px; border: none; font-weight: bold; width: 100%; cursor: pointer; font-size: 17px; }
     </style>
 </head>
 <body>
 
     <div id="splash">
         <h1 class="logo">TADY</h1>
-        <p style="color: #aaa; letter-spacing: 2px;">Všechno důležité je tady</p>
-        <button class="btn-vstup" onclick="startApp()">VSTOUPIT DO REALITY</button>
+        <p style="color: #aaa; letter-spacing: 2px;">Všechno děje všechno</p>
+        <button class="btn-vstup" onclick="startApp()">VSTOUPIT</button>
     </div>
 
     <div id="AR-view">
@@ -50,17 +50,18 @@
                      alt="Platba TADY" style="width:100%">
             </div>
             
-            <div style="color:var(--zlata); font-size: 24px; font-weight:bold;">29 Kč / 24h</div>
+            <div style="color:var(--zlata); font-size: 24px; font-weight:bold; margin-bottom:15px;">29 Kč / 24h</div>
             <button class="btn-platba" onclick="ulozitDoDatabeze()">MÁM ZAPLACENO</button>
-            <p onclick="zavritEditor()" style="color:#555; margin-top:20px; cursor:pointer; font-size:14px;">Zrušit</p>
+            <p onclick="zavritEditor()" style="color:#555; margin-top:20px; cursor:pointer;">Zrušit</p>
         </div>
     </div>
 
     <script type="module">
         import { neon } from 'https://cdn.jsdelivr.net/npm/@neondatabase/serverless@0.6.0/+esm';
         
-        // Připojení přímo na tvůj red-thunder s tvým heslem Marcel1199
-        const sql = neon('postgresql://neondb_owner:Marcel1199@ep-white-rain-a2pjt37u-pooler.us-east-2.aws.neon.tech/neondb?sslmode=require');
+        // NOVÁ VERZE PŘIPOJENÍ: Vynucujeme endpoint, aby to Neon neodmítl
+        const connectionString = 'postgresql://neondb_owner:Marcel1199@ep-white-rain-a2pjt37u-pooler.us-east-2.aws.neon.tech/neondb?sslmode=require&options=endpoint%3Dep-white-rain-a2pjt37u';
+        const sql = neon(connectionString);
 
         let lat = 50.91, lon = 14.62;
 
@@ -82,11 +83,13 @@
             const text = document.getElementById('obsah').value;
             if(!text) return alert("Napiš vzkaz!");
             try {
+                // Přímý zápis do databáze
                 await sql`INSERT INTO stopy (obsah, lat, lon) VALUES (${text}, ${lat}, ${lon})`;
                 alert("Úspěšně uloženo TADY!");
                 vytvorARVzkaz(text, lat, lon);
                 zavritEditor();
             } catch (e) {
+                console.error("Chyba Neonu:", e);
                 alert("Chyba při ukládání do databáze.");
             }
         };
@@ -95,7 +98,7 @@
             try {
                 const data = await sql`SELECT obsah, lat, lon FROM stopy WHERE plati_do > NOW()`;
                 data.forEach(s => vytvorARVzkaz(s.obsah, s.lat, s.lon));
-            } catch (e) { console.error(e); }
+            } catch (e) { console.error("Chyba při načítání:", e); }
         }
 
         function vytvorARVzkaz(t, la, lo) {
