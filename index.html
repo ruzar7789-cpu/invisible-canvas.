@@ -7,8 +7,6 @@
     
     <script src="https://aframe.io/releases/1.3.0/aframe.min.js"></script>
     <script src="https://raw.githack.com/AR-js-org/AR.js/master/aframe/build/aframe-ar-nft.js"></script>
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     
     <style>
         :root { --neon: #00f2ff; --tmavy: #0a0a0a; --zlata: #ffd700; }
@@ -19,16 +17,11 @@
         .logo { font-size: 65px; font-weight: 900; color: var(--neon); text-shadow: 0 0 20px var(--neon); margin: 0; }
         .btn-vstup { background: var(--neon); color: black; border-radius: 50px; padding: 18px 50px; font-weight: bold; cursor: pointer; margin-top: 35px; border: none; text-transform: uppercase; font-size: 18px; }
 
-        /* AR a Mapa */
-        #AR-view, #mapa-view { display: none; width: 100%; height: 100vh; position: absolute; top: 0; left: 0; }
-        #map-container { width: 100%; height: 100%; }
+        /* AR Kamera */
+        #AR-view { display: none; width: 100%; height: 100vh; position: absolute; top: 0; left: 0; }
+        .btn-pridat { position: fixed; bottom: 50px; right: 25px; width: 70px; height: 70px; background: var(--neon); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: black; font-size: 40px; font-weight: bold; z-index: 100; box-shadow: 0 0 25px var(--neon); border: none; cursor: pointer; }
 
-        /* Menu a ovládání */
-        .hlavni-menu { position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%); display: flex; gap: 40px; background: rgba(0,0,0,0.9); padding: 15px 35px; border-radius: 50px; border: 1px solid var(--neon); z-index: 100; box-shadow: 0 0 15px var(--neon); }
-        .menu-ikona { color: var(--neon); font-size: 26px; cursor: pointer; }
-        .btn-pridat { position: fixed; bottom: 120px; right: 25px; width: 70px; height: 70px; background: var(--neon); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: black; font-size: 40px; font-weight: bold; z-index: 100; box-shadow: 0 0 25px var(--neon); border: none; cursor: pointer; }
-
-        /* Editor a Diskretní Platba */
+        /* Editor a Platba */
         #editor-stop { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.97); z-index: 2000; padding: 20px; flex-direction: column; align-items: center; justify-content: center; }
         .karta { background: #151515; border: 2px solid var(--neon); padding: 30px; border-radius: 25px; width: 90%; max-width: 400px; text-align: center; box-shadow: 0 0 30px rgba(0,242,255,0.3); }
         textarea { width: 100%; height: 110px; background: #000; border: 1px solid var(--neon); color: white; padding: 12px; margin: 15px 0; border-radius: 12px; font-size: 16px; resize: none; }
@@ -45,29 +38,15 @@
 
     <div id="AR-view">
         <button class="btn-pridat" onclick="otevritEditor()">+</button>
-        <div class="hlavni-menu">
-            <span onclick="prepniNaMapu()" class="menu-ikona">🔍</span>
-            <span onclick="prepniNaAR()" class="menu-ikona">💬</span>
-            <span onclick="alert('Profil projektu TADY')" class="menu-ikona">👤</span>
-        </div>
         <a-scene embedded arjs="sourceType: webcam; debugUIEnabled: false;">
             <a-camera gps-camera rotation-reader></a-camera>
         </a-scene>
     </div>
 
-    <div id="mapa-view">
-        <div id="map-container"></div>
-        <div class="hlavni-menu">
-            <span onclick="prepniNaMapu()" class="menu-ikona">🔍</span>
-            <span onclick="prepniNaAR()" class="menu-ikona">💬</span>
-            <span onclick="alert('Profil projektu TADY')" class="menu-ikona">👤</span>
-        </div>
-    </div>
-
     <div id="editor-stop">
         <div class="karta">
             <h2 style="color:var(--neon); margin-top:0;">NOVÁ STOPA</h2>
-            <textarea id="obsah" placeholder="Napiš vzkaz nebo denní menu..."></textarea>
+            <textarea id="obsah" placeholder="Napiš vzkaz, který tu zůstane..."></textarea>
             
             <div style="background: white; padding: 10px; margin: 15px auto; width: 160px; border-radius: 15px;">
                 <img src="https://api.qrserver.com/v1/create-qr-code/?size=160x160&data=SPD*1.0*ACC:LT533250082844018353*BIC:REVOLT21*AM:29.00*CC:CZK*MSG:TADY_STOPA" 
@@ -83,22 +62,19 @@
     </div>
 
     <script type="module">
-        // --- PROPOJENÍ S NEONEM (RED-THUNDER) ---
         import { neon } from 'https://cdn.jsdelivr.net/npm/@neondatabase/serverless@0.6.0/+esm';
         
-        // Tvůj plný Connection String s heslem Marcel1199
-        const DATABASE_URL = 'postgresql://neondb_owner:Marcel1199@ep-white-rain-a2pjt37u-pooler.us-east-2.aws.neon.tech/neondb?sslmode=require';
-        const sql = neon(DATABASE_URL);
+        // TVÉ PŘIPOJENÍ S HESLEM Marcel1199
+        const sql = neon('postgresql://neondb_owner:Marcel1199@ep-white-rain-a2pjt37u-pooler.us-east-2.aws.neon.tech/neondb?sslmode=require');
 
-        let mapa;
         let mojeLat = 50.91;
         let mojeLon = 14.62;
 
-        // Sledování GPS polohy uživatele
+        // GPS zaměření
         navigator.geolocation.watchPosition(pos => {
             mojeLat = pos.coords.latitude;
             mojeLon = pos.coords.longitude;
-        }, err => console.error("GPS Error", err), { enableHighAccuracy: true });
+        }, err => console.error(err), { enableHighAccuracy: true });
 
         window.startApp = function() {
             document.getElementById('splash').style.display = 'none';
@@ -106,67 +82,46 @@
             nactiStopyZDB();
         };
 
-        window.prepniNaMapu = function() {
-            document.getElementById('AR-view').style.display = 'none';
-            document.getElementById('mapa-view').style.display = 'block';
-            if (!mapa) {
-                mapa = L.map('map-container').setView([mojeLat, mojeLon], 16);
-                L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(mapa);
-            } else {
-                mapa.setView([mojeLat, mojeLon], mapa.getZoom());
-            }
-        };
-
-        window.prepniNaAR = function() {
-            document.getElementById('mapa-view').style.display = 'none';
-            document.getElementById('AR-view').style.display = 'block';
-        };
-
         window.otevritEditor = function() { document.getElementById('editor-stop').style.display = 'flex'; };
         window.zavritEditor = function() { document.getElementById('editor-stop').style.display = 'none'; };
 
-        // --- UKLÁDÁNÍ DO DATABÁZE ---
+        // UKLÁDÁNÍ VZKAZU
         window.ulozitDoDatabeze = async function() {
             const text = document.getElementById('obsah').value;
-            if(!text) return alert("Napiš text vzkazu!");
+            if(!text) return alert("Napiš vzkaz!");
 
             try {
-                // Zapíše vzkaz a tvoji polohu do Neonu
+                // Odeslání do Neonu
                 await sql`INSERT INTO stopy (obsah, lat, lon) VALUES (${text}, ${mojeLat}, ${mojeLon})`;
-                
-                alert("Úspěšně uloženo TADY! Vzkaz se nyní zobrazí všem v okolí.");
-                
-                // Přidání do scény hned teď
+                alert("Úspěšně uloženo TADY!");
                 vytvorARVzkaz(text, mojeLat, mojeLon);
                 zavritEditor();
             } catch (e) {
                 console.error(e);
-                alert("Chyba při ukládání. Zkontroluj databázi Neon.");
+                alert("Chyba při ukládání. Zkontroluj, zda jsi v Neonu vytvořil tabulku!");
             }
         };
 
-        // --- NAČÍTÁNÍ VŠECH STOP Z OKOLÍ ---
+        // NAČÍTÁNÍ VZKAZŮ OD OSTATNÍCH
         async function nactiStopyZDB() {
             try {
-                // Vybere jen vzkazy, které ještě nevypršely (24h)
                 const stopy = await sql`SELECT obsah, lat, lon FROM stopy WHERE plati_do > NOW()`;
                 stopy.forEach(s => vytvorARVzkaz(s.obsah, s.lat, s.lon));
-            } catch (e) { console.error("Načítání stop selhalo", e); }
+            } catch (e) { console.error(e); }
         }
 
-        // --- FUNKCE PRO ZOBRAZENÍ V AR ---
+        // ZOBRAZENÍ V AR
         function vytvorARVzkaz(text, lat, lon) {
             const el = document.createElement('a-text');
             el.setAttribute('value', text);
             el.setAttribute('gps-entity-place', `latitude: ${lat}; longitude: ${lon};`);
             el.setAttribute('look-at', '[gps-camera]');
-            el.setAttribute('scale', '20 20 20'); // Velikost vzkazu v prostoru
-            el.setAttribute('color', '#00f2ff'); // Neonově modrá
+            el.setAttribute('scale', '20 20 20');
+            el.setAttribute('color', '#00f2ff');
             el.setAttribute('align', 'center');
-            el.setAttribute('position', '0 2 0'); // Výška nad zemí (2 metry)
+            el.setAttribute('position', '0 2 0');
             document.querySelector('a-scene').appendChild(el);
         }
     </script>
 </body>
 </html>
-
