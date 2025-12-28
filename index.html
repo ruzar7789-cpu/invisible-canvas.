@@ -1,111 +1,73 @@
 
 <!DOCTYPE html>
-<html lang="cs">
+<html>
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TADY - Tady se děje všechno</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>TADY - AR Svět</title>
+    <script src="https://aframe.io/releases/1.3.0/aframe.min.js"></script>
+    <script src="https://raw.githack.com/AR-js-org/AR.js/master/aframe/build/aframe-ar-nft.js"></script>
     <style>
-        :root { --neon-blue: #00f2ff; --glass: rgba(255, 255, 255, 0.1); }
-        body { font-family: 'Inter', sans-serif; background: #0a0e14; color: white; margin: 0; padding: 20px; overflow-x: hidden; }
-        
-        .hero { text-align: center; padding: 40px 0; }
-        h1 { font-size: 4rem; margin: 0; background: linear-gradient(to right, #fff, #00f2ff); -webkit-background-clip: text; -webkit-text-fill-color: transparent; letter-spacing: -3px; }
-        .slogan { color: var(--neon-blue); text-transform: uppercase; letter-spacing: 2px; font-size: 0.8rem; margin-top: -10px; }
-
-        .glass-card { 
-            background: rgba(255, 255, 255, 0.05); backdrop-filter: blur(15px); 
-            border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 24px; 
-            padding: 25px; margin-bottom: 20px; box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+        body { margin: 0; overflow: hidden; font-family: sans-serif; }
+        .ui-overlay {
+            position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%);
+            width: 90%; max-width: 400px; z-index: 10;
+            background: rgba(0, 0, 0, 0.7); backdrop-filter: blur(10px);
+            padding: 20px; border-radius: 20px; border: 1px solid #00f2ff; color: white; text-align: center;
         }
-
-        input, textarea { 
-            width: 100%; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.2); 
-            border-radius: 12px; padding: 15px; color: white; margin: 10px 0; font-size: 16px;
-        }
-
-        .btn-pay { 
-            background: linear-gradient(45deg, #00f2ff, #0072ff); color: black; border: none; 
-            padding: 20px; width: 100%; border-radius: 12px; font-weight: 800; cursor: pointer; 
-            text-transform: uppercase; font-size: 16px; transition: 0.3s;
-        }
-        .btn-pay:hover { transform: scale(1.02); box-shadow: 0 0 20px rgba(0,242,255,0.5); }
-
-        .vzkaz-ar { 
-            border-left: 4px solid var(--neon-blue); background: rgba(0, 242, 255, 0.05); 
-            padding: 15px; border-radius: 0 16px 16px 0; margin-bottom: 15px; position: relative;
-        }
-        .dist { position: absolute; right: 15px; top: 15px; font-size: 10px; color: var(--neon-blue); border: 1px solid var(--neon-blue); padding: 2px 6px; border-radius: 4px; }
-        
-        #status-area { display: none; margin-top: 20px; }
-        .iban-box { background: #000; padding: 15px; border-radius: 12px; border: 1px solid var(--neon-blue); color: var(--neon-blue); font-family: monospace; }
+        .logo { position: absolute; top: 20px; left: 20px; color: #00f2ff; font-weight: bold; font-size: 24px; z-index: 10; }
+        input, textarea { width: 100%; padding: 10px; margin: 10px 0; border-radius: 8px; border: none; }
+        .btn { background: #00f2ff; color: black; border: none; padding: 15px; width: 100%; border-radius: 10px; font-weight: bold; cursor: pointer; }
+        #payment-info { display: none; background: #111; padding: 15px; border-radius: 10px; margin-top: 10px; border: 1px dashed #00f2ff; font-size: 14px; }
     </style>
 </head>
 <body>
 
-    <div class="hero">
-        <h1>TADY</h1>
-        <div class="slogan">Tady se děje všechno</div>
-    </div>
+    <div class="logo">TADY</div>
 
-    <div class="glass-card">
-        <input type="text" id="jmeno" placeholder="Jméno / Firma / Restaurace">
-        <textarea id="vzkaz" rows="3" placeholder="Co chcete nechat na tomto místě? (Menu, vzkaz, podpis...)"></textarea>
-        <button class="btn-pay" onclick="initPlace()">UMÍSTIT NA MAPU SVĚTA (500 Kč)</button>
+    <div class="ui-overlay" id="ui">
+        <div id="form">
+            <h2 style="margin:0; font-size: 18px;">Tady se děje všechno</h2>
+            <input type="text" id="jmeno" placeholder="Jméno / Firma">
+            <textarea id="vzkaz" placeholder="Váš vzkaz v AR..."></textarea>
+            <button class="btn" onclick="showPayment()">UMÍSTIT DO PROSTORU (500 Kč)</button>
+        </div>
 
-        <div id="status-area">
-            <div class="glass-card" style="margin-top:20px; border-color: var(--neon-blue);">
-                <h4 style="margin-top:0;">Aktivace souřadnic:</h4>
-                <div class="iban-box" id="iban-info"></div>
-                <p style="font-size:12px; opacity:0.7; margin-top:15px;">Po zaplacení bude váš obsah viditelný pro každého, kdo sem přijde.</p>
-                <button onclick="confirm()" style="background:white; color:black; border:none; padding:10px; border-radius:8px; width:100%; font-weight:bold;">JIŽ JSEM ZAPLATIL</button>
-            </div>
+        <div id="payment-info">
+            <p>Aktivujte vzkaz platbou:</p>
+            <b>IBAN: LT533250082844018353</b><br>
+            <small>Zpráva: TADY <span id="msg-name"></span></small>
+            <button class="btn" style="margin-top:10px; background: white;" onclick="placeAR()">ZAPLACENO - ZOBRAZIT</button>
         </div>
     </div>
 
-    <h3 style="margin-left:10px;">Vzkazy v okolí</h3>
-    <div id="feed">
-        <div class="vzkaz-ar">
-            <span class="dist">0.2 km</span>
-            <b style="color:var(--neon-blue)">Denní menu - Restaurace</b><br>
-            <span style="opacity:0.8; font-size:14px;">Svíčková na smetaně ... 180 Kč<br>Guláš s cibulí ... 165 Kč</span>
-        </div>
-    </div>
+    <a-scene embedded arjs="sourceType: webcam; debugUIEnabled: false;" vr-mode-ui="enabled: false">
+        
+        <a-entity id="ar-container" position="0 0 -5">
+            <a-plane position="0 0 0" width="4" height="2" color="#000" opacity="0.8" material="transparent: true; side: double">
+                <a-text id="ar-text" value="Zde bude vas vzkaz\nTADY SE DEJE VSECHNO" align="center" color="#00f2ff" width="3.5"></a-text>
+            </a-plane>
+        </a-entity>
+
+        <a-entity camera></a-entity>
+    </a-scene>
 
     <script>
-        let loc = "Zaměřování...";
-        if (navigator.geolocation) {
-            navigator.geolocation.getCurrentPosition(p => {
-                loc = `${p.coords.latitude.toFixed(4)}, ${p.coords.longitude.toFixed(4)}`;
-            });
+        function showPayment() {
+            const name = document.getElementById('jmeno').value;
+            if (!name) return alert("Zadejte jméno.");
+            document.getElementById('msg-name').innerText = name;
+            document.getElementById('form').style.display = 'none';
+            document.getElementById('payment-info').style.display = 'block';
         }
 
-        function initPlace() {
-            const jmeno = document.getElementById('jmeno').value;
-            if(!jmeno) { alert("Zadejte název."); return; }
-            
-            document.getElementById('status-area').style.display = 'block';
-            document.getElementById('iban-info').innerHTML = `
-                IBAN: LT533250082844018353<br>
-                Částka: 500 CZK<br>
-                Zpráva: TADY ${jmeno}<br>
-                Lokace: ${loc}
-            `;
-        }
-
-        function confirm() {
-            const jmeno = document.getElementById('jmeno').value;
+        function placeAR() {
             const vzkaz = document.getElementById('vzkaz').value;
-            const feed = document.getElementById('feed');
-            
-            const div = document.createElement('div');
-            div.className = 'vzkaz-ar';
-            div.innerHTML = `<span class="dist">NYNÍ TADY</span><b style="color:var(--neon-blue)">${jmeno}</b><br><span style="opacity:0.8; font-size:14px;">${vzkaz}</span>`;
-            feed.prepend(div);
-            
-            document.getElementById('status-area').style.display = 'none';
-            document.getElementById('jmeno').value = '';
-            document.getElementById('vzkaz').value = '';
+            const jmeno = document.getElementById('jmeno').value;
+            // Aktualizace textu v AR prostoru
+            document.getElementById('ar-text').setAttribute('value', jmeno + ":\n" + vzkaz);
+            document.getElementById('ui').style.display = 'none';
+            alert("Vzkaz byl 'přibit' do prostoru před vámi!");
         }
     </script>
 </body>
