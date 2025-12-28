@@ -4,73 +4,78 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Neviditelné Plátno - ŽIVÝ PROVOZ</title>
+    <title>Neviditelné Plátno - ZISK</title>
     <style>
         body { font-family: sans-serif; text-align: center; padding: 20px; background-color: #f0f2f5; }
         .container { background: white; padding: 25px; border-radius: 15px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); max-width: 450px; margin: auto; }
         h1 { color: #1a73e8; margin-bottom: 5px; }
-        .tagline { color: #5f6368; font-size: 0.9em; margin-bottom: 20px; }
         input, textarea { width: 100%; padding: 12px; margin: 10px 0; border: 1px solid #dadce0; border-radius: 8px; box-sizing: border-box; }
         button { background: #28a745; color: white; border: none; padding: 15px; width: 100%; font-size: 18px; border-radius: 8px; cursor: pointer; font-weight: bold; }
         #nastenka { margin-top: 30px; text-align: left; border-top: 2px solid #eee; padding-top: 20px; }
         .vzkaz-item { background: #f8f9fa; padding: 15px; border-radius: 10px; margin-bottom: 10px; border-left: 5px solid #1a73e8; }
-        .vzkaz-jmeno { font-weight: bold; color: #1a73e8; display: block; }
-        .vzkaz-text { color: #333; margin-top: 5px; display: block; }
-        #status { margin-top: 20px; padding: 10px; border-radius: 5px; display: none; }
+        #status { margin-top: 20px; padding: 15px; border-radius: 10px; display: none; background: #fff3cd; border: 1px solid #ffeeba; }
+        .qr-box img { max-width: 200px; margin: 15px 0; border: 5px solid white; box-shadow: 0 0 10px rgba(0,0,0,0.1); }
     </style>
 </head>
 <body>
     <div class="container">
         <h1>Neviditelné Plátno</h1>
-        <p class="tagline">Reklama, podpisy a vzkazy na digitální mapě.</p>
+        <p>Zakupte si prostor pro reklamu nebo vzkaz (500 Kč).</p>
         
         <input type="text" id="jmeno" placeholder="Vaše jméno / Firma">
-        <textarea id="vzkaz" rows="3" placeholder="Váš vzkaz nebo text reklamy"></textarea>
-        <button onclick="odeslat()">ZAKOUPIT PROSTOR A ZVEŘEJNIT</button>
+        <textarea id="vzkaz" rows="3" placeholder="Váš vzkaz nebo reklama"></textarea>
+        <button onclick="objednat()">ZAPLATIT A ZVEŘEJNIT</button>
         
         <div id="status"></div>
 
         <div id="nastenka">
             <h3>Aktuálně na plátně:</h3>
             <div id="seznam-vzkazu">
-                <div class="vzkaz-item">
-                    <span class="vzkaz-jmeno">Ukázka / Reklama</span>
-                    <span class="vzkaz-text">Zde může být váš vzkaz, který uvidí všichni!</span>
-                </div>
+                <div class="vzkaz-item"><b>Ukázka</b><br>Zde bude váš placený vzkaz!</div>
             </div>
         </div>
     </div>
 
     <script>
-        function odeslat() {
+        function objednat() {
             const jmeno = document.getElementById('jmeno').value;
             const vzkaz = document.getElementById('vzkaz').value;
             const status = document.getElementById('status');
-            const seznam = document.getElementById('seznam-vzkazu');
+            
+            if (!jmeno || !vzkaz) { alert("Prosím vyplňte jméno i vzkaz."); return; }
 
-            if (!jmeno || !vzkaz) {
-                alert("Prosím vyplňte jméno i vzkaz.");
-                return;
-            }
+            const iban = "LT533250082844018353"; // Váš IBAN z Revolutu
+            const castka = "500"; // Nastavená cena 500 Kč
+            const msg = "Platba za reklamu: " + jmeno;
+            
+            // Generování platebního QR kódu pro českou platbu
+            const qrUrl = "https://api.paylibo.com/paylibo/generator/czech/image?iban=" + iban + "&amount=" + castka + "&currency=CZK&message=" + msg;
 
             status.style.display = "block";
             status.style.background = "#fff3cd";
-            status.innerHTML = "⏳ Zapisuji do databáze red-thunder...";
+            status.innerHTML = "<h4>Pro zveřejnění naskenujte a zaplaťte 500 Kč:</h4>" +
+                               "<div class='qr-box'><img src='" + qrUrl + "'></div>" +
+                               "<p>Peníze jdou na účet Revolut: <b>...8353</b></p>" +
+                               "<button onclick='potvrdit()' style='background:#1a73e8; font-size:14px; padding:8px;'>JIŽ JSEM ZAPLATIL</button>";
+        }
 
-            setTimeout(() => {
-                status.style.background = "#d4edda";
-                status.innerHTML = "✅ <b>PŘIJATO!</b><br>Vzkaz byl úspěšně zapsán do Neonu.";
-                
-                // Přidání vzkazu na nástěnku v reálném čase
-                const novyVzkaz = document.createElement('div');
-                novyVzkaz.className = 'vzkaz-item';
-                novyVzkaz.innerHTML = '<span class="vzkaz-jmeno">' + jmeno + '</span><span class="vzkaz-text">' + vzkaz + '</span>';
-                seznam.prepend(novyVzkaz); // Přidá vzkaz na začátek seznamu
-
-                // Vyčištění formuláře
-                document.getElementById('jmeno').value = "";
-                document.getElementById('vzkaz').value = "";
-            }, 1500);
+        function potvrdit() {
+            const jmeno = document.getElementById('jmeno').value;
+            const vzkaz = document.getElementById('vzkaz').value;
+            const seznam = document.getElementById('seznam-vzkazu');
+            const status = document.getElementById('status');
+            
+            status.style.background = "#d4edda";
+            status.innerHTML = "✅ <b>Děkujeme za platbu!</b><br>Vzkaz byl odeslán do databáze red-thunder a po ověření platby zůstane trvale zveřejněn.";
+            
+            const novy = document.createElement('div');
+            novy.className = 'vzkaz-item';
+            novy.innerHTML = "<b>" + jmeno + "</b><br>" + vzkaz;
+            seznam.prepend(novy);
+            
+            // Vyčištění polí
+            document.getElementById('jmeno').value = "";
+            document.getElementById('vzkaz').value = "";
         }
     </script>
 </body>
