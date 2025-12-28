@@ -3,137 +3,120 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>TADY - Oficiální Aplikace</title>
+    <title>TADY</title>
     <script src="https://aframe.io/releases/1.3.0/aframe.min.js"></script>
     <script src="https://raw.githack.com/AR-js-org/AR.js/master/aframe/build/aframe-ar-nft.js"></script>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <style>
-        :root { --neon: #00f2ff; --glass: rgba(10, 14, 20, 0.9); }
-        body { margin: 0; background: #000; color: white; font-family: sans-serif; }
+        :root { --neon: #00f2ff; --glass: rgba(15, 20, 25, 0.95); }
+        body { margin: 0; background: #000; color: white; font-family: 'Segoe UI', sans-serif; overflow: hidden; }
         
-        /* ÚVODNÍ OBRAZOVKA */
+        /* VELKÉ HLAVNÍ MENU */
         #home-screen {
             position: fixed; inset: 0; z-index: 5000;
-            background: radial-gradient(circle at center, #001a1d 0%, #000 100%);
-            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            background: #000; display: flex; flex-direction: column; padding: 40px 20px;
+            overflow-y: auto; text-align: center;
         }
-        .logo-main { font-size: 60px; font-weight: 900; color: var(--neon); letter-spacing: 5px; margin-bottom: 5px; }
-        .slogan { font-size: 14px; opacity: 0.7; letter-spacing: 2px; margin-bottom: 40px; }
+        .logo { font-size: 50px; font-weight: 900; color: var(--neon); letter-spacing: 4px; margin-bottom: 5px; }
+        .slogan { font-size: 14px; opacity: 0.7; margin-bottom: 40px; text-transform: uppercase; }
 
-        /* NAVIGACE */
+        .btn-large { 
+            background: var(--neon); color: #000; border: none; padding: 20px; 
+            width: 100%; border-radius: 15px; font-weight: 900; font-size: 18px; cursor: pointer;
+        }
+
+        .list-section { margin-top: 40px; text-align: left; width: 100%; }
+        .list-item { 
+            background: rgba(255,255,255,0.05); border: 1px solid rgba(0,242,255,0.2);
+            padding: 15px; border-radius: 12px; margin-bottom: 10px; display: flex; justify-content: space-between;
+        }
+
+        /* PŘEHLEDNÁ NAVIGACE */
         .bottom-nav {
-            position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%);
-            z-index: 4000; display: flex; background: var(--glass);
-            padding: 10px; border-radius: 40px; border: 1px solid var(--neon); gap: 15px;
+            position: fixed; bottom: 0; left: 0; right: 0; height: 80px;
+            z-index: 4000; display: none; background: var(--glass);
+            border-top: 1px solid var(--neon); align-items: center; justify-content: space-around;
         }
-        .nav-item { background: none; border: none; color: white; padding: 10px 20px; border-radius: 30px; cursor: pointer; }
-        .nav-item.active { background: var(--neon); color: #000; font-weight: bold; }
+        .nav-btn { background: none; border: none; color: white; font-size: 24px; cursor: pointer; opacity: 0.5; }
+        .nav-btn.active { color: var(--neon); opacity: 1; }
 
-        /* AR A MAPA */
-        #map-view { position: fixed; inset: 0; z-index: 500; display: none; }
-        #ar-view { position: fixed; inset: 0; z-index: 100; display: none; }
-        
-        /* FORMULÁŘ */
-        .modal {
-            position: fixed; inset: 0; z-index: 6000; background: rgba(0,0,0,0.9);
-            display: none; align-items: center; justify-content: center; padding: 20px;
-        }
-        .glass-box {
-            background: var(--glass); border: 1px solid var(--neon);
-            padding: 30px; border-radius: 30px; width: 100%; max-width: 350px; text-align: center;
-        }
-        .btn-action { background: var(--neon); color: #000; border: none; padding: 15px; width: 100%; border-radius: 12px; font-weight: bold; margin-top: 10px; }
+        #map-view, #ar-view { position: fixed; inset: 0; bottom: 80px; display: none; }
+        #map-view { z-index: 500; }
+        #ar-view { z-index: 100; }
+
+        /* OPRAVA TEXTU V AR */
+        .ar-label { width: 512px; height: 256px; background: black; color: #00f2ff; text-align: center; font-size: 40px; border: 4px solid #00f2ff; }
     </style>
 </head>
 <body>
 
     <div id="home-screen">
-        <div class="logo-main">TADY</div>
-        <div class="slogan">tady se děje všechno</div>
-        <button class="btn-action" style="width: 200px;" onclick="goToApp()">VSTOUPIT</button>
+        <div class="logo">TADY</div>
+        <div class="slogan">všechno důležité je tady</div>
+        
+        <button class="btn-large" onclick="enterApp()">VSTOUPIT DO SVĚTA</button>
+
+        <div class="list-section">
+            <h3 style="color: var(--neon); font-size: 14px;">VZKAZY V OKOLÍ</h3>
+            <div class="list-item">
+                <div><strong>MILUJI TĚ</strong><br><small>Miluji tě</small></div>
+                <div style="color: var(--neon); font-size: 10px;">NYNÍ TADY</div>
+            </div>
+            <div class="list-item">
+                <div><strong>Denní menu - Restaurace</strong><br><small>Svíčková na smetaně... 180 Kč</small></div>
+                <div style="color: var(--neon); font-size: 10px;">0.2 km</div>
+            </div>
+        </div>
     </div>
 
     <div id="map-view"></div>
 
     <div id="ar-view">
         <a-scene embedded arjs="sourceType: webcam; debugUIEnabled: false;" vr-mode-ui="enabled: false">
-            <a-entity camera id="main-cam">
-                <a-entity id="ar-preview" position="0 0 -2" visible="false">
-                    <a-plane width="1.5" height="0.8" color="#000" opacity="0.8">
-                        <a-text id="ar-text-val" value="" align="center" color="#00f2ff" width="2" wrap-count="20"></a-text>
+            <a-entity camera>
+                <a-entity id="preview-box" position="0 0 -3" visible="false">
+                    <a-plane width="2" height="1" color="#000" opacity="0.9" material="shader: flat">
+                        <a-text id="txt-val" value="" align="center" color="#00f2ff" width="2.5" wrap-count="20"></a-text>
                     </a-plane>
+                    <a-ring color="#00f2ff" radius-inner="0.05" radius-outer="0.06" position="0 -0.6 0" rotation="-90 0 0"></a-ring>
                 </a-entity>
             </a-entity>
-            <a-entity id="persistent-world"></a-entity>
         </a-scene>
     </div>
 
-    <div class="modal" id="create-modal">
-        <div class="glass-box">
-            <h2 style="color:var(--neon); margin-top:0;">NOVÝ VZKAZ</h2>
-            <input type="text" id="jmeno" placeholder="Jméno / Firma">
-            <textarea id="vzkaz" rows="4" placeholder="Váš vzkaz pro tento svět..."></textarea>
-            <button class="btn-action" onclick="startPlacement()">UMÍSTIT V AR</button>
-            <button style="background:none; border:none; color:white; margin-top:15px;" onclick="closeModal()">Zavřít</button>
-        </div>
-    </div>
-
-    <div class="bottom-nav" id="main-nav" style="display:none;">
-        <button class="nav-item active" id="nav-map" onclick="switchTab('map')">MAPA</button>
-        <button class="nav-item" id="nav-ar" onclick="switchTab('ar')">AR SVĚT</button>
-        <button class="nav-item" onclick="openModal()">+ TADY</button>
-        <button class="nav-item" onclick="goHome()">DOMŮ</button>
+    <div class="bottom-nav" id="b-nav">
+        <button class="nav-btn active" onclick="tab('map', this)">🗺️</button>
+        <button class="nav-btn" onclick="tab('ar', this)">📷</button>
+        <button class="nav-btn" onclick="location.reload()">🏠</button>
     </div>
 
     <script>
-        let map = L.map('map-view').setView([50.075, 14.437], 13);
+        let map = L.map('map-view').setView([50.075, 14.437], 14);
         L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png').addTo(map);
 
-        function goToApp() {
+        function enterApp() {
             document.getElementById('home-screen').style.display = 'none';
-            document.getElementById('main-nav').style.display = 'flex';
-            switchTab('map');
+            document.getElementById('b-nav').style.display = 'flex';
+            tab('map', document.querySelector('.nav-btn'));
         }
 
-        function goHome() {
-            document.getElementById('home-screen').style.display = 'flex';
-            document.getElementById('main-nav').style.display = 'none';
-            document.getElementById('map-view').style.display = 'none';
-            document.getElementById('ar-view').style.display = 'none';
-        }
-
-        function switchTab(type) {
-            document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
+        function tab(mode, btn) {
+            document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
             document.getElementById('map-view').style.display = 'none';
             document.getElementById('ar-view').style.display = 'none';
 
-            if(type === 'map') {
+            if(mode === 'map') {
                 document.getElementById('map-view').style.display = 'block';
-                document.getElementById('nav-map').classList.add('active');
+                map.invalidateSize();
             } else {
                 document.getElementById('ar-view').style.display = 'block';
-                document.getElementById('nav-ar').classList.add('active');
+                // Simulace náhledu v AR
+                document.getElementById('txt-val').setAttribute('value', 'TADY\nSE DEJE\nVSECHNO');
+                document.getElementById('preview-box').setAttribute('visible', 'true');
             }
-        }
-
-        function openModal() { document.getElementById('create-modal').style.display = 'flex'; }
-        function closeModal() { document.getElementById('create-modal').style.display = 'none'; }
-
-        function startPlacement() {
-            const name = document.getElementById('jmeno').value;
-            const text = document.getElementById('vzkaz').value;
-            if(!name) return alert("Zadejte jméno.");
-
-            closeModal();
-            switchTab('ar');
-            document.getElementById('ar-text-val').setAttribute('value', `${name}\n${text}`);
-            document.getElementById('ar-preview').setAttribute('visible', 'true');
-            
-            alert("Namiřte mobil a po zaplacení se vzkaz uloží na mapu pro všechny s aplikací!");
         }
     </script>
 </body>
 </html>
-
-
