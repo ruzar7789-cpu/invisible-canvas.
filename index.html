@@ -1,36 +1,47 @@
+
 <!DOCTYPE html>
 <html lang="cs">
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>TADY - Projekt Voda</title>
+    <title>TADY - Tvoř svůj svět</title>
     <script src="https://aframe.io/releases/1.3.0/aframe.min.js"></script>
     <script src="https://raw.githack.com/AR-js-org/AR.js/master/aframe/build/aframe-ar-nft.js"></script>
+    
     <style>
-        :root { --neon: #00f2ff; --tmavy: #0a0a0a; }
-        body { margin: 0; background: var(--tmavy); color: white; font-family: sans-serif; overflow: hidden; }
+        :root { --neon: #00f2ff; --tmavy: #0a0a0a; --zlata: #ffd700; }
+        body { margin: 0; background: var(--tmavy); color: white; font-family: 'Segoe UI', sans-serif; overflow: hidden; }
         
-        /* Úvodní obrazovka */
-        #splash { position: fixed; inset: 0; z-index: 100; background: radial-gradient(circle at center, #002d30 0%, #000 100%); display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; }
-        .logo { font-size: 60px; font-weight: 900; color: var(--neon); text-shadow: 0 0 20px var(--neon); margin: 0; }
-        .slogan { font-size: 18px; margin-top: 10px; color: #ccc; }
-        .btn-vstup { background: var(--neon); color: black; border-radius: 30px; padding: 15px 40px; font-weight: bold; cursor: pointer; margin-top: 30px; border: none; text-transform: uppercase; }
+        /* 1. Úvodní obrazovka TADY */
+        #splash { position: fixed; inset: 0; z-index: 100; background: radial-gradient(circle, #002d30 0%, #000 100%); display: flex; flex-direction: column; align-items: center; justify-content: center; }
+        .logo { font-size: 70px; font-weight: 900; color: var(--neon); text-shadow: 0 0 30px var(--neon); margin: 0; }
+        .slogan { font-size: 18px; color: #ccc; letter-spacing: 2px; }
+        .btn-vstup { background: var(--neon); color: black; border-radius: 50px; padding: 18px 50px; font-weight: bold; cursor: pointer; margin-top: 40px; border: none; text-transform: uppercase; transition: 0.3s; }
 
-        /* AR Rozhraní */
+        /* 2. AR Hlavní plocha */
         #AR-view { display: none; width: 100%; height: 100vh; }
         
-        /* Spodní Menu podle tvého návrhu */
-        .hlavni-menu { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); display: flex; gap: 40px; background: rgba(0,0,0,0.85); padding: 15px 35px; border-radius: 50px; border: 1px solid var(--neon); z-index: 10; align-items: center; }
-        .menu-ikona { color: var(--neon); font-size: 24px; cursor: pointer; filter: drop-shadow(0 0 5px var(--neon)); }
+        /* 3. Spodní Menu - Design z tvé vize */
+        .hlavni-menu { position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%); display: flex; gap: 45px; background: rgba(0,0,0,0.9); padding: 15px 40px; border-radius: 60px; border: 1px solid var(--neon); z-index: 10; align-items: center; }
+        .menu-ikona { color: var(--neon); font-size: 28px; cursor: pointer; opacity: 0.8; }
+        .menu-ikona:hover { opacity: 1; filter: drop-shadow(0 0 8px var(--neon)); }
 
-        /* Tlačítko PLUS pro vzkazy/reklamu */
-        .btn-pridat { position: fixed; bottom: 110px; right: 25px; width: 60px; height: 60px; background: var(--neon); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: black; font-size: 35px; font-weight: bold; z-index: 10; box-shadow: 0 0 20px var(--neon); cursor: pointer; }
+        /* 4. Tlačítko PLUS (Start nákupu stopy) */
+        .btn-pridat { position: fixed; bottom: 120px; right: 30px; width: 70px; height: 70px; background: var(--neon); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: black; font-size: 40px; font-weight: bold; z-index: 10; box-shadow: 0 0 25px var(--neon); cursor: pointer; }
+
+        /* 5. Editor a Platební brána */
+        #editor-stop { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.95); z-index: 1000; padding: 30px; flex-direction: column; align-items: center; justify-content: center; }
+        .karta-platby { background: #1a1a1a; border: 2px solid var(--neon); padding: 30px; border-radius: 20px; width: 90%; max-width: 400px; text-align: center; }
+        textarea { width: 100%; height: 100px; background: #000; border: 1px solid var(--neon); color: white; padding: 10px; margin: 15px 0; border-radius: 10px; }
+        .cena { color: var(--zlata); font-size: 24px; font-weight: bold; margin: 15px 0; }
+        .btn-zaplatit { background: var(--zlata); color: black; padding: 15px 30px; border-radius: 10px; border: none; font-weight: bold; width: 100%; cursor: pointer; }
     </style>
 </head>
 <body>
+
     <div id="splash">
         <h1 class="logo">TADY</h1>
-        <p class="slogan">všechno důležité je tady</p>
+        <p class="slogan">Všechno důležité je tady</p>
         <button class="btn-vstup" onclick="startApp()">VSTOUPIT</button>
     </div>
 
@@ -46,16 +57,44 @@
         </a-scene>
     </div>
 
+    <div id="editor-stop">
+        <div class="karta-platby">
+            <h2 style="color:var(--neon)">VYTVOŘIT STOPU</h2>
+            <p>Zanech vzkaz nebo menu pro ostatní.</p>
+            <textarea id="obsah-stopy" placeholder="Napiš vzkaz nebo denní menu..."></textarea>
+            <div class="cena">CENA: 29 Kč / den</div>
+            <button class="btn-zaplatit" onclick="procesPlatby()">ZAPLATIT A UMÍSTIT</button>
+            <p onclick="zavritEditor()" style="margin-top:20px; cursor:pointer; font-size:14px; color:#666">Zrušit</p>
+        </div>
+    </div>
+
     <script>
         function startApp() {
             document.getElementById('splash').style.display = 'none';
             document.getElementById('AR-view').style.display = 'block';
         }
-        
+
         function otevritEditor() {
-            alert("Otevírám editor pro nový vzkaz nebo reklamu.");
+            document.getElementById('editor-stop').style.display = 'flex';
+        }
+
+        function zavritEditor() {
+            document.getElementById('editor-stop').style.display = 'none';
+        }
+
+        async function procesPlatby() {
+            const text = document.getElementById('obsah-stopy').value;
+            if(!text) return alert("Napiš nejdříve text!");
+
+            alert("Propojuji s platební bránou... Platba 29 Kč potvrzena.");
+            
+            // TADY SE DĚJE ZÁPIS DO TVÉHO NEONU (Red-Thunder)
+            // Simulace úspěšného uložení
+            console.log("Ukládám do Neon DB: " + text);
+            
+            zavritEditor();
+            alert("Tvoje digitální stopa byla umístěna na tvé aktuální pozici!");
         }
     </script>
 </body>
 </html>
-
