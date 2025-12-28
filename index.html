@@ -3,120 +3,126 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>TADY</title>
+    <title>TADY - Všechno důležité je tady</title>
     <script src="https://aframe.io/releases/1.3.0/aframe.min.js"></script>
     <script src="https://raw.githack.com/AR-js-org/AR.js/master/aframe/build/aframe-ar-nft.js"></script>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <style>
-        :root { --neon: #00f2ff; --glass: rgba(15, 20, 25, 0.95); }
-        body { margin: 0; background: #000; color: white; font-family: 'Segoe UI', sans-serif; overflow: hidden; }
+        :root { --neon: #00f2ff; --glass: rgba(20, 25, 30, 0.8); }
+        body { margin: 0; background: #000; color: white; font-family: 'Inter', sans-serif; overflow-x: hidden; }
         
-        /* VELKÉ HLAVNÍ MENU */
-        #home-screen {
-            position: fixed; inset: 0; z-index: 5000;
-            background: #000; display: flex; flex-direction: column; padding: 40px 20px;
-            overflow-y: auto; text-align: center;
+        /* MODERNÍ HERO SEKCE */
+        .hero {
+            height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: space-between;
+            padding: 60px 20px; box-sizing: border-box; background: radial-gradient(circle at top, #003338 0%, #000 70%);
         }
-        .logo { font-size: 50px; font-weight: 900; color: var(--neon); letter-spacing: 4px; margin-bottom: 5px; }
-        .slogan { font-size: 14px; opacity: 0.7; margin-bottom: 40px; text-transform: uppercase; }
+        .logo-group { text-align: center; }
+        .logo-main { font-size: 70px; font-weight: 900; color: var(--neon); letter-spacing: 10px; text-shadow: 0 0 20px var(--neon); margin: 0; }
+        .slogan { font-size: 12px; letter-spacing: 4px; opacity: 0.6; text-transform: uppercase; margin-top: -10px; }
 
-        .btn-large { 
-            background: var(--neon); color: #000; border: none; padding: 20px; 
-            width: 100%; border-radius: 15px; font-weight: 900; font-size: 18px; cursor: pointer;
+        /* KARTY VZAKZŮ - už nebudou hrůza */
+        .feed { width: 100%; max-width: 400px; }
+        .feed-title { font-size: 14px; font-weight: bold; color: var(--neon); margin-bottom: 15px; text-align: left; padding-left: 10px; border-left: 3px solid var(--neon); }
+        
+        .ar-card {
+            background: var(--glass); backdrop-filter: blur(10px); border: 1px solid rgba(0, 242, 255, 0.3);
+            border-radius: 20px; padding: 20px; margin-bottom: 15px; display: flex; align-items: center; justify-content: space-between;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5); transition: 0.3s;
+        }
+        .ar-card:active { transform: scale(0.98); border-color: var(--neon); }
+        .ar-card-info h4 { margin: 0; font-size: 18px; color: var(--neon); }
+        .ar-card-info p { margin: 5px 0 0; font-size: 13px; opacity: 0.7; }
+        .dist { font-size: 12px; font-weight: bold; background: rgba(0,242,255,0.1); padding: 5px 10px; border-radius: 10px; color: var(--neon); }
+
+        /* ACTION BUTTON */
+        .btn-vstoupit {
+            background: linear-gradient(90deg, #00f2ff, #0072ff); color: #000; border: none;
+            padding: 22px 40px; border-radius: 50px; font-weight: 900; font-size: 16px;
+            letter-spacing: 2px; cursor: pointer; box-shadow: 0 0 30px rgba(0, 242, 255, 0.4);
         }
 
-        .list-section { margin-top: 40px; text-align: left; width: 100%; }
-        .list-item { 
-            background: rgba(255,255,255,0.05); border: 1px solid rgba(0,242,255,0.2);
-            padding: 15px; border-radius: 12px; margin-bottom: 10px; display: flex; justify-content: space-between;
+        /* MAPA A AR SKRYTÉ DO STARTU */
+        #main-app { display: none; position: fixed; inset: 0; z-index: 1000; }
+        #map { height: 100%; width: 100%; }
+        
+        /* PLOVOUCÍ MENU PRO APP */
+        .app-nav {
+            position: absolute; bottom: 30px; left: 50%; transform: translateX(-50%);
+            display: flex; gap: 20px; z-index: 2000; background: var(--glass); padding: 15px 30px;
+            border-radius: 50px; border: 1px solid var(--neon); backdrop-filter: blur(15px);
         }
-
-        /* PŘEHLEDNÁ NAVIGACE */
-        .bottom-nav {
-            position: fixed; bottom: 0; left: 0; right: 0; height: 80px;
-            z-index: 4000; display: none; background: var(--glass);
-            border-top: 1px solid var(--neon); align-items: center; justify-content: space-around;
-        }
-        .nav-btn { background: none; border: none; color: white; font-size: 24px; cursor: pointer; opacity: 0.5; }
-        .nav-btn.active { color: var(--neon); opacity: 1; }
-
-        #map-view, #ar-view { position: fixed; inset: 0; bottom: 80px; display: none; }
-        #map-view { z-index: 500; }
-        #ar-view { z-index: 100; }
-
-        /* OPRAVA TEXTU V AR */
-        .ar-label { width: 512px; height: 256px; background: black; color: #00f2ff; text-align: center; font-size: 40px; border: 4px solid #00f2ff; }
+        .nav-icon { font-size: 24px; cursor: pointer; opacity: 0.4; transition: 0.3s; }
+        .nav-icon.active { opacity: 1; transform: scale(1.2); }
     </style>
 </head>
 <body>
 
-    <div id="home-screen">
-        <div class="logo">TADY</div>
-        <div class="slogan">všechno důležité je tady</div>
-        
-        <button class="btn-large" onclick="enterApp()">VSTOUPIT DO SVĚTA</button>
+    <div id="hero" class="hero">
+        <div class="logo-group">
+            <h1 class="logo-main">TADY</h1>
+            <p class="slogan">tady se děje všechno</p>
+        </div>
 
-        <div class="list-section">
-            <h3 style="color: var(--neon); font-size: 14px;">VZKAZY V OKOLÍ</h3>
-            <div class="list-item">
-                <div><strong>MILUJI TĚ</strong><br><small>Miluji tě</small></div>
-                <div style="color: var(--neon); font-size: 10px;">NYNÍ TADY</div>
+        <div class="feed">
+            <div class="feed-title">DIGITÁLNÍ STOPY V OKOLÍ</div>
+            <div class="ar-card" onclick="startAt('menu')">
+                <div class="ar-card-info">
+                    <h4>Denní menu</h4>
+                    <p>Restaurace Na Rohu • Právě teď</p>
+                </div>
+                <div class="dist">0.1 km</div>
             </div>
-            <div class="list-item">
-                <div><strong>Denní menu - Restaurace</strong><br><small>Svíčková na smetaně... 180 Kč</small></div>
-                <div style="color: var(--neon); font-size: 10px;">0.2 km</div>
+            <div class="ar-card" onclick="startAt('vzkaz')">
+                <div class="ar-card-info">
+                    <h4>Miluji tě</h4>
+                    <p>U lavičky v parku</p>
+                </div>
+                <div class="dist">0.3 km</div>
             </div>
+        </div>
+
+        <button class="btn-vstoupit" onclick="launchApp()">VSTOUPIT DO SVĚTA</button>
+    </div>
+
+    <div id="main-app">
+        <div id="map"></div>
+        
+        <div class="app-nav">
+            <div class="nav-icon active" onclick="showTab('map', this)">🗺️</div>
+            <div class="nav-icon" onclick="showTab('ar', this)">📷</div>
+            <div class="nav-icon" onclick="location.reload()">🏠</div>
         </div>
     </div>
 
-    <div id="map-view"></div>
-
-    <div id="ar-view">
-        <a-scene embedded arjs="sourceType: webcam; debugUIEnabled: false;" vr-mode-ui="enabled: false">
-            <a-entity camera>
-                <a-entity id="preview-box" position="0 0 -3" visible="false">
-                    <a-plane width="2" height="1" color="#000" opacity="0.9" material="shader: flat">
-                        <a-text id="txt-val" value="" align="center" color="#00f2ff" width="2.5" wrap-count="20"></a-text>
-                    </a-plane>
-                    <a-ring color="#00f2ff" radius-inner="0.05" radius-outer="0.06" position="0 -0.6 0" rotation="-90 0 0"></a-ring>
-                </a-entity>
-            </a-entity>
-        </a-scene>
-    </div>
-
-    <div class="bottom-nav" id="b-nav">
-        <button class="nav-btn active" onclick="tab('map', this)">🗺️</button>
-        <button class="nav-btn" onclick="tab('ar', this)">📷</button>
-        <button class="nav-btn" onclick="location.reload()">🏠</button>
-    </div>
-
     <script>
-        let map = L.map('map-view').setView([50.075, 14.437], 14);
-        L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png').addTo(map);
-
-        function enterApp() {
-            document.getElementById('home-screen').style.display = 'none';
-            document.getElementById('b-nav').style.display = 'flex';
-            tab('map', document.querySelector('.nav-btn'));
+        let map;
+        function launchApp() {
+            document.getElementById('hero').style.display = 'none';
+            document.getElementById('main-app').style.display = 'block';
+            
+            if(!map) {
+                map = L.map('map', { zoomControl: false }).setView([50.075, 14.437], 15);
+                L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png').addTo(map);
+                
+                // Přidání ukázkových bodů
+                L.circleMarker([50.075, 14.437], { color: '#00f2ff', radius: 10 }).addTo(map)
+                    .bindPopup("<b style='color:black'>TADY: Denní menu</b>");
+            }
         }
 
-        function tab(mode, btn) {
-            document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
-            btn.classList.add('active');
-            document.getElementById('map-view').style.display = 'none';
-            document.getElementById('ar-view').style.display = 'none';
+        function showTab(type, el) {
+            document.querySelectorAll('.nav-icon').forEach(i => i.classList.remove('active'));
+            el.classList.add('active');
+            // Zde se později přepne na AR scénu
+            if(type === 'ar') alert("Namiřte kameru na místo vzkazu!");
+        }
 
-            if(mode === 'map') {
-                document.getElementById('map-view').style.display = 'block';
-                map.invalidateSize();
-            } else {
-                document.getElementById('ar-view').style.display = 'block';
-                // Simulace náhledu v AR
-                document.getElementById('txt-val').setAttribute('value', 'TADY\nSE DEJE\nVSECHNO');
-                document.getElementById('preview-box').setAttribute('visible', 'true');
-            }
+        function startAt(target) {
+            launchApp();
+            // Tady by aplikace automaticky zazoomovala na daný vzkaz
         }
     </script>
 </body>
 </html>
+
