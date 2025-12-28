@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="cs">
 <head>
@@ -14,7 +13,7 @@
         #nastenka { margin-top: 30px; text-align: left; border-top: 2px solid #eee; padding-top: 20px; }
         .vzkaz-item { background: #f8f9fa; padding: 15px; border-radius: 10px; margin-bottom: 10px; border-left: 5px solid #1a73e8; }
         #status { margin-top: 20px; padding: 15px; border-radius: 10px; display: none; background: #fff3cd; border: 1px solid #ffeeba; }
-        .qr-box img { max-width: 200px; margin: 15px 0; border: 5px solid white; box-shadow: 0 0 10px rgba(0,0,0,0.1); }
+        .qr-box img { width: 220px; height: 220px; margin: 15px 0; border: 5px solid white; box-shadow: 0 0 10px rgba(0,0,0,0.1); background-color: #eee; }
     </style>
 </head>
 <body>
@@ -44,19 +43,20 @@
             
             if (!jmeno || !vzkaz) { alert("Prosím vyplňte jméno i vzkaz."); return; }
 
-            const iban = "LT533250082844018353"; // Váš IBAN z Revolutu
-            const castka = "500"; // Nastavená cena 500 Kč
-            const msg = "Platba za reklamu: " + jmeno;
+            // Vaše údaje a opravený odkaz na QR generátor
+            const iban = "LT533250082844018353"; 
+            const castka = "500.00"; 
+            const msg = encodeURIComponent("Reklama: " + jmeno);
             
-            // Generování platebního QR kódu pro českou platbu
+            // Finální stabilní URL pro QR kód
             const qrUrl = "https://api.paylibo.com/paylibo/generator/czech/image?iban=" + iban + "&amount=" + castka + "&currency=CZK&message=" + msg;
 
             status.style.display = "block";
             status.style.background = "#fff3cd";
             status.innerHTML = "<h4>Pro zveřejnění naskenujte a zaplaťte 500 Kč:</h4>" +
-                               "<div class='qr-box'><img src='" + qrUrl + "'></div>" +
+                               "<div class='qr-box'><img src='" + qrUrl + "' alt='Platební QR kód'></div>" +
                                "<p>Peníze jdou na účet Revolut: <b>...8353</b></p>" +
-                               "<button onclick='potvrdit()' style='background:#1a73e8; font-size:14px; padding:8px;'>JIŽ JSEM ZAPLATIL</button>";
+                               "<button onclick='potvrdit()' style='background:#1a73e8; font-size:14px; padding:12px; color:white; border:none; border-radius:8px; cursor:pointer;'>JIŽ JSEM ZAPLATIL</button>";
         }
 
         function potvrdit() {
@@ -73,11 +73,11 @@
             novy.innerHTML = "<b>" + jmeno + "</b><br>" + vzkaz;
             seznam.prepend(novy);
             
-            // Vyčištění polí
             document.getElementById('jmeno').value = "";
             document.getElementById('vzkaz').value = "";
         }
     </script>
 </body>
 </html>
+
 
