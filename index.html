@@ -1,62 +1,59 @@
 <!DOCTYPE html>
-<html jazyk="cs">
+<html lang="cs">
 <head>
-    <meta znaková sada="utf-8">
-    <meta jméno="výřez" obsah="šířka=šířka zařízení, počáteční škálování=1.0, škálovatelný uživatelem=ne">
-    <title>TADY - Vše důležité je tady</title>
-    <script zdroj="https://aframe.io/releases/1.3.0/aframe.min.js"></script>
-    <script zdroj="https://raw.githack.com/AR-js-org/AR.js/master/aframe/build/aframe-ar-nft.js"></script>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>TADY - Projekt Voda</title>
+    <script src="https://aframe.io/releases/1.3.0/aframe.min.js"></script>
+    <script src="https://raw.githack.com/AR-js-org/AR.js/master/aframe/build/aframe-ar-nft.js"></script>
     <style>
-        :root { --neon: #00f2ff; --tmavy: #0a0a0a; --sklo: rgba(0, 242, 255, 0.1); }
-        tělo { okraj: 0; pozadí: var(--tmavy); barva: bílý; rodina-písmen: bezpatkové písmo; přetákat: skrytý; }
+        :root { --neon: #00f2ff; --tmavy: #0a0a0a; }
+        body { margin: 0; background: var(--tmavy); color: white; font-family: sans-serif; overflow: hidden; }
         
         /* Úvodní obrazovka */
-        #šplouchnutí { pozice: pevná; vložka: 0; z-index: 100; pozadí: radiální gradient(kruh uprostřed, #002d30 0%, #000 100%); zobrazení: flex; flex-směr: sloupec; zarovnat-položky: střed; ospravedlnit-obsah: střed; }
-        .logo { velikost písma: 60pixelů; tloušťka písma: 900; barva: var(--neon); textový-stín: 0 0 20px var(--neon); }
-        .btn-vstup { pozadí: var(--neon); barva: černý; okraj-poloměr: 30px; polstrování: 15px 40px; tloušťka písma: tučné; kurzor: ukazatel; okraj-top: 20px; }
+        #splash { position: fixed; inset: 0; z-index: 100; background: radial-gradient(circle at center, #002d30 0%, #000 100%); display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; }
+        .logo { font-size: 60px; font-weight: 900; color: var(--neon); text-shadow: 0 0 20px var(--neon); margin: 0; }
+        .slogan { font-size: 18px; margin-top: 10px; color: #ccc; }
+        .btn-vstup { background: var(--neon); color: black; border-radius: 30px; padding: 15px 40px; font-weight: bold; cursor: pointer; margin-top: 30px; border: none; text-transform: uppercase; }
 
         /* AR Rozhraní */
-        #AR-view { zobrazení: žádný; }
+        #AR-view { display: none; width: 100%; height: 100vh; }
         
-        /* Spodní Menu - Podle obrázku */
-        .hlavni-menu { pozice: pevná; dole: 20px; vlevo: 50%; transformovat: translateX(-50%); zobrazení: flex; mezera: 30px; pozadí: rgba(0,0,0,0.8); polstrování: 15px 30px; okraj-poloměr: 50px; ohraničení: 1px solid var(--neon); z-index: 10; }
-        .menu-ikona { barva: var(--neon); velikost písma: 24px; kurzor: ukazatel; }
+        /* Spodní Menu podle tvého návrhu */
+        .hlavni-menu { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); display: flex; gap: 40px; background: rgba(0,0,0,0.85); padding: 15px 35px; border-radius: 50px; border: 1px solid var(--neon); z-index: 10; align-items: center; }
+        .menu-ikona { color: var(--neon); font-size: 24px; cursor: pointer; filter: drop-shadow(0 0 5px var(--neon)); }
 
-        /* Tlačítko pro přidání vzkazu/reklamy */
-        .btn-pridat { pozice: pevná; dole: 100px; vpravo: 20px; šířka: 60px; výška: 60px; pozadí: var(--neon); okraj-poloměr: 50%; zobrazení: flex; zarovnat-položky: střed; ospravedlnit-obsah: střed; barva: černý; velikost písma: 30px; tloušťka písma: tučné; z-index: 10; stín-boxu: 0 0 15px var(--neon); }
-
-        /* Styl pro digitální karty (Denní menu/Reklama) */
-        .ar-karta { pozadí: var(--sklo); ohraničení: 1px solid var(--neon); polstrování: 20px; okraj-poloměr: 15px; backdrop-filter: blur(5px); }
+        /* Tlačítko PLUS pro vzkazy/reklamu */
+        .btn-pridat { position: fixed; bottom: 110px; right: 25px; width: 60px; height: 60px; background: var(--neon); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: black; font-size: 35px; font-weight: bold; z-index: 10; box-shadow: 0 0 20px var(--neon); cursor: pointer; }
     </style>
 </head>
 <body>
-    <div identifikacni-cislo="šplouchnutí">
-        <h1 třída="logo">TADY</h1>
-        <span>všechno důležité je tady</span>
-        <div třída="btn-vstup" onclick="startApp()">VSTOUPIT</div>
+    <div id="splash">
+        <h1 class="logo">TADY</h1>
+        <p class="slogan">všechno důležité je tady</p>
+        <button class="btn-vstup" onclick="startApp()">VSTOUPIT</button>
     </div>
 
-    <div identifikacni-cislo="AR-view">
-        <div třída="btn-pridat" onclick="otevritEditor()">+</div>
+    <div id="AR-view">
+        <div class="btn-pridat" onclick="otevritEditor()">+</div>
         
-        <div třída="hlavni-menu">
-            <div třída="menu-ikona">🔍</div> <div třída="menu-ikona">💬</div> <div třída="menu-ikona">👤</div> </div>
+        <div class="hlavni-menu">
+            <span class="menu-ikona">🔍</span> <span class="menu-ikona">💬</span> <span class="menu-ikona">👤</span> </div>
 
-        <scéna A vloženy AR.js="sourceType: webkamera; debugUIEnabled: false;">
-            <entita fotoaparát>
-                </entita>
-        </scéna>
+        <a-scene embedded arjs="sourceType: webcam; debugUIEnabled: false;">
+            <a-entity camera>
+                </a-entity>
+        </a-scene>
     </div>
 
     <script>
-        funkce startApp() {
-            dokument.získatElementById('šplouchnutí').styl.zobrazit = 'žádný';
-            dokument.získatElementById('AR-view').styl.zobrazit = 'blok';
+        function startApp() {
+            document.getElementById('splash').style.display = 'none';
+            document.getElementById('AR-view').style.display = 'block';
         }
         
-        funkce otevritEditor() {
-            alert("Zde se otevře rozhraní pro umístění vzkazu nebo placené reklamy.");
-            // Zde propojíme tvou platební bránu a Neon DB
+        function otevritEditor() {
+            alert("Otevírám editor pro nový vzkaz nebo reklamu.");
         }
     </script>
 </body>
