@@ -4,73 +4,110 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Neviditelné Plátno - ZISK</title>
+    <title>TADY - Tady se děje všechno</title>
     <style>
-        body { font-family: sans-serif; text-align: center; padding: 20px; background-color: #f0f2f5; }
-        .container { background: white; padding: 25px; border-radius: 15px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); max-width: 450px; margin: auto; }
-        h1 { color: #1a73e8; margin-bottom: 5px; }
-        input, textarea { width: 100%; padding: 12px; margin: 10px 0; border: 1px solid #dadce0; border-radius: 8px; box-sizing: border-box; }
-        button { background: #28a745; color: white; border: none; padding: 15px; width: 100%; font-size: 18px; border-radius: 8px; cursor: pointer; font-weight: bold; }
-        #status { margin-top: 20px; padding: 15px; border-radius: 10px; display: none; background: #fff3cd; border: 1px solid #ffeeba; }
-        .vzkaz-item { background: #f8f9fa; padding: 15px; border-radius: 10px; margin-bottom: 10px; border-left: 5px solid #1a73e8; text-align: left; }
-        .platebni-udaje { background: #f1f3f4; padding: 15px; border-radius: 8px; margin: 15px 0; font-family: monospace; font-size: 14px; color: #3c4043; border: 1px dashed #bdc1c6; }
+        :root { --neon-blue: #00f2ff; --glass: rgba(255, 255, 255, 0.1); }
+        body { font-family: 'Inter', sans-serif; background: #0a0e14; color: white; margin: 0; padding: 20px; overflow-x: hidden; }
+        
+        .hero { text-align: center; padding: 40px 0; }
+        h1 { font-size: 4rem; margin: 0; background: linear-gradient(to right, #fff, #00f2ff); -webkit-background-clip: text; -webkit-text-fill-color: transparent; letter-spacing: -3px; }
+        .slogan { color: var(--neon-blue); text-transform: uppercase; letter-spacing: 2px; font-size: 0.8rem; margin-top: -10px; }
+
+        .glass-card { 
+            background: rgba(255, 255, 255, 0.05); backdrop-filter: blur(15px); 
+            border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 24px; 
+            padding: 25px; margin-bottom: 20px; box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+        }
+
+        input, textarea { 
+            width: 100%; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.2); 
+            border-radius: 12px; padding: 15px; color: white; margin: 10px 0; font-size: 16px;
+        }
+
+        .btn-pay { 
+            background: linear-gradient(45deg, #00f2ff, #0072ff); color: black; border: none; 
+            padding: 20px; width: 100%; border-radius: 12px; font-weight: 800; cursor: pointer; 
+            text-transform: uppercase; font-size: 16px; transition: 0.3s;
+        }
+        .btn-pay:hover { transform: scale(1.02); box-shadow: 0 0 20px rgba(0,242,255,0.5); }
+
+        .vzkaz-ar { 
+            border-left: 4px solid var(--neon-blue); background: rgba(0, 242, 255, 0.05); 
+            padding: 15px; border-radius: 0 16px 16px 0; margin-bottom: 15px; position: relative;
+        }
+        .dist { position: absolute; right: 15px; top: 15px; font-size: 10px; color: var(--neon-blue); border: 1px solid var(--neon-blue); padding: 2px 6px; border-radius: 4px; }
+        
+        #status-area { display: none; margin-top: 20px; }
+        .iban-box { background: #000; padding: 15px; border-radius: 12px; border: 1px solid var(--neon-blue); color: var(--neon-blue); font-family: monospace; }
     </style>
 </head>
 <body>
-    <div class="container">
-        <h1>Neviditelné Plátno</h1>
-        <p>Zakupte si reklamu nebo vzkaz (500 Kč).</p>
-        
-        <input type="text" id="jmeno" placeholder="Vaše jméno / Firma">
-        <textarea id="vzkaz" rows="3" placeholder="Váš vzkaz nebo reklama"></textarea>
-        <button onclick="objednat()">ZAPLATIT A ZVEŘEJNIT</button>
-        
-        <div id="status"></div>
 
-        <div id="nastenka" style="margin-top:30px; border-top:1px solid #eee; padding-top:20px;">
-            <h3>Aktuálně na plátně:</h3>
-            <div id="seznam-vzkazu">
-                <div class="vzkaz-item"><b>Ukázka</b><br>Zde bude váš placený vzkaz!</div>
+    <div class="hero">
+        <h1>TADY</h1>
+        <div class="slogan">Tady se děje všechno</div>
+    </div>
+
+    <div class="glass-card">
+        <input type="text" id="jmeno" placeholder="Jméno / Firma / Restaurace">
+        <textarea id="vzkaz" rows="3" placeholder="Co chcete nechat na tomto místě? (Menu, vzkaz, podpis...)"></textarea>
+        <button class="btn-pay" onclick="initPlace()">UMÍSTIT NA MAPU SVĚTA (500 Kč)</button>
+
+        <div id="status-area">
+            <div class="glass-card" style="margin-top:20px; border-color: var(--neon-blue);">
+                <h4 style="margin-top:0;">Aktivace souřadnic:</h4>
+                <div class="iban-box" id="iban-info"></div>
+                <p style="font-size:12px; opacity:0.7; margin-top:15px;">Po zaplacení bude váš obsah viditelný pro každého, kdo sem přijde.</p>
+                <button onclick="confirm()" style="background:white; color:black; border:none; padding:10px; border-radius:8px; width:100%; font-weight:bold;">JIŽ JSEM ZAPLATIL</button>
             </div>
         </div>
     </div>
 
+    <h3 style="margin-left:10px;">Vzkazy v okolí</h3>
+    <div id="feed">
+        <div class="vzkaz-ar">
+            <span class="dist">0.2 km</span>
+            <b style="color:var(--neon-blue)">Denní menu - Restaurace</b><br>
+            <span style="opacity:0.8; font-size:14px;">Svíčková na smetaně ... 180 Kč<br>Guláš s cibulí ... 165 Kč</span>
+        </div>
+    </div>
+
     <script>
-        function objednat() {
-            const jmeno = document.getElementById('jmeno').value;
-            const vzkaz = document.getElementById('vzkaz').value;
-            const status = document.getElementById('status');
-            
-            if (!jmeno || !vzkaz) { alert("Prosím vyplňte všechna pole."); return; }
-
-            // Pouze IBAN z vašeho Revolutu
-            const iban = "LT533250082844018353"; 
-
-            status.style.display = "block";
-            status.innerHTML = "<h4>Platební údaje (500 Kč):</h4>" +
-                               "<div class='platebni-udaje'>" +
-                               "Bankovní spojení (IBAN):<br><b>" + iban + "</b><br><br>" +
-                               "Zpráva pro příjemce:<br><b>" + jmeno + "</b>" +
-                               "</div>" +
-                               "<p style='font-size:13px;'>Platbu odešlete přes své internetové bankovnictví (Revolut/Mezinárodní platba).</p>" +
-                               "<button onclick='potvrdit()' style='background:#1a73e8; font-size:14px; padding:12px; color:white; border:none; border-radius:8px; cursor:pointer;'>HOTOVO, ODESLAL JSEM</button>";
+        let loc = "Zaměřování...";
+        if (navigator.geolocation) {
+            navigator.geolocation.getCurrentPosition(p => {
+                loc = `${p.coords.latitude.toFixed(4)}, ${p.coords.longitude.toFixed(4)}`;
+            });
         }
 
-        function potvrdit() {
+        function initPlace() {
+            const jmeno = document.getElementById('jmeno').value;
+            if(!jmeno) { alert("Zadejte název."); return; }
+            
+            document.getElementById('status-area').style.display = 'block';
+            document.getElementById('iban-info').innerHTML = `
+                IBAN: LT533250082844018353<br>
+                Částka: 500 CZK<br>
+                Zpráva: TADY ${jmeno}<br>
+                Lokace: ${loc}
+            `;
+        }
+
+        function confirm() {
             const jmeno = document.getElementById('jmeno').value;
             const vzkaz = document.getElementById('vzkaz').value;
-            const seznam = document.getElementById('seznam-vzkazu');
+            const feed = document.getElementById('feed');
             
-            document.getElementById('status').innerHTML = "✅ <b>Děkujeme!</b><br>Vzkaz byl odeslán do systému red-thunder a po ověření platby bude trvale viditelný.";
+            const div = document.createElement('div');
+            div.className = 'vzkaz-ar';
+            div.innerHTML = `<span class="dist">NYNÍ TADY</span><b style="color:var(--neon-blue)">${jmeno}</b><br><span style="opacity:0.8; font-size:14px;">${vzkaz}</span>`;
+            feed.prepend(div);
             
-            const novy = document.createElement('div');
-            novy.className = 'vzkaz-item';
-            novy.innerHTML = "<b>" + jmeno + "</b><br>" + vzkaz;
-            seznam.prepend(novy);
-
-            document.getElementById('jmeno').value = "";
-            document.getElementById('vzkaz').value = "";
+            document.getElementById('status-area').style.display = 'none';
+            document.getElementById('jmeno').value = '';
+            document.getElementById('vzkaz').value = '';
         }
     </script>
 </body>
 </html>
+
