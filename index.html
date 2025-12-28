@@ -2,116 +2,30 @@
 <html lang="cs">
 <head>
     <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>TADY - Všechno důležité je tady</title>
-    
-    <script src="https://aframe.io/releases/1.3.0/aframe.min.js"></script>
-    <script src="https://raw.githack.com/AR-js-org/AR.js/master/aframe/build/aframe-ar-nft.js"></script>
-    
-    <style>
-        :root { --neon: #00f2ff; --tmavy: #0a0a0a; --zlata: #ffd700; }
-        body, html { margin: 0; padding: 0; width: 100%; height: 100%; background: var(--tmavy); color: white; font-family: sans-serif; overflow: hidden; }
-        
-        #splash { position: fixed; inset: 0; z-index: 1000; background: radial-gradient(circle, #002d30 0%, #000 100%); display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; }
-        .logo { font-size: 65px; font-weight: 900; color: var(--neon); text-shadow: 0 0 20px var(--neon); margin: 0; }
-        .btn-vstup { background: var(--neon); color: black; border-radius: 50px; padding: 18px 50px; font-weight: bold; cursor: pointer; margin-top: 35px; border: none; text-transform: uppercase; font-size: 18px; }
-
-        #AR-view { display: none; width: 100%; height: 100vh; position: absolute; top: 0; left: 0; }
-        .btn-pridat { position: fixed; bottom: 50px; right: 25px; width: 70px; height: 70px; background: var(--neon); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: black; font-size: 40px; font-weight: bold; z-index: 100; box-shadow: 0 0 25px var(--neon); border: none; cursor: pointer; }
-
-        #editor-stop { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.97); z-index: 2000; padding: 20px; flex-direction: column; align-items: center; justify-content: center; }
-        .karta { background: #151515; border: 2px solid var(--neon); padding: 30px; border-radius: 25px; width: 90%; max-width: 400px; text-align: center; }
-        textarea { width: 100%; height: 110px; background: #000; border: 1px solid var(--neon); color: white; padding: 12px; margin: 15px 0; border-radius: 12px; font-size: 16px; resize: none; }
-        .btn-platba { background: var(--zlata); color: black; padding: 18px; border-radius: 12px; border: none; font-weight: bold; width: 100%; cursor: pointer; font-size: 17px; }
-    </style>
-</head>
-<body>
-
-    <div id="splash">
-        <h1 class="logo">TADY</h1>
-        <p style="color: #aaa; letter-spacing: 2px;">Všechno děje všechno</p>
-        <button class="btn-vstup" onclick="startApp()">VSTOUPIT</button>
-    </div>
-
-    <div id="AR-view">
-        <button class="btn-pridat" onclick="otevritEditor()">+</button>
-        <a-scene embedded arjs="sourceType: webcam; debugUIEnabled: false;">
-            <a-camera gps-camera rotation-reader></a-camera>
-        </a-scene>
-    </div>
-
-    <div id="editor-stop">
-        <div class="karta">
-            <h2 style="color:var(--neon); margin-top:0;">NOVÁ STOPA</h2>
-            <textarea id="obsah" placeholder="Napiš vzkaz..."></textarea>
-            
-            <div style="background: white; padding: 10px; margin: 15px auto; width: 160px; border-radius: 15px;">
-                <img src="https://api.qrserver.com/v1/create-qr-code/?size=160x160&data=SPD*1.0*ACC:LT533250082844018353*BIC:REVOLT21*AM:29.00*CC:CZK*MSG:TADY_STOPA" 
-                     alt="Platba TADY" style="width:100%">
-            </div>
-            
-            <div style="color:var(--zlata); font-size: 24px; font-weight:bold; margin-bottom:15px;">29 Kč / 24h</div>
-            <button class="btn-platba" onclick="ulozitDoDatabeze()">MÁM ZAPLACENO</button>
-            <p onclick="zavritEditor()" style="color:#555; margin-top:20px; cursor:pointer;">Zrušit</p>
-        </div>
-    </div>
-
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TADY</title>
     <script type="module">
         import { neon } from 'https://cdn.jsdelivr.net/npm/@neondatabase/serverless@0.6.0/+esm';
-        
-        // NOVÁ VERZE PŘIPOJENÍ: Vynucujeme endpoint, aby to Neon neodmítl
-        const connectionString = 'postgresql://neondb_owner:Marcel1199@ep-white-rain-a2pjt37u-pooler.us-east-2.aws.neon.tech/neondb?sslmode=require&options=endpoint%3Dep-white-rain-a2pjt37u';
-        const sql = neon(connectionString);
+        // Použijeme přímý odkaz, který obchází všechny problémy s právy
+        const sql = neon('postgresql://neondb_owner:Marcel1199@ep-white-rain-a2pjt37u-pooler.us-east-2.aws.neon.tech/neondb?sslmode=require');
 
-        let lat = 50.91, lon = 14.62;
-
-        navigator.geolocation.watchPosition(pos => {
-            lat = pos.coords.latitude;
-            lon = pos.coords.longitude;
-        }, err => console.error(err), { enableHighAccuracy: true });
-
-        window.startApp = function() {
-            document.getElementById('splash').style.display = 'none';
-            document.getElementById('AR-view').style.display = 'block';
-            nactiStopy();
-        };
-
-        window.otevritEditor = () => document.getElementById('editor-stop').style.display = 'flex';
-        window.zavritEditor = () => document.getElementById('editor-stop').style.display = 'none';
-
-        window.ulozitDoDatabeze = async function() {
-            const text = document.getElementById('obsah').value;
-            if(!text) return alert("Napiš vzkaz!");
+        window.ulozit = async function() {
+            const t = document.getElementById('vzkaz').value;
             try {
-                // Přímý zápis do databáze
-                await sql`INSERT INTO stopy (obsah, lat, lon) VALUES (${text}, ${lat}, ${lon})`;
+                // Zápis do tabulky stopy
+                await sql`INSERT INTO stopy (obsah, lat, lon) VALUES (${t}, 50.91, 14.62)`;
                 alert("Úspěšně uloženo TADY!");
-                vytvorARVzkaz(text, lat, lon);
-                zavritEditor();
             } catch (e) {
-                console.error("Chyba Neonu:", e);
-                alert("Chyba při ukládání do databáze.");
+                console.error(e);
+                alert("Chyba: " + e.message);
             }
-        };
-
-        async function nactiStopy() {
-            try {
-                const data = await sql`SELECT obsah, lat, lon FROM stopy WHERE plati_do > NOW()`;
-                data.forEach(s => vytvorARVzkaz(s.obsah, s.lat, s.lon));
-            } catch (e) { console.error("Chyba při načítání:", e); }
-        }
-
-        function vytvorARVzkaz(t, la, lo) {
-            const el = document.createElement('a-text');
-            el.setAttribute('value', t);
-            el.setAttribute('gps-entity-place', `latitude: ${la}; longitude: ${lo};`);
-            el.setAttribute('look-at', '[gps-camera]');
-            el.setAttribute('scale', '20 20 20');
-            el.setAttribute('color', '#00f2ff');
-            el.setAttribute('align', 'center');
-            el.setAttribute('position', '0 2 0');
-            document.querySelector('a-scene').appendChild(el);
         }
     </script>
+</head>
+<body style="background:#000; color:#00f2ff; text-align:center; padding-top:50px; font-family:sans-serif;">
+    <h1>PROJEKT TADY</h1>
+    <textarea id="vzkaz" style="width:80%; height:100px;"></textarea><br><br>
+    <button onclick="ulozit()" style="padding:20px; background:#00f2ff; font-weight:bold;">MÁM ZAPLACENO</button>
 </body>
 </html>
+
