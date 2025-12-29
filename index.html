@@ -13,7 +13,6 @@
             padding-bottom: 70px;
         }
 
-        /* Horní lišta */
         header {
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: white; padding: 15px; text-align: center;
@@ -26,7 +25,6 @@
 
         .container { max-width: 600px; margin: 10px auto; padding: 10px; }
 
-        /* Přepínač sekcí */
         .tabs {
             display: flex; background: white; margin-bottom: 15px;
             border-radius: 12px; overflow: hidden;
@@ -44,32 +42,38 @@
             background-color: rgba(118, 75, 162, 0.05);
         }
 
-        /* Sekce obsahu */
         .content-section { display: none; }
         .content-section.active { display: block; }
 
-        /* Karty příspěvků */
+        /* Styl příspěvků */
         .post {
             background: white; border-radius: 12px; padding: 15px;
             margin-bottom: 15px; box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+            animation: slideIn 0.3s ease-out;
+        }
+
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
         }
 
         .post-header { display: flex; align-items: center; margin-bottom: 10px; }
         .avatar { width: 40px; height: 40px; background: #ddd; border-radius: 50%; margin-right: 10px; }
-        .post-image { 
-            width: 100%; height: 200px; background: #eee; border-radius: 8px; 
-            display: flex; align-items: center; justify-content: center; color: #999;
+        
+        /* Mapa */
+        .map-container {
+            width: 100%; height: 450px; background: #e5e3df;
+            border-radius: 12px; position: relative;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+        }
+        
+        .map-btn {
+            background: #764ba2; color: white; border: none;
+            padding: 10px 20px; border-radius: 20px; cursor: pointer;
+            font-weight: bold; margin-top: 10px;
         }
 
-        /* Placeholder pro mapu */
-        .map-box {
-            width: 100%; height: 400px; background: #e5e3df;
-            border-radius: 12px; display: flex; align-items: center;
-            justify-content: center; font-weight: bold; color: #555;
-            border: 2px dashed #ccc;
-        }
-
-        /* Plovoucí tlačítko Plus */
+        /* Plovoucí tlačítko */
         .fab {
             position: fixed; bottom: 20px; right: 20px;
             width: 60px; height: 60px; background: #764ba2;
@@ -79,7 +83,7 @@
             cursor: pointer; border: none; z-index: 1001;
         }
 
-        /* Vyskakovací okno (Modál) */
+        /* Modál */
         .modal {
             display: none; position: fixed; top: 0; left: 0;
             width: 100%; height: 100%; background: rgba(0,0,0,0.5);
@@ -88,14 +92,13 @@
 
         .modal-content {
             background: white; padding: 25px; border-radius: 20px;
-            width: 90%; max-width: 400px; position: relative;
+            width: 90%; max-width: 400px;
         }
 
-        .modal-content h3 { margin-top: 0; }
         textarea {
             width: 100%; height: 100px; border: 1px solid #ddd;
             border-radius: 8px; padding: 10px; box-sizing: border-box;
-            margin: 10px 0; font-family: inherit;
+            margin: 10px 0; font-family: inherit; resize: none;
         }
 
         .btn-send {
@@ -120,29 +123,33 @@
         </div>
 
         <div id="lide" class="content-section active">
-            <div class="post">
-                <div class="post-header">
-                    <div class="avatar" style="background: #667eea;"></div>
-                    <div><b>Marcel D.</b><br><small>Právě teď</small></div>
+            <div id="postsList">
+                <div class="post">
+                    <div class="post-header">
+                        <div class="avatar" style="background: #667eea;"></div>
+                        <div><b>Marcel D.</b><br><small>Právě teď • Varnsdorf</small></div>
+                    </div>
+                    <div class="post-content">Vítejte v aplikaci TADY. Zkuste něco napsat přes tlačítko + níže!</div>
                 </div>
-                <div class="post-content">Vítejte v první verzi aplikace TADY!</div>
             </div>
         </div>
 
         <div id="firmy" class="content-section">
-            <div class="post">
+            <div class="post" style="border-left: 5px solid #ff4081;">
                 <div class="post-header">
-                    <div class="avatar" style="background: #764ba2;"></div>
-                    <div><b>Vaše Firma</b><br><small>Sponzorováno</small></div>
+                    <div class="avatar" style="background: #ff4081;"></div>
+                    <div><b>Lokální Business</b><br><small>Sponzorovaný tip</small></div>
                 </div>
-                <div class="post-content">Zde se budou zobrazovat nabídky firem ve vašem okolí.</div>
-                <div class="post-image">Prostor pro reklamu</div>
+                <div class="post-content">Hledáme partnery pro projekt TADY. Vaše firma může být právě zde!</div>
             </div>
         </div>
 
         <div id="mapa" class="content-section">
-            <div class="map-box">
-                📍 Zde se brzy zobrazí interaktivní mapa
+            <div class="map-container">
+                <span style="font-size: 50px;">📍</span>
+                <b>Mapa se připravuje</b>
+                <button class="map-btn" onclick="getLocation()">Zaměřit moji polohu</button>
+                <p id="locationStatus" style="font-size: 0.8rem; margin-top: 10px;"></p>
             </div>
         </div>
     </div>
@@ -152,26 +159,57 @@
     <div id="postModal" class="modal">
         <div class="modal-content">
             <h3>Co se TADY děje?</h3>
-            <textarea placeholder="Napište něco..."></textarea>
-            <button class="btn-send" onclick="toggleModal()">Sdílet</button>
+            <textarea id="postText" placeholder="Napište něco zajímavého..."></textarea>
+            <button class="btn-send" onclick="addPost()">Sdílet</button>
             <button style="background:none; border:none; color:gray; width:100%; margin-top:10px; cursor:pointer;" onclick="toggleModal()">Zrušit</button>
         </div>
     </div>
 
     <script>
-        // Logika pro přepínání sekcí
         function showSection(sectionId, element) {
             document.querySelectorAll('.content-section').forEach(s => s.classList.remove('active'));
             document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-            
             document.getElementById(sectionId).classList.add('active');
             element.classList.add('active');
         }
 
-        // Logika pro otevírání okna
         function toggleModal() {
             const modal = document.getElementById('postModal');
             modal.style.display = modal.style.display === 'flex' ? 'none' : 'flex';
+            document.getElementById('postText').value = '';
+        }
+
+        function addPost() {
+            const text = document.getElementById('postText').value;
+            if (text.trim() === "") return;
+
+            const postsList = document.getElementById('postsList');
+            const newPost = document.createElement('div');
+            newPost.className = 'post';
+            newPost.innerHTML = `
+                <div class="post-header">
+                    <div class="avatar" style="background: #764ba2;"></div>
+                    <div><b>Uživatel</b><br><small>Právě teď</small></div>
+                </div>
+                <div class="post-content">${text}</div>
+            `;
+            
+            postsList.insertBefore(newPost, postsList.firstChild);
+            toggleModal();
+        }
+
+        function getLocation() {
+            const status = document.getElementById('locationStatus');
+            if (navigator.geolocation) {
+                status.innerText = "Zaměřuji...";
+                navigator.geolocation.getCurrentPosition((pos) => {
+                    status.innerText = `Nalezeno: ${pos.coords.latitude.toFixed(4)}, ${pos.coords.longitude.toFixed(4)}`;
+                }, () => {
+                    status.innerText = "Přístup k poloze zamítnut.";
+                });
+            } else {
+                status.innerText = "Geolokace není podporována.";
+            }
         }
     </script>
 
