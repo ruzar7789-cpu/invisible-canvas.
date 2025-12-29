@@ -27,14 +27,12 @@
         <p class="slogan">Všechno důležité je tady.</p>
         <button class="btn-vstup" onclick="startApp()">VSTOUPIT</button>
     </div>
-
     <div id="AR-view">
         <button class="btn-pridat" onclick="otevritEditor()">+</button>
         <a-scene embedded arjs="sourceType: webcam; debugUIEnabled: false;">
             <a-camera gps-camera rotation-reader></a-camera>
         </a-scene>
     </div>
-
     <div id="editor-stop">
         <div class="karta">
             <h2 style="color:var(--neon); margin-top:0;">NOVÁ STOPA</h2>
@@ -47,50 +45,31 @@
             <p onclick="zavritEditor()" style="color:#555; margin-top:20px; cursor:pointer;">Zrušit</p>
         </div>
     </div>
-
     <script>
-        // GPS souřadnice
         let lat = 50.91, lon = 14.62;
-        navigator.geolocation.watchPosition(p => { 
-            lat = p.coords.latitude; 
-            lon = p.coords.longitude; 
-        });
-
-        // Funkce pro ovládání vzhledu
-        window.startApp = () => { 
-            document.getElementById('splash').style.display = 'none'; 
-            document.getElementById('AR-view').style.display = 'block'; 
-        };
+        navigator.geolocation.watchPosition(p => { lat = p.coords.latitude; lon = p.coords.longitude; });
+        window.startApp = () => { document.getElementById('splash').style.display = 'none'; document.getElementById('AR-view').style.display = 'block'; };
         window.otevritEditor = () => document.getElementById('editor-stop').style.display = 'flex';
         window.zavritEditor = () => document.getElementById('editor-stop').style.display = 'none';
 
-        // HLAVNÍ ZMĚNA: Ukládání přes Vercel
         window.ulozitDoDatabeze = async function() {
             const text = document.getElementById('obsah').value;
             if(!text) return alert("Napiš vzkaz!");
-
             try {
-                // Posíláme data na tvou novou bezpečnou adresu
-                const response = await fetch('https://invisible-canvas-xi.vercel.app/api/ulozit', {
+                // Voláme tvou bezpečnou cestu na Vercelu
+                const res = await fetch('/api/ulozit', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ 
-                        obsah: text, 
-                        lat: lat, 
-                        lon: lon 
-                    })
+                    body: JSON.stringify({ obsah: text, lat: lat, lon: lon })
                 });
-
-                if (response.ok) {
+                if(res.ok) {
                     alert("Úspěšně uloženo TADY!");
                     zavritEditor();
                 } else {
-                    const errorData = await response.json();
-                    alert("Chyba serveru: " + errorData.error);
+                    alert("Chyba serveru. Zkontroluj Logs ve Vercelu.");
                 }
             } catch (e) { 
                 alert("Nepodařilo se spojit se serverem."); 
-                console.error(e); 
             }
         };
     </script>
