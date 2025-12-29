@@ -9,16 +9,14 @@
         :root {
             --primary: #764ba2;
             --secondary: #667eea;
-            --gastro: #ff9800;
-            --obchod: #4caf50;
-            --sluzby: #2196f3;
-            --kultura: #9c27b0;
+            --accent: #ff9800;
+            --bg: #f0f2f5;
         }
 
         body {
             font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
             margin: 0; padding: 0;
-            background-color: #f0f2f5;
+            background-color: var(--bg);
             color: #1c1e21;
             padding-bottom: 70px;
         }
@@ -41,37 +39,28 @@
         .tab {
             flex: 1; padding: 15px; text-align: center;
             cursor: pointer; font-weight: bold; color: #65676b;
-            transition: 0.3s; font-size: 0.85rem;
+            transition: 0.3s; font-size: 0.8rem; text-transform: uppercase;
         }
         .tab.active {
             color: var(--primary); border-bottom: 3px solid var(--primary);
             background-color: rgba(118, 75, 162, 0.05);
         }
 
-        /* Kategorie Filtry */
-        .category-filter {
-            display: flex; gap: 8px; overflow-x: auto; padding-bottom: 10px; margin-bottom: 10px;
-        }
-        .cat-chip {
-            padding: 6px 15px; border-radius: 20px; background: white;
-            font-size: 0.8rem; font-weight: bold; cursor: pointer; border: 1px solid #ddd; white-space: nowrap;
-        }
-        .cat-chip.active { background: var(--primary); color: white; border-color: var(--primary); }
-
         .content-section { display: none; }
         .content-section.active { display: block; }
 
         #map { height: 400px; width: 100%; border-radius: 15px; margin-top: 10px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
 
-        .post {
-            background: white; border-radius: 12px; padding: 15px;
-            margin-bottom: 15px; box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+        /* Chat styl */
+        .chat-item {
+            background: white; padding: 15px; border-radius: 12px;
+            margin-bottom: 10px; display: flex; align-items: center;
+            cursor: pointer; transition: 0.2s;
         }
-        .biz-card { border-top: 4px solid var(--gastro); }
-
-        .btn-main { background: var(--primary); color: white; border: none; padding: 12px; width: 100%; border-radius: 8px; font-weight: bold; cursor: pointer; }
-        .btn-yellow { background: #ffc107; color: #000; border: none; padding: 12px; border-radius: 8px; font-weight: bold; cursor: pointer; margin-bottom: 15px; width: 100%; }
-
+        .chat-item:hover { background: #f9f9f9; }
+        .chat-avatar { width: 45px; height: 45px; background: var(--primary); border-radius: 50%; margin-right: 12px; display: flex; align-items: center; justify-content: center; color: white; font-weight: bold; }
+        
+        /* Modály */
         .modal {
             display: none; position: fixed; top: 0; left: 0;
             width: 100%; height: 100%; background: rgba(0,0,0,0.6);
@@ -79,7 +68,9 @@
             backdrop-filter: blur(3px);
         }
         .modal-content { background: white; padding: 25px; border-radius: 20px; width: 90%; max-width: 400px; }
-        .edit-input, select { width: 100%; padding: 12px; margin: 10px 0; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box; }
+        .input-box { width: 100%; padding: 12px; margin: 10px 0; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box; }
+        
+        .btn-send { background: var(--primary); color: white; border: none; padding: 12px; width: 100%; border-radius: 8px; font-weight: bold; cursor: pointer; }
 
         .fab {
             position: fixed; bottom: 20px; right: 20px;
@@ -95,73 +86,57 @@
 
     <header>
         <h1>TADY</h1>
-        <div class="profile-icon" id="headerAvatar" style="width:35px; height:35px; background:white; color:#764ba2; border-radius:50%; display:flex; align-items:center; justify-content:center; font-weight:bold; cursor:pointer;" onclick="showSection('profil', null)">M</div>
+        <div id="msgDot" style="width:10px; height:10px; background:red; border-radius:50%; position:absolute; right:25px; top:15px; display:none;"></div>
+        <div style="font-size: 1.2rem; cursor:pointer;" onclick="showSection('zpravy', null)">💬</div>
     </header>
 
     <div class="container">
         <div class="tabs">
             <div class="tab active" onclick="showSection('lide', this)">Dění</div>
-            <div class="tab" onclick="showSection('firmy', this)">Firmy</div>
             <div class="tab" onclick="showSection('mapa', this)">Mapa</div>
-            <div class="tab" onclick="showSection('profil', this)">Profil</div>
+            <div class="tab" onclick="showSection('zpravy', this)">Zprávy</div>
         </div>
 
         <div id="lide" class="content-section active">
             <div id="postsList">
-                <div class="post">
-                    <b>Marcel Drvota</b><br><small>Právě teď</small>
-                    <p>Filtrování kategorií je tu! Zkuste přidat firmu s označením.</p>
+                <div style="background:white; padding:15px; border-radius:12px; margin-bottom:10px; box-shadow:0 2px 5px rgba(0,0,0,0.05);">
+                    <b>Marcel Drvota</b><br><small>Varnsdorf • právě teď</small>
+                    <p>Zkuste kliknout na firmu na mapě a napsat jí zprávu! 💬</p>
                 </div>
             </div>
-        </div>
-
-        <div id="firmy" class="content-section">
-            <div class="category-filter">
-                <div class="cat-chip active">Vše</div>
-                <div class="cat-chip">Gastro</div>
-                <div class="cat-chip">Obchody</div>
-                <div class="cat-chip">Služby</div>
-                <div class="cat-chip">Kultura</div>
-            </div>
-            <button class="btn-yellow" onclick="toggleBusinessModal()">🏢 Přidat můj podnik</button>
-            <div id="businessList"></div>
         </div>
 
         <div id="mapa" class="content-section">
             <div id="map"></div>
         </div>
 
-        <div id="profil" class="content-section">
-            <div style="background: white; padding: 30px; border-radius: 15px; text-align: center;">
-                <h2>Profil Marcel</h2>
-                <button class="btn-main">Moje firmy</button>
+        <div id="zpravy" class="content-section">
+            <h3>Moje konverzace</h3>
+            <div id="chatList">
+                <div class="chat-item" onclick="alert('Otevírám chat s Týmem TADY...')">
+                    <div class="chat-avatar">T</div>
+                    <div><b>Tým TADY</b><br><small>Vítejte v novém centru zpráv!</small></div>
+                </div>
             </div>
         </div>
     </div>
 
     <button class="fab" onclick="togglePostModal()">+</button>
 
-    <div id="businessModal" class="modal">
+    <div id="msgModal" class="modal">
         <div class="modal-content">
-            <h3>Nová firma</h3>
-            <input type="text" id="bizName" class="edit-input" placeholder="Název podniku">
-            <select id="bizCat">
-                <option value="gastro">Gastro 🍕</option>
-                <option value="obchod">Obchod 🛍️</option>
-                <option value="sluzby">Služby 🛠️</option>
-                <option value="kultura">Kultura 🎭</option>
-            </select>
-            <textarea id="bizOffer" class="edit-input" placeholder="Co nabízíte?"></textarea>
-            <button class="btn-main" onclick="addBusiness()">Uložit na mapu</button>
-            <button onclick="toggleBusinessModal()" style="border:none; background:none; color:gray; width:100%; margin-top:10px; cursor:pointer;">Zrušit</button>
+            <h3 id="msgTarget">Napsat firmě</h3>
+            <textarea id="msgContent" class="input-box" placeholder="Váš dotaz..."></textarea>
+            <button class="btn-send" onclick="sendDirectMessage()">Odeslat zprávu</button>
+            <button onclick="document.getElementById('msgModal').style.display='none'" style="border:none; background:none; color:gray; width:100%; margin-top:10px; cursor:pointer;">Zavřít</button>
         </div>
     </div>
 
     <div id="postModal" class="modal">
         <div class="modal-content">
             <h3>Co se děje?</h3>
-            <textarea id="postText" class="edit-input" placeholder="Sdílejte..."></textarea>
-            <button class="btn-main" onclick="addPost()">Sdílet</button>
+            <textarea id="postText" class="input-box" placeholder="Sdílejte s okolím..."></textarea>
+            <button class="btn-send" onclick="addPost()">Sdílet</button>
         </div>
     </div>
 
@@ -169,7 +144,7 @@
     <script>
         let map;
         let userPos = [50.91, 14.62];
-        const colors = { gastro: "#ff9800", obchod: "#4caf50", sluzby: "#2196f3", kultura: "#9c27b0" };
+        let currentBizTarget = "";
 
         function showSection(sectionId, element) {
             document.querySelectorAll('.content-section').forEach(s => s.classList.remove('active'));
@@ -184,37 +159,37 @@
         function initMap() {
             map = L.map('map').setView(userPos, 14);
             L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
-            L.circle(userPos, {radius: 200, color: '#764ba2'}).addTo(map).bindPopup("Jste TADY");
+            L.circle(userPos, {radius: 150, color: '#764ba2'}).addTo(map).bindPopup("Vy jste TADY");
+
+            // Přidáme testovací firmu
+            const bizPos = [userPos[0] + 0.002, userPos[1] + 0.003];
+            L.marker(bizPos).addTo(map).bindPopup(`
+                <b>Místní Kavárna</b><br>Dnes čerstvé koláče!<br><br>
+                <button onclick="openMessage('Místní Kavárna')" style="background:#764ba2; color:white; border:none; padding:5px 10px; border-radius:5px; cursor:pointer;">💬 Napsat dotaz</button>
+            `);
         }
 
-        function toggleBusinessModal() {
-            const m = document.getElementById('businessModal');
-            m.style.display = m.style.display === 'flex' ? 'none' : 'flex';
+        function openMessage(bizName) {
+            currentBizTarget = bizName;
+            document.getElementById('msgTarget').innerText = "Dotaz pro: " + bizName;
+            document.getElementById('msgModal').style.display = 'flex';
         }
 
-        function addBusiness() {
-            const name = document.getElementById('bizName').value;
-            const cat = document.getElementById('bizCat').value;
-            const offer = document.getElementById('bizOffer').value;
-            if(!name) return;
+        function sendDirectMessage() {
+            const content = document.getElementById('msgContent').value;
+            if(!content) return;
 
-            // Přidání do seznamu
-            const biz = document.createElement('div');
-            biz.className = 'post biz-card';
-            biz.style.borderTopColor = colors[cat];
-            biz.innerHTML = `<b>${name}</b> [${cat.toUpperCase()}]<br><p>${offer}</p>`;
-            document.getElementById('businessList').insertBefore(biz, document.getElementById('businessList').firstChild);
+            // Přidáme do seznamu chatů
+            const chatList = document.getElementById('chatList');
+            const item = document.createElement('div');
+            item.className = 'chat-item';
+            item.innerHTML = `<div class="chat-avatar">${currentBizTarget[0]}</div><div><b>${currentBizTarget}</b><br><small>Já: ${content}</small></div>`;
+            chatList.insertBefore(item, chatList.firstChild);
 
-            // Přidání na mapu
-            const lat = userPos[0] + (Math.random() - 0.5) * 0.015;
-            const lng = userPos[1] + (Math.random() - 0.5) * 0.015;
-            
-            if(!map) initMap();
-            L.circleMarker([lat, lng], { radius: 10, color: colors[cat], fillOpacity: 0.8 }).addTo(map)
-                .bindPopup(`<b>${name}</b><br>${offer}`);
-
-            toggleBusinessModal();
-            showSection('mapa', document.querySelectorAll('.tab')[2]);
+            document.getElementById('msgModal').style.display = 'none';
+            document.getElementById('msgContent').value = '';
+            alert("Zpráva byla odeslána!");
+            showSection('zpravy', document.querySelectorAll('.tab')[2]);
         }
 
         function togglePostModal() {
@@ -226,10 +201,11 @@
             const text = document.getElementById('postText').value;
             if(!text) return;
             const p = document.createElement('div');
-            p.className = 'post';
+            p.style = "background:white; padding:15px; border-radius:12px; margin-bottom:10px; box-shadow:0 2px 5px rgba(0,0,0,0.05);";
             p.innerHTML = `<b>Marcel</b><br>${text}`;
             document.getElementById('postsList').insertBefore(p, document.getElementById('postsList').firstChild);
             togglePostModal();
+            document.getElementById('postText').value = '';
         }
     </script>
 </body>
