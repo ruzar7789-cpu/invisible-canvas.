@@ -9,7 +9,8 @@
         :root {
             --primary: #764ba2;
             --secondary: #667eea;
-            --accent: #ff9800;
+            --accent: #ffeb3b;
+            --danger: #ff5252;
             --bg: #f0f2f5;
         }
 
@@ -20,6 +21,22 @@
             color: #1c1e21;
             padding-bottom: 70px;
         }
+
+        /* Radar Panel */
+        .radar-panel {
+            background: #222;
+            color: #0f0;
+            padding: 5px 15px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.75rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            overflow: hidden;
+            white-space: nowrap;
+        }
+        .radar-scanner { animation: blink 1s infinite; }
+        @keyframes blink { 50% { opacity: 0; } }
 
         header {
             background: linear-gradient(135deg, var(--secondary) 0%, var(--primary) 100%);
@@ -39,39 +56,32 @@
         .tab {
             flex: 1; padding: 15px; text-align: center;
             cursor: pointer; font-weight: bold; color: #65676b;
-            transition: 0.3s; font-size: 0.8rem; text-transform: uppercase;
+            transition: 0.3s; font-size: 0.8rem;
         }
         .tab.active {
             color: var(--primary); border-bottom: 3px solid var(--primary);
             background-color: rgba(118, 75, 162, 0.05);
         }
 
-        .content-section { display: none; }
-        .content-section.active { display: block; }
-
-        #map { height: 400px; width: 100%; border-radius: 15px; margin-top: 10px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
-
-        /* Chat styl */
-        .chat-item {
-            background: white; padding: 15px; border-radius: 12px;
-            margin-bottom: 10px; display: flex; align-items: center;
-            cursor: pointer; transition: 0.2s;
+        /* Akční karta */
+        .post {
+            background: white; border-radius: 12px; padding: 15px;
+            margin-bottom: 15px; box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+            position: relative;
         }
-        .chat-item:hover { background: #f9f9f9; }
-        .chat-avatar { width: 45px; height: 45px; background: var(--primary); border-radius: 50%; margin-right: 12px; display: flex; align-items: center; justify-content: center; color: white; font-weight: bold; }
-        
-        /* Modály */
-        .modal {
-            display: none; position: fixed; top: 0; left: 0;
-            width: 100%; height: 100%; background: rgba(0,0,0,0.6);
-            z-index: 2000; justify-content: center; align-items: center;
-            backdrop-filter: blur(3px);
+        .post.flash-deal {
+            border: 2px solid var(--danger);
+            background: #fff8f8;
         }
-        .modal-content { background: white; padding: 25px; border-radius: 20px; width: 90%; max-width: 400px; }
-        .input-box { width: 100%; padding: 12px; margin: 10px 0; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box; }
-        
-        .btn-send { background: var(--primary); color: white; border: none; padding: 12px; width: 100%; border-radius: 8px; font-weight: bold; cursor: pointer; }
+        .badge-flash {
+            position: absolute; top: 10px; right: 10px;
+            background: var(--danger); color: white;
+            padding: 3px 8px; border-radius: 5px; font-size: 0.7rem; font-weight: bold;
+        }
 
+        #map { height: 400px; width: 100%; border-radius: 15px; margin-top: 10px; }
+
+        /* FAB */
         .fab {
             position: fixed; bottom: 20px; right: 20px;
             width: 60px; height: 60px; background: var(--primary);
@@ -80,13 +90,26 @@
             font-size: 30px; box-shadow: 0 4px 15px rgba(0,0,0,0.3);
             cursor: pointer; border: none; z-index: 1001;
         }
+
+        .modal {
+            display: none; position: fixed; top: 0; left: 0;
+            width: 100%; height: 100%; background: rgba(0,0,0,0.6);
+            z-index: 2000; justify-content: center; align-items: center;
+        }
+        .modal-content { background: white; padding: 25px; border-radius: 20px; width: 90%; max-width: 400px; }
+        .input-box { width: 100%; padding: 12px; margin: 10px 0; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box; }
+        .btn-send { background: var(--primary); color: white; border: none; padding: 12px; width: 100%; border-radius: 8px; font-weight: bold; cursor: pointer; }
     </style>
 </head>
 <body>
 
+    <div class="radar-panel">
+        <div>RADAR TADY: <span id="radarMsg">Skenuji okolí...</span></div>
+        <div class="radar-scanner">● LIVE</div>
+    </div>
+
     <header>
-        <h1>TADY</h1>
-        <div id="msgDot" style="width:10px; height:10px; background:red; border-radius:50%; position:absolute; right:25px; top:15px; display:none;"></div>
+        <h1 style="letter-spacing: 2px;">TADY</h1>
         <div style="font-size: 1.2rem; cursor:pointer;" onclick="showSection('zpravy', null)">💬</div>
     </header>
 
@@ -99,9 +122,11 @@
 
         <div id="lide" class="content-section active">
             <div id="postsList">
-                <div style="background:white; padding:15px; border-radius:12px; margin-bottom:10px; box-shadow:0 2px 5px rgba(0,0,0,0.05);">
-                    <b>Marcel Drvota</b><br><small>Varnsdorf • právě teď</small>
-                    <p>Zkuste kliknout na firmu na mapě a napsat jí zprávu! 💬</p>
+                <div class="post flash-deal">
+                    <span class="badge-flash">⚡ BLESKOVÁ AKCE</span>
+                    <b>Pekárna U Marcela</b><br>
+                    <small>150m od vás • Končí za 2h</small>
+                    <p>Posledních 10 kousků dnešního štrúdlu se slevou 50 %! Přijďte si hned.</p>
                 </div>
             </div>
         </div>
@@ -111,40 +136,28 @@
         </div>
 
         <div id="zpravy" class="content-section">
-            <h3>Moje konverzace</h3>
             <div id="chatList">
-                <div class="chat-item" onclick="alert('Otevírám chat s Týmem TADY...')">
-                    <div class="chat-avatar">T</div>
-                    <div><b>Tým TADY</b><br><small>Vítejte v novém centru zpráv!</small></div>
-                </div>
+                <div style="text-align:center; padding:50px; color:gray;">Zatím žádné nové zprávy.</div>
             </div>
         </div>
     </div>
 
     <button class="fab" onclick="togglePostModal()">+</button>
 
-    <div id="msgModal" class="modal">
-        <div class="modal-content">
-            <h3 id="msgTarget">Napsat firmě</h3>
-            <textarea id="msgContent" class="input-box" placeholder="Váš dotaz..."></textarea>
-            <button class="btn-send" onclick="sendDirectMessage()">Odeslat zprávu</button>
-            <button onclick="document.getElementById('msgModal').style.display='none'" style="border:none; background:none; color:gray; width:100%; margin-top:10px; cursor:pointer;">Zavřít</button>
-        </div>
-    </div>
-
     <div id="postModal" class="modal">
         <div class="modal-content">
-            <h3>Co se děje?</h3>
-            <textarea id="postText" class="input-box" placeholder="Sdílejte s okolím..."></textarea>
-            <button class="btn-send" onclick="addPost()">Sdílet</button>
+            <h3>Sdílet s okolím</h3>
+            <textarea id="postText" class="input-box" placeholder="Co se TADY děje?"></textarea>
+            <label><input type="checkbox" id="isFlash"> Označit jako BLESKOVOU AKCI</label>
+            <button class="btn-send" style="margin-top:10px;" onclick="addPost()">Publikovat</button>
+            <button onclick="togglePostModal()" style="border:none; background:none; color:gray; width:100%; margin-top:10px; cursor:pointer;">Zrušit</button>
         </div>
     </div>
 
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script>
         let map;
-        let userPos = [50.91, 14.62];
-        let currentBizTarget = "";
+        let userPos = [50.911, 14.622]; // Varnsdorf
 
         function showSection(sectionId, element) {
             document.querySelectorAll('.content-section').forEach(s => s.classList.remove('active'));
@@ -157,39 +170,13 @@
         }
 
         function initMap() {
-            map = L.map('map').setView(userPos, 14);
+            map = L.map('map').setView(userPos, 15);
             L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
-            L.circle(userPos, {radius: 150, color: '#764ba2'}).addTo(map).bindPopup("Vy jste TADY");
-
-            // Přidáme testovací firmu
-            const bizPos = [userPos[0] + 0.002, userPos[1] + 0.003];
-            L.marker(bizPos).addTo(map).bindPopup(`
-                <b>Místní Kavárna</b><br>Dnes čerstvé koláče!<br><br>
-                <button onclick="openMessage('Místní Kavárna')" style="background:#764ba2; color:white; border:none; padding:5px 10px; border-radius:5px; cursor:pointer;">💬 Napsat dotaz</button>
-            `);
-        }
-
-        function openMessage(bizName) {
-            currentBizTarget = bizName;
-            document.getElementById('msgTarget').innerText = "Dotaz pro: " + bizName;
-            document.getElementById('msgModal').style.display = 'flex';
-        }
-
-        function sendDirectMessage() {
-            const content = document.getElementById('msgContent').value;
-            if(!content) return;
-
-            // Přidáme do seznamu chatů
-            const chatList = document.getElementById('chatList');
-            const item = document.createElement('div');
-            item.className = 'chat-item';
-            item.innerHTML = `<div class="chat-avatar">${currentBizTarget[0]}</div><div><b>${currentBizTarget}</b><br><small>Já: ${content}</small></div>`;
-            chatList.insertBefore(item, chatList.firstChild);
-
-            document.getElementById('msgModal').style.display = 'none';
-            document.getElementById('msgContent').value = '';
-            alert("Zpráva byla odeslána!");
-            showSection('zpravy', document.querySelectorAll('.tab')[2]);
+            L.circle(userPos, {radius: 100, color: '#764ba2', fillOpacity: 0.2}).addTo(map).bindPopup("Vy jste TADY");
+            
+            // Ukázková akce na mapě
+            L.circleMarker([userPos[0] + 0.001, userPos[1] + 0.001], {radius: 12, color: 'red'}).addTo(map)
+                .bindPopup("<b>BLESKOVÁ AKCE!</b><br>Pekárna U Marcela (150m)");
         }
 
         function togglePostModal() {
@@ -199,14 +186,30 @@
 
         function addPost() {
             const text = document.getElementById('postText').value;
+            const isFlash = document.getElementById('isFlash').checked;
             if(!text) return;
+
             const p = document.createElement('div');
-            p.style = "background:white; padding:15px; border-radius:12px; margin-bottom:10px; box-shadow:0 2px 5px rgba(0,0,0,0.05);";
-            p.innerHTML = `<b>Marcel</b><br>${text}`;
+            p.className = isFlash ? "post flash-deal" : "post";
+            if(isFlash) {
+                p.innerHTML = `<span class="badge-flash">⚡ BLESKOVÁ AKCE</span>`;
+                document.getElementById('radarMsg').innerText = "DETEKCE: Nová akce v okolí!";
+            }
+            p.innerHTML += `<b>Uživatel TADY</b><br><small>Právě teď • 0m</small><p>${text}</p>`;
+            
             document.getElementById('postsList').insertBefore(p, document.getElementById('postsList').firstChild);
             togglePostModal();
             document.getElementById('postText').value = '';
+            document.getElementById('isFlash').checked = false;
         }
+
+        // Simulace radaru
+        const messages = ["Skenuji Varnsdorf...", "V okolí 500m je klid.", "Nová firma přidána na mapu!", "Marcel Drvota právě sdílel novinku."];
+        setInterval(() => {
+            if(Math.random() > 0.7) {
+                document.getElementById('radarMsg').innerText = messages[Math.floor(Math.random()*messages.length)];
+            }
+        }, 4000);
     </script>
 </body>
 </html>
