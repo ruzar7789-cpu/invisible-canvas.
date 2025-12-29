@@ -6,6 +6,15 @@
     <title>TADY - Všechno důležité je tady</title>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <style>
+        :root {
+            --primary: #764ba2;
+            --secondary: #667eea;
+            --gastro: #ff9800;
+            --obchod: #4caf50;
+            --sluzby: #2196f3;
+            --kultura: #9c27b0;
+        }
+
         body {
             font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
             margin: 0; padding: 0;
@@ -14,24 +23,16 @@
             padding-bottom: 70px;
         }
 
-        /* Designové prvky hlavičky */
         header {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, var(--secondary) 0%, var(--primary) 100%);
             color: white; padding: 12px 20px;
             display: flex; justify-content: space-between; align-items: center;
             position: sticky; top: 0; z-index: 1000;
             box-shadow: 0 2px 10px rgba(0,0,0,0.1);
         }
-        header h1 { margin: 0; font-size: 1.6rem; letter-spacing: 2px; font-weight: 800; }
-        .profile-icon {
-            width: 35px; height: 35px; background: #fff;
-            border-radius: 50%; display: flex; align-items: center; justify-content: center;
-            color: #764ba2; font-weight: bold; cursor: pointer;
-        }
 
         .container { max-width: 600px; margin: 0 auto; padding: 10px; }
 
-        /* Navigace */
         .tabs {
             display: flex; background: white; margin-bottom: 15px;
             border-radius: 12px; overflow: hidden;
@@ -40,58 +41,49 @@
         .tab {
             flex: 1; padding: 15px; text-align: center;
             cursor: pointer; font-weight: bold; color: #65676b;
-            transition: 0.3s; font-size: 0.85rem; text-transform: uppercase;
+            transition: 0.3s; font-size: 0.85rem;
         }
         .tab.active {
-            color: #764ba2; border-bottom: 3px solid #764ba2;
+            color: var(--primary); border-bottom: 3px solid var(--primary);
             background-color: rgba(118, 75, 162, 0.05);
         }
+
+        /* Kategorie Filtry */
+        .category-filter {
+            display: flex; gap: 8px; overflow-x: auto; padding-bottom: 10px; margin-bottom: 10px;
+        }
+        .cat-chip {
+            padding: 6px 15px; border-radius: 20px; background: white;
+            font-size: 0.8rem; font-weight: bold; cursor: pointer; border: 1px solid #ddd; white-space: nowrap;
+        }
+        .cat-chip.active { background: var(--primary); color: white; border-color: var(--primary); }
 
         .content-section { display: none; }
         .content-section.active { display: block; }
 
-        /* Mapa - Srdce verze 1.0 */
-        #map { height: 450px; width: 100%; border-radius: 15px; margin-top: 10px; border: 3px solid white; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
+        #map { height: 400px; width: 100%; border-radius: 15px; margin-top: 10px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
 
-        /* Karty */
         .post {
             background: white; border-radius: 12px; padding: 15px;
             margin-bottom: 15px; box-shadow: 0 2px 5px rgba(0,0,0,0.05);
-            border-left: 4px solid transparent;
         }
-        .biz-card { border-left-color: #ffc107; }
-        
-        .post-header { display: flex; align-items: center; margin-bottom: 10px; }
-        .avatar { width: 40px; height: 40px; background: #764ba2; border-radius: 50%; margin-right: 10px; color: white; display: flex; align-items: center; justify-content: center; font-weight: bold; }
+        .biz-card { border-top: 4px solid var(--gastro); }
 
-        .btn-main {
-            background: #764ba2; color: white; border: none;
-            padding: 12px; width: 100%; border-radius: 8px;
-            font-weight: bold; cursor: pointer; margin-top: 10px;
-        }
+        .btn-main { background: var(--primary); color: white; border: none; padding: 12px; width: 100%; border-radius: 8px; font-weight: bold; cursor: pointer; }
+        .btn-yellow { background: #ffc107; color: #000; border: none; padding: 12px; border-radius: 8px; font-weight: bold; cursor: pointer; margin-bottom: 15px; width: 100%; }
 
-        .btn-yellow {
-            background: #ffc107; color: #000; border: none;
-            padding: 12px; border-radius: 8px; font-weight: bold; cursor: pointer; margin-bottom: 15px; width: 100%;
-        }
-
-        /* Modály */
         .modal {
             display: none; position: fixed; top: 0; left: 0;
             width: 100%; height: 100%; background: rgba(0,0,0,0.6);
             z-index: 2000; justify-content: center; align-items: center;
             backdrop-filter: blur(3px);
         }
-        .modal-content {
-            background: white; padding: 25px; border-radius: 20px;
-            width: 90%; max-width: 400px;
-        }
-        .edit-input { width: 100%; padding: 12px; margin: 10px 0; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box; font-family: inherit; }
+        .modal-content { background: white; padding: 25px; border-radius: 20px; width: 90%; max-width: 400px; }
+        .edit-input, select { width: 100%; padding: 12px; margin: 10px 0; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box; }
 
-        /* Plus Button */
         .fab {
             position: fixed; bottom: 20px; right: 20px;
-            width: 60px; height: 60px; background: #764ba2;
+            width: 60px; height: 60px; background: var(--primary);
             color: white; border-radius: 50%;
             display: flex; justify-content: center; align-items: center;
             font-size: 30px; box-shadow: 0 4px 15px rgba(0,0,0,0.3);
@@ -103,7 +95,7 @@
 
     <header>
         <h1>TADY</h1>
-        <div class="profile-icon" id="headerAvatar" onclick="showSection('profil', null)">M</div>
+        <div class="profile-icon" id="headerAvatar" style="width:35px; height:35px; background:white; color:#764ba2; border-radius:50%; display:flex; align-items:center; justify-content:center; font-weight:bold; cursor:pointer;" onclick="showSection('profil', null)">M</div>
     </header>
 
     <div class="container">
@@ -117,32 +109,32 @@
         <div id="lide" class="content-section active">
             <div id="postsList">
                 <div class="post">
-                    <div class="post-header">
-                        <div class="avatar">T</div>
-                        <div><b>Tým TADY</b><br><small>Oficiální • Právě teď</small></div>
-                    </div>
-                    <div class="post-content">Verze 1.0 je venku! Vyzkoušejte propojení firem s mapou.</div>
+                    <b>Marcel Drvota</b><br><small>Právě teď</small>
+                    <p>Filtrování kategorií je tu! Zkuste přidat firmu s označením.</p>
                 </div>
             </div>
         </div>
 
         <div id="firmy" class="content-section">
-            <button class="btn-yellow" onclick="toggleBusinessModal()">🏢 Přidat firmu na mapu</button>
-            <div id="businessList">
-                </div>
+            <div class="category-filter">
+                <div class="cat-chip active">Vše</div>
+                <div class="cat-chip">Gastro</div>
+                <div class="cat-chip">Obchody</div>
+                <div class="cat-chip">Služby</div>
+                <div class="cat-chip">Kultura</div>
+            </div>
+            <button class="btn-yellow" onclick="toggleBusinessModal()">🏢 Přidat můj podnik</button>
+            <div id="businessList"></div>
         </div>
 
         <div id="mapa" class="content-section">
             <div id="map"></div>
-            <p style="text-align:center; font-size:0.8rem; color:gray; margin-top:10px;">Body na mapě představují firmy v okolí.</p>
         </div>
 
         <div id="profil" class="content-section">
             <div style="background: white; padding: 30px; border-radius: 15px; text-align: center;">
-                <div class="avatar" style="width: 80px; height: 80px; margin: 0 auto 15px; font-size: 2rem;">M</div>
-                <h2 id="userNameDisplay">Marcel Drvota</h2>
-                <p>Ambasador projektu TADY</p>
-                <button class="btn-main">Moje statistiky</button>
+                <h2>Profil Marcel</h2>
+                <button class="btn-main">Moje firmy</button>
             </div>
         </div>
     </div>
@@ -151,57 +143,48 @@
 
     <div id="businessModal" class="modal">
         <div class="modal-content">
-            <h3>Nová firma na mapu</h3>
-            <p style="font-size: 0.8rem; color: gray;">Kliknutím na mapu se firma uloží na dané místo.</p>
+            <h3>Nová firma</h3>
             <input type="text" id="bizName" class="edit-input" placeholder="Název podniku">
+            <select id="bizCat">
+                <option value="gastro">Gastro 🍕</option>
+                <option value="obchod">Obchod 🛍️</option>
+                <option value="sluzby">Služby 🛠️</option>
+                <option value="kultura">Kultura 🎭</option>
+            </select>
             <textarea id="bizOffer" class="edit-input" placeholder="Co nabízíte?"></textarea>
-            <button class="btn-main" onclick="addBusinessToMap()">Uložit firmu TADY</button>
+            <button class="btn-main" onclick="addBusiness()">Uložit na mapu</button>
             <button onclick="toggleBusinessModal()" style="border:none; background:none; color:gray; width:100%; margin-top:10px; cursor:pointer;">Zrušit</button>
         </div>
     </div>
 
     <div id="postModal" class="modal">
         <div class="modal-content">
-            <h3>Co se TADY děje?</h3>
-            <textarea id="postText" class="edit-input" placeholder="Sdílejte moment..."></textarea>
+            <h3>Co se děje?</h3>
+            <textarea id="postText" class="edit-input" placeholder="Sdílejte..."></textarea>
             <button class="btn-main" onclick="addPost()">Sdílet</button>
-            <button onclick="togglePostModal()" style="border:none; background:none; color:gray; width:100%; margin-top:10px; cursor:pointer;">Zrušit</button>
         </div>
     </div>
 
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script>
         let map;
-        let markers = [];
-        let userPos = [50.91, 14.62]; // Výchozí bod Varnsdorf
+        let userPos = [50.91, 14.62];
+        const colors = { gastro: "#ff9800", obchod: "#4caf50", sluzby: "#2196f3", kultura: "#9c27b0" };
 
         function showSection(sectionId, element) {
             document.querySelectorAll('.content-section').forEach(s => s.classList.remove('active'));
             document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
             document.getElementById(sectionId).classList.add('active');
             if(element) element.classList.add('active');
-            
             if(sectionId === 'mapa') {
-                setTimeout(() => {
-                    if (!map) initMap();
-                    map.invalidateSize();
-                }, 200);
+                setTimeout(() => { if (!map) initMap(); map.invalidateSize(); }, 200);
             }
         }
 
         function initMap() {
-            map = L.map('map').setView(userPos, 13);
-            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-                attribution: '© OpenStreetMap'
-            }).addTo(map);
-
-            if (navigator.geolocation) {
-                navigator.geolocation.getCurrentPosition(p => {
-                    userPos = [p.coords.latitude, p.coords.longitude];
-                    map.setView(userPos, 15);
-                    L.circle(userPos, { radius: 200, color: '#764ba2' }).addTo(map).bindPopup("Vy jste TADY");
-                });
-            }
+            map = L.map('map').setView(userPos, 14);
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
+            L.circle(userPos, {radius: 200, color: '#764ba2'}).addTo(map).bindPopup("Jste TADY");
         }
 
         function toggleBusinessModal() {
@@ -209,49 +192,44 @@
             m.style.display = m.style.display === 'flex' ? 'none' : 'flex';
         }
 
+        function addBusiness() {
+            const name = document.getElementById('bizName').value;
+            const cat = document.getElementById('bizCat').value;
+            const offer = document.getElementById('bizOffer').value;
+            if(!name) return;
+
+            // Přidání do seznamu
+            const biz = document.createElement('div');
+            biz.className = 'post biz-card';
+            biz.style.borderTopColor = colors[cat];
+            biz.innerHTML = `<b>${name}</b> [${cat.toUpperCase()}]<br><p>${offer}</p>`;
+            document.getElementById('businessList').insertBefore(biz, document.getElementById('businessList').firstChild);
+
+            // Přidání na mapu
+            const lat = userPos[0] + (Math.random() - 0.5) * 0.015;
+            const lng = userPos[1] + (Math.random() - 0.5) * 0.015;
+            
+            if(!map) initMap();
+            L.circleMarker([lat, lng], { radius: 10, color: colors[cat], fillOpacity: 0.8 }).addTo(map)
+                .bindPopup(`<b>${name}</b><br>${offer}`);
+
+            toggleBusinessModal();
+            showSection('mapa', document.querySelectorAll('.tab')[2]);
+        }
+
         function togglePostModal() {
             const m = document.getElementById('postModal');
             m.style.display = m.style.display === 'flex' ? 'none' : 'flex';
         }
 
-        function addBusinessToMap() {
-            const name = document.getElementById('bizName').value;
-            const offer = document.getElementById('bizOffer').value;
-            if(!name) return;
-
-            // Simulace umístění firmy blízko uživatele (pro demo v1.0)
-            const lat = userPos[0] + (Math.random() - 0.5) * 0.01;
-            const lng = userPos[1] + (Math.random() - 0.5) * 0.01;
-
-            // 1. Přidání do seznamu firem
-            const bizList = document.getElementById('businessList');
-            const biz = document.createElement('div');
-            biz.className = 'post biz-card';
-            biz.innerHTML = `<div class="post-header"><div class="avatar" style="background:#ffc107">F</div><div><b>${name}</b><br><small>Nová firma na mapě</small></div></div><div class="post-content">${offer}</div>`;
-            bizList.insertBefore(biz, bizList.firstChild);
-
-            // 2. Přidání špendlíku na mapu
-            if(!map) initMap();
-            const marker = L.marker([lat, lng]).addTo(map)
-                .bindPopup(`<b>${name}</b><br>${offer}`)
-                .openPopup();
-            
-            markers.push(marker);
-            
-            toggleBusinessModal();
-            alert("Firma byla úspěšně přidána na mapu!");
-            showSection('mapa', document.querySelectorAll('.tab')[2]);
-        }
-
         function addPost() {
             const text = document.getElementById('postText').value;
-            if(!text.trim()) return;
-            const post = document.createElement('div');
-            post.className = 'post';
-            post.innerHTML = `<div class="post-header"><div class="avatar">M</div><div><b>Marcel D.</b><br><small>Právě teď</small></div></div><div class="post-content">${text}</div>`;
-            document.getElementById('postsList').insertBefore(post, document.getElementById('postsList').firstChild);
+            if(!text) return;
+            const p = document.createElement('div');
+            p.className = 'post';
+            p.innerHTML = `<b>Marcel</b><br>${text}`;
+            document.getElementById('postsList').insertBefore(p, document.getElementById('postsList').firstChild);
             togglePostModal();
-            document.getElementById('postText').value = '';
         }
     </script>
 </body>
