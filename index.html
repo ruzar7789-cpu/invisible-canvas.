@@ -14,15 +14,15 @@
             padding-bottom: 70px;
         }
 
-        /* Header */
+        /* Designové prvky hlavičky */
         header {
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white; padding: 10px 20px;
+            color: white; padding: 12px 20px;
             display: flex; justify-content: space-between; align-items: center;
             position: sticky; top: 0; z-index: 1000;
             box-shadow: 0 2px 10px rgba(0,0,0,0.1);
         }
-        header h1 { margin: 0; font-size: 1.6rem; letter-spacing: 2px; }
+        header h1 { margin: 0; font-size: 1.6rem; letter-spacing: 2px; font-weight: 800; }
         .profile-icon {
             width: 35px; height: 35px; background: #fff;
             border-radius: 50%; display: flex; align-items: center; justify-content: center;
@@ -31,7 +31,7 @@
 
         .container { max-width: 600px; margin: 0 auto; padding: 10px; }
 
-        /* Tabs */
+        /* Navigace */
         .tabs {
             display: flex; background: white; margin-bottom: 15px;
             border-radius: 12px; overflow: hidden;
@@ -40,7 +40,7 @@
         .tab {
             flex: 1; padding: 15px; text-align: center;
             cursor: pointer; font-weight: bold; color: #65676b;
-            transition: 0.3s; font-size: 0.9rem;
+            transition: 0.3s; font-size: 0.85rem; text-transform: uppercase;
         }
         .tab.active {
             color: #764ba2; border-bottom: 3px solid #764ba2;
@@ -50,14 +50,17 @@
         .content-section { display: none; }
         .content-section.active { display: block; }
 
-        /* Mapa */
-        #map { height: 400px; width: 100%; border-radius: 12px; margin-top: 10px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+        /* Mapa - Srdce verze 1.0 */
+        #map { height: 450px; width: 100%; border-radius: 15px; margin-top: 10px; border: 3px solid white; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
 
-        /* Příspěvky a firmy */
+        /* Karty */
         .post {
             background: white; border-radius: 12px; padding: 15px;
             margin-bottom: 15px; box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+            border-left: 4px solid transparent;
         }
+        .biz-card { border-left-color: #ffc107; }
+        
         .post-header { display: flex; align-items: center; margin-bottom: 10px; }
         .avatar { width: 40px; height: 40px; background: #764ba2; border-radius: 50%; margin-right: 10px; color: white; display: flex; align-items: center; justify-content: center; font-weight: bold; }
 
@@ -67,23 +70,25 @@
             font-weight: bold; cursor: pointer; margin-top: 10px;
         }
 
-        .btn-business {
+        .btn-yellow {
             background: #ffc107; color: #000; border: none;
-            padding: 10px; border-radius: 8px; font-weight: bold; cursor: pointer; margin-bottom: 15px; width: 100%;
+            padding: 12px; border-radius: 8px; font-weight: bold; cursor: pointer; margin-bottom: 15px; width: 100%;
         }
 
         /* Modály */
         .modal {
             display: none; position: fixed; top: 0; left: 0;
-            width: 100%; height: 100%; background: rgba(0,0,0,0.5);
+            width: 100%; height: 100%; background: rgba(0,0,0,0.6);
             z-index: 2000; justify-content: center; align-items: center;
+            backdrop-filter: blur(3px);
         }
         .modal-content {
             background: white; padding: 25px; border-radius: 20px;
             width: 90%; max-width: 400px;
         }
-        .edit-input { width: 100%; padding: 10px; margin: 10px 0; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box; }
+        .edit-input { width: 100%; padding: 12px; margin: 10px 0; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box; font-family: inherit; }
 
+        /* Plus Button */
         .fab {
             position: fixed; bottom: 20px; right: 20px;
             width: 60px; height: 60px; background: #764ba2;
@@ -113,38 +118,31 @@
             <div id="postsList">
                 <div class="post">
                     <div class="post-header">
-                        <div class="avatar currentAvatar">M</div>
-                        <div><b class="currentName">Marcel D.</b><br><small>Varnsdorf • právě teď</small></div>
+                        <div class="avatar">T</div>
+                        <div><b>Tým TADY</b><br><small>Oficiální • Právě teď</small></div>
                     </div>
-                    <div class="post-content">Vítejte ve verzi 0.9! Máme funkční mapu.</div>
+                    <div class="post-content">Verze 1.0 je venku! Vyzkoušejte propojení firem s mapou.</div>
                 </div>
             </div>
         </div>
 
         <div id="firmy" class="content-section">
-            <button class="btn-business" onclick="toggleBusinessModal()">🏢 Chci být vidět (pro firmy)</button>
+            <button class="btn-yellow" onclick="toggleBusinessModal()">🏢 Přidat firmu na mapu</button>
             <div id="businessList">
-                <div class="post" style="border-left: 5px solid #ffc107;">
-                    <div class="post-header">
-                        <div class="avatar" style="background: #ffc107;">F</div>
-                        <div><b>Ukázková Firma</b><br><small>Varnsdorf • Sponzorováno</small></div>
-                    </div>
-                    <div class="post-content">Tady bude vaše reklama nebo speciální nabídka.</div>
                 </div>
-            </div>
         </div>
 
         <div id="mapa" class="content-section">
-            <button class="btn-main" onclick="initMap()" style="margin-bottom: 10px;">Načíst mapu mého okolí</button>
             <div id="map"></div>
+            <p style="text-align:center; font-size:0.8rem; color:gray; margin-top:10px;">Body na mapě představují firmy v okolí.</p>
         </div>
 
         <div id="profil" class="content-section">
-            <div style="background: white; padding: 25px; border-radius: 12px; text-align: center;">
-                <div class="avatar currentAvatar" style="width: 80px; height: 80px; margin: 0 auto 15px; font-size: 2rem;">M</div>
-                <h2 class="currentName">Marcel D.</h2>
-                <p>Uživatel aplikace TADY</p>
-                <button class="btn-main">Nastavení účtu</button>
+            <div style="background: white; padding: 30px; border-radius: 15px; text-align: center;">
+                <div class="avatar" style="width: 80px; height: 80px; margin: 0 auto 15px; font-size: 2rem;">M</div>
+                <h2 id="userNameDisplay">Marcel Drvota</h2>
+                <p>Ambasador projektu TADY</p>
+                <button class="btn-main">Moje statistiky</button>
             </div>
         </div>
     </div>
@@ -153,10 +151,11 @@
 
     <div id="businessModal" class="modal">
         <div class="modal-content">
-            <h3>Zviditelnit firmu</h3>
+            <h3>Nová firma na mapu</h3>
+            <p style="font-size: 0.8rem; color: gray;">Kliknutím na mapu se firma uloží na dané místo.</p>
             <input type="text" id="bizName" class="edit-input" placeholder="Název podniku">
-            <textarea id="bizOffer" class="edit-input" placeholder="Co nabízíte okolí? (např. Sleva 20%)"></textarea>
-            <button class="btn-main" onclick="addBusiness()">Zveřejnit nabídku</button>
+            <textarea id="bizOffer" class="edit-input" placeholder="Co nabízíte?"></textarea>
+            <button class="btn-main" onclick="addBusinessToMap()">Uložit firmu TADY</button>
             <button onclick="toggleBusinessModal()" style="border:none; background:none; color:gray; width:100%; margin-top:10px; cursor:pointer;">Zrušit</button>
         </div>
     </div>
@@ -164,7 +163,7 @@
     <div id="postModal" class="modal">
         <div class="modal-content">
             <h3>Co se TADY děje?</h3>
-            <textarea id="postText" class="edit-input" placeholder="Napište něco..."></textarea>
+            <textarea id="postText" class="edit-input" placeholder="Sdílejte moment..."></textarea>
             <button class="btn-main" onclick="addPost()">Sdílet</button>
             <button onclick="togglePostModal()" style="border:none; background:none; color:gray; width:100%; margin-top:10px; cursor:pointer;">Zrušit</button>
         </div>
@@ -173,25 +172,34 @@
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script>
         let map;
+        let markers = [];
+        let userPos = [50.91, 14.62]; // Výchozí bod Varnsdorf
 
         function showSection(sectionId, element) {
             document.querySelectorAll('.content-section').forEach(s => s.classList.remove('active'));
             document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
             document.getElementById(sectionId).classList.add('active');
             if(element) element.classList.add('active');
-            if(sectionId === 'mapa' && !map) { setTimeout(initMap, 200); }
+            
+            if(sectionId === 'mapa') {
+                setTimeout(() => {
+                    if (!map) initMap();
+                    map.invalidateSize();
+                }, 200);
+            }
         }
 
         function initMap() {
-            if (map) return;
-            map = L.map('map').setView([50.91, 14.62], 13); // Výchozí bod Varnsdorf
-            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
-            
+            map = L.map('map').setView(userPos, 13);
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '© OpenStreetMap'
+            }).addTo(map);
+
             if (navigator.geolocation) {
                 navigator.geolocation.getCurrentPosition(p => {
-                    const pos = [p.coords.latitude, p.coords.longitude];
-                    map.setView(pos, 15);
-                    L.marker(pos).addTo(map).bindPopup('Jste TADY').openPopup();
+                    userPos = [p.coords.latitude, p.coords.longitude];
+                    map.setView(userPos, 15);
+                    L.circle(userPos, { radius: 200, color: '#764ba2' }).addTo(map).bindPopup("Vy jste TADY");
                 });
             }
         }
@@ -206,26 +214,41 @@
             m.style.display = m.style.display === 'flex' ? 'none' : 'flex';
         }
 
-        function addBusiness() {
+        function addBusinessToMap() {
             const name = document.getElementById('bizName').value;
             const offer = document.getElementById('bizOffer').value;
             if(!name) return;
 
+            // Simulace umístění firmy blízko uživatele (pro demo v1.0)
+            const lat = userPos[0] + (Math.random() - 0.5) * 0.01;
+            const lng = userPos[1] + (Math.random() - 0.5) * 0.01;
+
+            // 1. Přidání do seznamu firem
+            const bizList = document.getElementById('businessList');
             const biz = document.createElement('div');
-            biz.className = 'post';
-            biz.style.borderLeft = "5px solid #ffc107";
-            biz.innerHTML = `<div class="post-header"><div class="avatar" style="background:#ffc107">${name[0]}</div><div><b>${name}</b><br><small>Právě teď • Novinka</small></div></div><div class="post-content">${offer}</div>`;
-            document.getElementById('businessList').insertBefore(biz, document.getElementById('businessList').firstChild);
+            biz.className = 'post biz-card';
+            biz.innerHTML = `<div class="post-header"><div class="avatar" style="background:#ffc107">F</div><div><b>${name}</b><br><small>Nová firma na mapě</small></div></div><div class="post-content">${offer}</div>`;
+            bizList.insertBefore(biz, bizList.firstChild);
+
+            // 2. Přidání špendlíku na mapu
+            if(!map) initMap();
+            const marker = L.marker([lat, lng]).addTo(map)
+                .bindPopup(`<b>${name}</b><br>${offer}`)
+                .openPopup();
+            
+            markers.push(marker);
+            
             toggleBusinessModal();
+            alert("Firma byla úspěšně přidána na mapu!");
+            showSection('mapa', document.querySelectorAll('.tab')[2]);
         }
 
         function addPost() {
             const text = document.getElementById('postText').value;
             if(!text.trim()) return;
-            const name = document.querySelector('.currentName').innerText;
             const post = document.createElement('div');
             post.className = 'post';
-            post.innerHTML = `<div class="post-header"><div class="avatar">${name[0]}</div><div><b>${name}</b><br><small>Právě teď</small></div></div><div class="post-content">${text}</div>`;
+            post.innerHTML = `<div class="post-header"><div class="avatar">M</div><div><b>Marcel D.</b><br><small>Právě teď</small></div></div><div class="post-content">${text}</div>`;
             document.getElementById('postsList').insertBefore(post, document.getElementById('postsList').firstChild);
             togglePostModal();
             document.getElementById('postText').value = '';
