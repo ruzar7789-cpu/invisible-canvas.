@@ -10,21 +10,39 @@
             margin: 0; padding: 0;
             background-color: #f0f2f5;
             color: #1c1e21;
-            padding-bottom: 70px;
+            padding-bottom: 70px; /* Space for future bottom nav */
         }
 
+        /* Header s novou navigací a profilem */
         header {
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white; padding: 15px; text-align: center;
+            color: white; padding: 10px 20px;
+            display: flex; justify-content: space-between; align-items: center;
             position: sticky; top: 0; z-index: 1000;
             box-shadow: 0 2px 10px rgba(0,0,0,0.1);
         }
-
-        header h1 { margin: 0; font-size: 1.8rem; letter-spacing: 3px; }
-        header p { margin: 5px 0 0; font-size: 0.9rem; opacity: 0.8; }
+        header .left-side {
+            display: flex; align-items: center;
+        }
+        header h1 {
+            margin: 0; font-size: 1.6rem; letter-spacing: 2px;
+            text-transform: uppercase;
+            margin-right: 15px; /* Space between TADY and slogan */
+        }
+        header p {
+            margin: 0; font-size: 0.9rem; opacity: 0.8;
+            font-style: italic;
+        }
+        .profile-icon {
+            width: 35px; height: 35px; background: #fff;
+            border-radius: 50%; display: flex; align-items: center; justify-content: center;
+            color: #764ba2; font-weight: bold; font-size: 1.2rem;
+            cursor: pointer;
+        }
 
         .container { max-width: 600px; margin: 10px auto; padding: 10px; }
 
+        /* Tabs pro navigaci */
         .tabs {
             display: flex; background: white; margin-bottom: 15px;
             border-radius: 12px; overflow: hidden;
@@ -53,44 +71,49 @@
 
         .post-header { display: flex; align-items: center; margin-bottom: 10px; }
         .avatar { width: 40px; height: 40px; background: #764ba2; border-radius: 50%; margin-right: 10px; color: white; display: flex; align-items: center; justify-content: center; font-weight: bold; }
-        
         .post-content { margin-bottom: 10px; }
         .post-img-display { width: 100%; border-radius: 8px; margin-top: 10px; display: none; }
 
-        .post-actions { border-top: 1px solid #eee; padding-top: 10px; margin-top: 10px; }
-        .like-btn { background: none; border: none; color: #65676b; cursor: pointer; font-weight: bold; }
-        .like-btn.active { color: #e91e63; }
+        .post-actions { border-top: 1px solid #eee; padding-top: 10px; margin-top: 10px; display: flex; justify-content: space-around; }
+        .action-btn { background: none; border: none; color: #65676b; cursor: pointer; font-weight: bold; font-size: 0.9rem; display: flex; align-items: center; }
+        .action-btn.active { color: #e91e63; }
+        .action-btn span { margin-left: 5px; }
 
-        /* Modál */
-        .modal {
-            display: none; position: fixed; top: 0; left: 0;
-            width: 100%; height: 100%; background: rgba(0,0,0,0.5);
-            z-index: 2000; justify-content: center; align-items: center;
+        /* Profilová stránka */
+        .profile-card {
+            background: white; padding: 25px; border-radius: 12px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05); text-align: center;
         }
-
-        .modal-content {
-            background: white; padding: 25px; border-radius: 20px;
-            width: 90%; max-width: 400px;
+        .profile-avatar {
+            width: 100px; height: 100px; background: #667eea; border-radius: 50%;
+            margin: 0 auto 15px auto; display: flex; align-items: center; justify-content: center;
+            color: white; font-size: 3rem; font-weight: bold;
         }
-
-        textarea {
-            width: 100%; height: 100px; border: 1px solid #ddd;
-            border-radius: 8px; padding: 10px; box-sizing: border-box;
-            margin: 10px 0; font-family: inherit; resize: none;
-        }
-
-        .file-input-label {
-            display: inline-block; background: #f0f2f5; padding: 10px;
-            border-radius: 8px; cursor: pointer; margin-bottom: 10px;
-            width: 100%; text-align: center; box-sizing: border-box;
-        }
-
-        .btn-send {
+        .profile-name { font-size: 1.8rem; margin-bottom: 5px; }
+        .profile-bio { color: #65676b; margin-bottom: 20px; }
+        .profile-stats { display: flex; justify-content: space-around; margin-bottom: 20px; }
+        .profile-stats div { text-align: center; }
+        .profile-stats strong { display: block; font-size: 1.2rem; }
+        .profile-stats span { font-size: 0.8rem; color: #65676b; }
+        .edit-profile-btn {
             background: #764ba2; color: white; border: none;
-            padding: 12px; width: 100%; border-radius: 8px;
-            font-weight: bold; cursor: pointer;
+            padding: 10px 20px; border-radius: 25px; cursor: pointer;
+            font-weight: bold;
         }
 
+        /* Mapa (základní) */
+        .map-container {
+            width: 100%; height: 450px; background: #e5e3df;
+            border-radius: 12px; display: flex; flex-direction: column; align-items: center; justify-content: center;
+            color: #555;
+        }
+        .map-btn {
+            background: #764ba2; color: white; border: none;
+            padding: 10px 20px; border-radius: 20px; cursor: pointer;
+            font-weight: bold; margin-top: 10px;
+        }
+
+        /* FAB - Plovoucí tlačítko */
         .fab {
             position: fixed; bottom: 20px; right: 20px;
             width: 60px; height: 60px; background: #764ba2;
@@ -99,20 +122,50 @@
             font-size: 30px; box-shadow: 0 4px 15px rgba(0,0,0,0.3);
             cursor: pointer; border: none; z-index: 1001;
         }
+
+        /* Modál */
+        .modal {
+            display: none; position: fixed; top: 0; left: 0;
+            width: 100%; height: 100%; background: rgba(0,0,0,0.5);
+            z-index: 2000; justify-content: center; align-items: center;
+        }
+        .modal-content {
+            background: white; padding: 25px; border-radius: 20px;
+            width: 90%; max-width: 400px;
+        }
+        textarea {
+            width: 100%; height: 100px; border: 1px solid #ddd;
+            border-radius: 8px; padding: 10px; box-sizing: border-box;
+            margin: 10px 0; font-family: inherit; resize: none;
+        }
+        .file-input-label {
+            display: inline-block; background: #f0f2f5; padding: 10px;
+            border-radius: 8px; cursor: pointer; margin-bottom: 10px;
+            width: 100%; text-align: center; box-sizing: border-box;
+        }
+        .btn-send {
+            background: #764ba2; color: white; border: none;
+            padding: 12px; width: 100%; border-radius: 8px;
+            font-weight: bold; cursor: pointer;
+        }
     </style>
 </head>
 <body>
 
     <header>
-        <h1>TADY</h1>
-        <p>„tady se děje všechno“</p>
+        <div class="left-side">
+            <h1>TADY</h1>
+            <p>„tady se děje všechno“</p>
+        </div>
+        <div class="profile-icon" onclick="showSection('profil', document.querySelector('.tabs .tab:last-child'))">M</div>
     </header>
 
     <div class="container">
         <div class="tabs">
-            <div class="tab active" onclick="showSection('lide', this)">Lidé</div>
+            <div class="tab active" onclick="showSection('lide', this)">Dění</div>
             <div class="tab" onclick="showSection('firmy', this)">Firmy</div>
             <div class="tab" onclick="showSection('mapa', this)">Mapa</div>
+            <div class="tab" onclick="showSection('profil', this)">Profil</div>
         </div>
 
         <div id="lide" class="content-section active">
@@ -120,11 +173,13 @@
                 <div class="post">
                     <div class="post-header">
                         <div class="avatar">M</div>
-                        <div><b>Marcel D.</b><br><small>Varnsdorf</small></div>
+                        <div><b>Marcel D.</b><br><small>Varnsdorf • před 1h</small></div>
                     </div>
-                    <div class="post-content">Vítejte v TADY v0.6! Nyní můžete přidávat i fotky.</div>
+                    <div class="post-content">Vítejte v TADY! Nový profil a vylepšené menu.</div>
                     <div class="post-actions">
-                        <button class="like-btn" onclick="this.classList.toggle('active')">❤️ To se mi líbí</button>
+                        <button class="action-btn" onclick="this.classList.toggle('active')">❤️ <span>25</span></button>
+                        <button class="action-btn">💬 <span>3</span></button>
+                        <button class="action-btn">🔗 <span>Sdílet</span></button>
                     </div>
                 </div>
             </div>
@@ -137,14 +192,34 @@
                     <div><b>Promo Tým TADY</b><br><small>Sponzorováno</small></div>
                 </div>
                 <div class="post-content">Hledáme ambasadory pro naši síť!</div>
+                <div class="post-actions">
+                    <button class="action-btn" onclick="this.classList.toggle('active')">👍 <span>12</span></button>
+                    <button class="action-btn">Kontakt</button>
+                </div>
             </div>
         </div>
 
         <div id="mapa" class="content-section">
-            <div style="text-align: center; padding: 50px; background: white; border-radius: 12px;">
+            <div class="map-container">
                 <span style="font-size: 50px;">🌍</span>
                 <h3>Mapa se načítá...</h3>
                 <p>Brzy propojíme vaši polohu s okolím.</p>
+                <button class="map-btn" onclick="getLocation()">Zaměřit moji polohu</button>
+                <p id="locationStatus" style="font-size: 0.8rem; margin-top: 10px;"></p>
+            </div>
+        </div>
+
+        <div id="profil" class="content-section">
+            <div class="profile-card">
+                <div class="profile-avatar">M</div>
+                <h2 class="profile-name">Marcel D.</h2>
+                <p class="profile-bio">Tvůrce a vizionář projektu TADY. Nadšenec do inovací a spojování lidí.</p>
+                <div class="profile-stats">
+                    <div><strong>52</strong><span>Příspěvků</span></div>
+                    <div><strong>128</strong><span>Sledování</span></div>
+                    <div><strong>230</strong><span>Sledující</span></div>
+                </div>
+                <button class="edit-profile-btn">Upravit profil</button>
             </div>
         </div>
     </div>
@@ -175,8 +250,19 @@
         function showSection(sectionId, element) {
             document.querySelectorAll('.content-section').forEach(s => s.classList.remove('active'));
             document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            
             document.getElementById(sectionId).classList.add('active');
-            element.classList.add('active');
+            if (element) { // Element might be null if called from profile icon
+                element.classList.add('active');
+            } else {
+                // If called from profile icon, ensure the correct tab is active
+                const tabs = document.querySelectorAll('.tabs .tab');
+                tabs.forEach(tab => {
+                    if (tab.innerText.includes('Profil')) { // Find the 'Profil' tab
+                        tab.classList.add('active');
+                    }
+                });
+            }
         }
 
         function toggleModal() {
@@ -214,17 +300,33 @@
             newPost.innerHTML = `
                 <div class="post-header">
                     <div class="avatar">U</div>
-                    <div><b>Uživatel</b><br><small>Právě teď</small></div>
+                    <div><b>Nový Uživatel</b><br><small>Právě teď</small></div>
                 </div>
                 <div class="post-content">${text}</div>
                 ${imgHtml}
                 <div class="post-actions">
-                    <button class="like-btn" onclick="this.classList.toggle('active')">❤️ To se mi líbí</button>
+                    <button class="action-btn" onclick="this.classList.toggle('active')">❤️ <span>0</span></button>
+                    <button class="action-btn">💬 <span>0</span></button>
+                    <button class="action-btn">🔗 <span>Sdílet</span></button>
                 </div>
             `;
             
             postsList.insertBefore(newPost, postsList.firstChild);
             toggleModal();
+        }
+
+        function getLocation() {
+            const status = document.getElementById('locationStatus');
+            if (navigator.geolocation) {
+                status.innerText = "Zaměřuji polohu...";
+                navigator.geolocation.getCurrentPosition((pos) => {
+                    status.innerText = `Poloha: ${pos.coords.latitude.toFixed(4)}, ${pos.coords.longitude.toFixed(4)}`;
+                }, (error) => {
+                    status.innerText = `Chyba: ${error.message}`;
+                });
+            } else {
+                status.innerText = "Geolokace není podporována vaším prohlížečem.";
+            }
         }
     </script>
 </body>
