@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>TADY - Všechno důležité je tady</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <style>
         body {
             font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
@@ -30,20 +31,6 @@
 
         .container { max-width: 600px; margin: 0 auto; padding: 10px; }
 
-        /* Vyhledávání */
-        .search-bar {
-            margin: 10px 0;
-            background: white;
-            border-radius: 25px;
-            padding: 8px 15px;
-            display: flex;
-            align-items: center;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
-        }
-        .search-bar input {
-            border: none; outline: none; width: 100%; font-size: 0.9rem; padding: 5px;
-        }
-
         /* Tabs */
         .tabs {
             display: flex; background: white; margin-bottom: 15px;
@@ -63,24 +50,26 @@
         .content-section { display: none; }
         .content-section.active { display: block; }
 
-        /* Příspěvky */
+        /* Mapa */
+        #map { height: 400px; width: 100%; border-radius: 12px; margin-top: 10px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+
+        /* Příspěvky a firmy */
         .post {
             background: white; border-radius: 12px; padding: 15px;
             margin-bottom: 15px; box-shadow: 0 2px 5px rgba(0,0,0,0.05);
         }
         .post-header { display: flex; align-items: center; margin-bottom: 10px; }
         .avatar { width: 40px; height: 40px; background: #764ba2; border-radius: 50%; margin-right: 10px; color: white; display: flex; align-items: center; justify-content: center; font-weight: bold; }
-        .post-img-display { width: 100%; border-radius: 8px; margin-top: 10px; }
 
-        /* Profil */
-        .profile-card {
-            background: white; padding: 25px; border-radius: 12px;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.05); text-align: center;
+        .btn-main {
+            background: #764ba2; color: white; border: none;
+            padding: 12px; width: 100%; border-radius: 8px;
+            font-weight: bold; cursor: pointer; margin-top: 10px;
         }
-        .profile-avatar-large {
-            width: 80px; height: 80px; background: #667eea; border-radius: 50%;
-            margin: 0 auto 15px; display: flex; align-items: center; justify-content: center;
-            color: white; font-size: 2rem; font-weight: bold;
+
+        .btn-business {
+            background: #ffc107; color: #000; border: none;
+            padding: 10px; border-radius: 8px; font-weight: bold; cursor: pointer; margin-bottom: 15px; width: 100%;
         }
 
         /* Modály */
@@ -93,16 +82,7 @@
             background: white; padding: 25px; border-radius: 20px;
             width: 90%; max-width: 400px;
         }
-        input.edit-input, textarea.edit-input {
-            width: 100%; padding: 10px; margin: 10px 0;
-            border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box;
-        }
-
-        .btn-main {
-            background: #764ba2; color: white; border: none;
-            padding: 12px; width: 100%; border-radius: 8px;
-            font-weight: bold; cursor: pointer; margin-top: 10px;
-        }
+        .edit-input { width: 100%; padding: 10px; margin: 10px 0; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box; }
 
         .fab {
             position: fixed; bottom: 20px; right: 20px;
@@ -122,11 +102,6 @@
     </header>
 
     <div class="container">
-        <div class="search-bar">
-            <span>🔍</span>
-            <input type="text" placeholder="Hledejte co se děje v okolí...">
-        </div>
-
         <div class="tabs">
             <div class="tab active" onclick="showSection('lide', this)">Dění</div>
             <div class="tab" onclick="showSection('firmy', this)">Firmy</div>
@@ -141,69 +116,89 @@
                         <div class="avatar currentAvatar">M</div>
                         <div><b class="currentName">Marcel D.</b><br><small>Varnsdorf • právě teď</small></div>
                     </div>
-                    <div class="post-content">TADY je místo, kde se potkávají lidé a příležitosti.</div>
+                    <div class="post-content">Vítejte ve verzi 0.9! Máme funkční mapu.</div>
                 </div>
             </div>
         </div>
 
         <div id="firmy" class="content-section">
-            <div class="post" style="border-left: 5px solid #ffc107;">
-                <div class="post-header">
-                    <div class="avatar" style="background: #ffc107;">F</div>
-                    <div><b>Místní Bistro</b><br><small>Sponzorováno • 300m</small></div>
+            <button class="btn-business" onclick="toggleBusinessModal()">🏢 Chci být vidět (pro firmy)</button>
+            <div id="businessList">
+                <div class="post" style="border-left: 5px solid #ffc107;">
+                    <div class="post-header">
+                        <div class="avatar" style="background: #ffc107;">F</div>
+                        <div><b>Ukázková Firma</b><br><small>Varnsdorf • Sponzorováno</small></div>
+                    </div>
+                    <div class="post-content">Tady bude vaše reklama nebo speciální nabídka.</div>
                 </div>
-                <div class="post-content">Dnes káva s sebou za 40,- pro uživatele TADY! ☕</div>
             </div>
         </div>
 
         <div id="mapa" class="content-section">
-            <div style="background: white; padding: 40px; border-radius: 12px; text-align: center;">
-                <p>📍 Mapa připravuje připojení k GPS...</p>
-                <button class="btn-main" onclick="getLocation()" style="width: auto; padding: 10px 20px;">Zaměřit mě</button>
-                <p id="locationStatus" style="font-size: 0.8rem; margin-top: 10px;"></p>
-            </div>
+            <button class="btn-main" onclick="initMap()" style="margin-bottom: 10px;">Načíst mapu mého okolí</button>
+            <div id="map"></div>
         </div>
 
         <div id="profil" class="content-section">
-            <div class="profile-card">
-                <div class="profile-avatar-large currentAvatar">M</div>
-                <h2 id="displayProfileName" class="currentName">Marcel D.</h2>
-                <p id="displayProfileBio">Vizionář a tvůrce aplikace TADY.</p>
-                <button class="btn-main" onclick="toggleEditModal()">Upravit profil</button>
+            <div style="background: white; padding: 25px; border-radius: 12px; text-align: center;">
+                <div class="avatar currentAvatar" style="width: 80px; height: 80px; margin: 0 auto 15px; font-size: 2rem;">M</div>
+                <h2 class="currentName">Marcel D.</h2>
+                <p>Uživatel aplikace TADY</p>
+                <button class="btn-main">Nastavení účtu</button>
             </div>
         </div>
     </div>
 
     <button class="fab" onclick="togglePostModal()">+</button>
 
+    <div id="businessModal" class="modal">
+        <div class="modal-content">
+            <h3>Zviditelnit firmu</h3>
+            <input type="text" id="bizName" class="edit-input" placeholder="Název podniku">
+            <textarea id="bizOffer" class="edit-input" placeholder="Co nabízíte okolí? (např. Sleva 20%)"></textarea>
+            <button class="btn-main" onclick="addBusiness()">Zveřejnit nabídku</button>
+            <button onclick="toggleBusinessModal()" style="border:none; background:none; color:gray; width:100%; margin-top:10px; cursor:pointer;">Zrušit</button>
+        </div>
+    </div>
+
     <div id="postModal" class="modal">
         <div class="modal-content">
-            <h3>Nové dění</h3>
-            <textarea id="postText" class="edit-input" placeholder="Co se TADY děje?"></textarea>
+            <h3>Co se TADY děje?</h3>
+            <textarea id="postText" class="edit-input" placeholder="Napište něco..."></textarea>
             <button class="btn-main" onclick="addPost()">Sdílet</button>
             <button onclick="togglePostModal()" style="border:none; background:none; color:gray; width:100%; margin-top:10px; cursor:pointer;">Zrušit</button>
         </div>
     </div>
 
-    <div id="editProfileModal" class="modal">
-        <div class="modal-content">
-            <h3>Upravit profil</h3>
-            <input type="text" id="editName" class="edit-input" placeholder="Vaše jméno">
-            <textarea id="editBio" class="edit-input" placeholder="Něco o vás"></textarea>
-            <button class="btn-main" onclick="saveProfile()">Uložit změny</button>
-            <button onclick="toggleEditModal()" style="border:none; background:none; color:gray; width:100%; margin-top:10px; cursor:pointer;">Zrušit</button>
-        </div>
-    </div>
-
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script>
+        let map;
+
         function showSection(sectionId, element) {
             document.querySelectorAll('.content-section').forEach(s => s.classList.remove('active'));
             document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
             document.getElementById(sectionId).classList.add('active');
             if(element) element.classList.add('active');
-            else {
-                document.querySelectorAll('.tab').forEach(t => { if(t.innerText === 'Profil') t.classList.add('active'); });
+            if(sectionId === 'mapa' && !map) { setTimeout(initMap, 200); }
+        }
+
+        function initMap() {
+            if (map) return;
+            map = L.map('map').setView([50.91, 14.62], 13); // Výchozí bod Varnsdorf
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
+            
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(p => {
+                    const pos = [p.coords.latitude, p.coords.longitude];
+                    map.setView(pos, 15);
+                    L.marker(pos).addTo(map).bindPopup('Jste TADY').openPopup();
+                });
             }
+        }
+
+        function toggleBusinessModal() {
+            const m = document.getElementById('businessModal');
+            m.style.display = m.style.display === 'flex' ? 'none' : 'flex';
         }
 
         function togglePostModal() {
@@ -211,47 +206,29 @@
             m.style.display = m.style.display === 'flex' ? 'none' : 'flex';
         }
 
-        function toggleEditModal() {
-            const m = document.getElementById('editProfileModal');
-            if(m.style.display !== 'flex') {
-                document.getElementById('editName').value = document.getElementById('displayProfileName').innerText;
-                document.getElementById('editBio').value = document.getElementById('displayProfileBio').innerText;
-            }
-            m.style.display = m.style.display === 'flex' ? 'none' : 'flex';
-        }
+        function addBusiness() {
+            const name = document.getElementById('bizName').value;
+            const offer = document.getElementById('bizOffer').value;
+            if(!name) return;
 
-        function saveProfile() {
-            const newName = document.getElementById('editName').value;
-            const newBio = document.getElementById('editBio').value;
-            
-            document.querySelectorAll('.currentName').forEach(el => el.innerText = newName);
-            document.getElementById('displayProfileBio').innerText = newBio;
-            document.querySelectorAll('.currentAvatar').forEach(el => el.innerText = newName.charAt(0).toUpperCase());
-            document.getElementById('headerAvatar').innerText = newName.charAt(0).toUpperCase();
-            
-            toggleEditModal();
+            const biz = document.createElement('div');
+            biz.className = 'post';
+            biz.style.borderLeft = "5px solid #ffc107";
+            biz.innerHTML = `<div class="post-header"><div class="avatar" style="background:#ffc107">${name[0]}</div><div><b>${name}</b><br><small>Právě teď • Novinka</small></div></div><div class="post-content">${offer}</div>`;
+            document.getElementById('businessList').insertBefore(biz, document.getElementById('businessList').firstChild);
+            toggleBusinessModal();
         }
 
         function addPost() {
             const text = document.getElementById('postText').value;
             if(!text.trim()) return;
-            const name = document.getElementById('displayProfileName').innerText;
-            const initial = name.charAt(0).toUpperCase();
-
+            const name = document.querySelector('.currentName').innerText;
             const post = document.createElement('div');
             post.className = 'post';
-            post.innerHTML = `<div class="post-header"><div class="avatar">${initial}</div><div><b>${name}</b><br><small>Právě teď</small></div></div><div class="post-content">${text}</div>`;
+            post.innerHTML = `<div class="post-header"><div class="avatar">${name[0]}</div><div><b>${name}</b><br><small>Právě teď</small></div></div><div class="post-content">${text}</div>`;
             document.getElementById('postsList').insertBefore(post, document.getElementById('postsList').firstChild);
             togglePostModal();
             document.getElementById('postText').value = '';
-        }
-
-        function getLocation() {
-            const s = document.getElementById('locationStatus');
-            s.innerText = "Zaměřuji...";
-            navigator.geolocation.getCurrentPosition(p => {
-                s.innerText = `Poloha: ${p.coords.latitude.toFixed(4)}, ${p.coords.longitude.toFixed(4)}`;
-            }, e => s.innerText = "Chyba polohy.");
         }
     </script>
 </body>
