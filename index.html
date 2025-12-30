@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>TADY | M.D. Business OS</title>
 
+    <link rel="manifest" href="/manifest.json">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="TADY">
@@ -31,22 +32,24 @@
         @keyframes pulseGold { 0%, 100% { box-shadow: 0 0 5px var(--gold); } 50% { box-shadow: 0 0 20px var(--gold); } }
 
         /* ADMIN DASHBOARD */
-        #admin-dash { position: fixed; bottom: 110px; width: 90%; left: 5%; background: var(--gold); color: #000; border-radius: 25px; padding: 20px; z-index: 2000; display: none; max-height: 40vh; overflow-y: auto; box-shadow: 0 10px 50px rgba(0,0,0,0.8); }
+        #admin-dash { position: fixed; bottom: 110px; width: 90%; left: 5%; background: var(--gold); color: #000; border-radius: 25px; padding: 20px; z-index: 2000; display: none; max-height: 40vh; overflow-y: auto; }
         .admin-item { background: rgba(0,0,0,0.1); padding: 10px; border-radius: 10px; margin-bottom: 10px; border: 1px solid rgba(0,0,0,0.2); }
 
-        /* MODALY */
+        /* MODAL PLATBY */
         .modal { position: fixed; top: 0; width: 100%; height: 100%; z-index: 3000; background: rgba(0,0,0,0.95); display: none; align-items: center; justify-content: center; pointer-events: auto; }
-        .box { background: #0a0a0a; padding: 40px; border-radius: 40px; width: 85%; text-align: center; border: 1px solid #333; }
+        .box { background: #0a0a0a; padding: 30px; border-radius: 40px; width: 85%; text-align: center; border: 1px solid #333; }
         
         /* NAVIGACE */
         .footer-ui { position: fixed; bottom: 0; width: 100%; z-index: 1000; padding: 25px 0; background: linear-gradient(to top, #000 70%, transparent); text-align: center; }
         .nav-icon { cursor: pointer; display: inline-block; margin: 0 15px; font-size: 2.2rem; filter: drop-shadow(0 0 5px rgba(255,255,255,0.3)); }
         
-        .btn-gold { background: var(--gold); color: black; border: none; padding: 15px; border-radius: 15px; font-weight: 900; width: 100%; cursor: pointer; margin-top: 10px; }
+        .btn-gold { background: var(--gold); color: black; border: none; padding: 15px; border-radius: 15px; font-weight: 900; width: 100%; cursor: pointer; margin-top: 10px; font-size: 1rem; }
+        .watermark { position: fixed; top: 10px; right: 10px; z-index: 1000; font-family: 'Orbitron'; font-size: 0.8rem; color: rgba(255,255,255,0.5); }
     </style>
 </head>
 <body>
 
+<div class="watermark">DESIGNED BY M.D.</div>
 <video id="ar-engine" autoplay playsinline muted></video>
 
 <div id="ar-overlay">
@@ -63,15 +66,26 @@
 <div id="admin-dash">
     <h3 style="margin:0; font-family:'Orbitron'">M.D. VELITELSTVÍ</h3>
     <div id="admin-list" style="margin-top:10px;"></div>
-    <button onclick="location.reload()" class="btn-gold" style="background:#000; color:#fff;">ODHLÁSIT ADMINA</button>
+    <button onclick="location.reload()" class="btn-gold" style="background:#000; color:#fff;">ZAVŘÍT</button>
 </div>
 
 <div id="pay-modal" class="modal">
     <div class="box">
-        <h2 style="font-family:'Orbitron'; color:var(--gold)">PLATBA M.D.</h2>
-        <div style="background:#fff; padding:15px; border-radius:20px; margin:15px 0; display:inline-block;"><img id="qr-img" style="width:200px;"></div>
-        <div id="price-tag" style="font-size:2rem; font-weight:900;"></div>
+        <h2 style="font-family:'Orbitron'; color:var(--gold); margin-bottom: 5px;">PLATBA M.D.</h2>
+        <p style="font-size: 0.8rem; margin-bottom: 15px;">Pro aktivaci vzkazu zaplaťte:</p>
+        
+        <div style="background:#fff; padding:10px; border-radius:20px; display:inline-block; margin-bottom: 10px;">
+            <img id="qr-img" style="width:180px; display:block;">
+        </div>
+        
+        <div id="price-tag" style="font-size:2rem; font-weight:900; color:var(--gold);"></div>
+        
+        <button id="pay-link-btn" class="btn-gold" style="background:#fff; color:#000;">
+            ⚡ RYCHLÁ PLATBA (BANKA)
+        </button>
+
         <button onclick="closePay()" class="btn-gold">MÁM ZAPLACENO</button>
+        <p style="font-size:0.6rem; color:#888; margin-top:10px;">Vzkaz bude aktivován po připsání platby.</p>
     </div>
 </div>
 
@@ -86,7 +100,7 @@
 
 <script>
     let map, isMap = false, isAdmin = false, vzkazy = [], pType = null;
-    const IBAN = "LT533250082844018353";
+    const IBAN = "LT533250082844018353"; // Tvůj Revolut
 
     function toggleMap() {
         isMap = !isMap;
@@ -95,13 +109,15 @@
         if(isMap && !map) {
             map = L.map('map', { zoomControl: false }).setView([50.91, 14.62], 15);
             L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png').addTo(map);
+            
+            // Načtení schválených vzkazů z DB
+            loadApprovedVzkazy();
+
             map.on('click', e => {
                 let type = pType || (confirm("Chcete ZLATOU STOPU (149,-)? OK=Ano, Zrušit=Osobní (29,-)") ? 'FIREMNÍ' : 'OSOBNÍ');
                 let txt = prompt(`Napište text pro ${type}:`);
                 if(txt) {
-                    let v = { type, txt, lat: e.latlng.lat, lng: e.latlng.lng, active: false };
-                    vzkazy.push(v);
-                    saveToDB(v); // Odeslání do Neonu
+                    saveToDB(type, txt, e.latlng.lat, e.latlng.lng);
                     showQR(type);
                     pType = null;
                 }
@@ -110,69 +126,82 @@
         if(isMap) setTimeout(() => map.invalidateSize(), 200);
     }
 
-    async function saveToDB(v) {
-        try {
-            await fetch('/api/save', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ typ: v.type, obsah: v.txt, lat: v.lat, lng: v.lng })
-            });
-        } catch(e) { console.error("DB Error", e); }
+    async function saveToDB(typ, obsah, lat, lng) {
+        await fetch('/api/save', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ typ, obsah, lat, lng })
+        });
+    }
+
+    async function loadApprovedVzkazy() {
+        const res = await fetch('/api/list');
+        const data = await res.json();
+        data.forEach(v => {
+            L.marker([v.lat, v.lng]).addTo(map).bindPopup(`<b>${v.typ}</b><br>${v.obsah}`);
+        });
     }
 
     function showQR(type) {
         let cena = type === 'FIREMNÍ' ? 149 : 29;
-        let qrData = `SPD*1.0*ACC:${IBAN}*AM:${cena}.00*CC:CZK*MSG:TADY`;
+        let msg = `TADY-${type}`;
+        let qrData = `SPD*1.0*ACC:${IBAN}*AM:${cena}.00*CC:CZK*MSG:${msg}`;
+        
         document.getElementById('qr-img').src = `https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=${encodeURIComponent(qrData)}`;
         document.getElementById('price-tag').innerText = cena + " Kč";
+        
+        // Funkce pro rychlou platbu
+        document.getElementById('pay-link-btn').onclick = () => {
+            window.location.href = `spays://?data=${encodeURIComponent(qrData)}`;
+            setTimeout(() => alert("Pokud se banka neotevřela, použijte QR kód."), 1000);
+        };
+
         document.getElementById('pay-modal').style.display = 'flex';
     }
 
     function closePay() {
         document.getElementById('pay-modal').style.display = 'none';
         if(isMap) toggleMap();
-        alert("Vzkaz odeslán. Po schválení M.D. se objeví v AR.");
+        alert("Díky! M.D. vzkaz prověří a brzy ho uvidí celý Varnsdorf.");
     }
 
     function adminLogin() {
         if(prompt("HESLO M.D.:") === "2025") {
             isAdmin = true;
             document.getElementById('admin-dash').style.display = 'block';
-            updateAdminList();
+            fetchAdminList();
         }
     }
 
-    function updateAdminList() {
+    async function fetchAdminList() {
+        const res = await fetch('/api/list_all'); // Musíš mít tuhle API pro admina
+        const data = await res.json();
         const list = document.getElementById('admin-list');
-        list.innerHTML = vzkazy.length === 0 ? "Žádné vzkazy k odbavení." : "";
-        vzkazy.forEach((v, i) => {
-            list.innerHTML += `<div class="admin-item">
-                <b>${v.type}:</b> ${v.txt}<br>
-                <button onclick="approve(${i})" style="background:lime; border:none; padding:5px; border-radius:5px; margin-top:5px;">SCHVÁLIT</button>
-                <button onclick="vzkazy.splice(${i},1); updateAdminList();" style="background:red; color:white; border:none; padding:5px; border-radius:5px;">SMAZAT</button>
+        list.innerHTML = "";
+        data.forEach(v => {
+            list.innerHTML += `<div class="admin-item" style="background:${v.aktivni ? '#90ee90' : '#ffcccb'}">
+                <b>${v.typ}:</b> ${v.obsah}<br>
+                ${!v.aktivni ? `<button onclick="approve(${v.id})" style="background:lime; border:none; padding:5px; border-radius:5px;">SCHVÁLIT</button>` : 'AKTIVNÍ'}
             </div>`;
         });
     }
 
-    function approve(i) { vzkazy[i].active = true; alert("Povoleno!"); updateAdminList(); }
-
     function shareApp() {
         if (navigator.share) {
-            navigator.share({ title: 'TADY AR', text: 'Koukni na vzkazy ve městě!', url: window.location.href });
+            navigator.share({ title: 'TADY AR', text: 'Koukni na digitální Varnsdorf!', url: window.location.href });
         } else {
             navigator.clipboard.writeText(window.location.href);
             alert("Odkaz zkopírován!");
         }
     }
 
-    function fastTrack(t) { pType = t; toggleMap(); alert("Vyberte nyní místo na mapě."); }
+    function fastTrack(t) { pType = t; toggleMap(); alert("Nyní klikněte na mapu, kde se má vzkaz zobrazit."); }
 
     window.onload = () => {
         navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } })
         .then(s => document.getElementById('ar-engine').srcObject = s)
-        .catch(err => alert("Kamera není dostupná. Prosím povolte přístup."));
+        .catch(err => console.log("Kamera nedostupná"));
     };
 </script>
 </body>
-    </html>
-    
+</html>
