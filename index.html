@@ -8,38 +8,16 @@
     <style>
         :root { --p: #764ba2; --s: #667eea; --gold: #ffc107; --sos: #ff4b2b; --bg: #0b1118; --cyan: #00f2ff; }
         body, html { margin: 0; padding: 0; width: 100%; height: 100%; font-family: 'Segoe UI', sans-serif; background: var(--bg); color: #fff; overflow-x: hidden; }
-
-        header { 
-            background: linear-gradient(135deg, var(--s), var(--p)); color: white; padding: 30px 15px; 
-            text-align: center; border-bottom-left-radius: 40px; border-bottom-right-radius: 40px; 
-            box-shadow: 0 10px 40px rgba(0,0,0,0.6); position: sticky; top: 0; z-index: 1000;
-        }
+        header { background: linear-gradient(135deg, var(--s), var(--p)); color: white; padding: 30px 15px; text-align: center; border-bottom-left-radius: 40px; border-bottom-right-radius: 40px; box-shadow: 0 10px 40px rgba(0,0,0,0.6); position: sticky; top: 0; z-index: 1000; }
         .logo { font-size: 2.5rem; font-weight: 900; letter-spacing: 8px; margin: 0; }
         .slogan { font-size: 0.9rem; color: #adffd2; margin-top: 8px; font-weight: 600; }
-
         .container { padding: 20px; max-width: 600px; margin: 0 auto; padding-bottom: 120px; }
         .card { background: white; border-radius: 30px; padding: 25px; margin-bottom: 30px; box-shadow: 0 20px 50px rgba(0,0,0,0.3); color: #333; }
-        
-        textarea, select { 
-            width: 100%; padding: 18px; border: 2px solid #f0f0f0; border-radius: 20px; 
-            box-sizing: border-box; margin-bottom: 15px; background: #f9f9f9; font-size: 1rem;
-        }
-        .btn { 
-            background: var(--p); color: white; border: none; padding: 20px; width: 100%; 
-            border-radius: 20px; font-weight: 800; cursor: pointer; font-size: 1.1rem;
-        }
+        textarea { width: 100%; padding: 18px; border: 2px solid #f0f0f0; border-radius: 20px; box-sizing: border-box; margin-bottom: 15px; background: #f9f9f9; font-size: 1rem; }
+        .btn { background: var(--p); color: white; border: none; padding: 20px; width: 100%; border-radius: 20px; font-weight: 800; cursor: pointer; font-size: 1.1rem; }
         .btn-ai { background: linear-gradient(90deg, #00f2ff, #667eea); border: none; }
-
-        #map { height: 350px; border-radius: 30px; width: 100%; border: 5px solid white; }
-        #ar-screen { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: black; display: none; z-index: 5000; }
-        #camera-feed { width: 100%; height: 100%; object-fit: cover; }
-
-        nav { 
-            position: fixed; bottom: 25px; left: 50%; transform: translateX(-50%); width: 85%; 
-            background: rgba(255,255,255,0.95); backdrop-filter: blur(20px); display: flex; 
-            justify-content: space-around; padding: 18px 0; border-radius: 40px; z-index: 1000; 
-        }
-        .nav-item { font-size: 1.6rem; cursor: pointer; color: #444; }
+        #map { height: 350px; border-radius: 30px; width: 100%; border: 5px solid white; margin-top: 10px; }
+        nav { position: fixed; bottom: 25px; left: 50%; transform: translateX(-50%); width: 85%; background: rgba(255,255,255,0.95); backdrop-filter: blur(20px); display: flex; justify-content: space-around; padding: 18px 0; border-radius: 40px; z-index: 1000; }
     </style>
 </head>
 <body>
@@ -52,18 +30,13 @@
 <div class="container">
     <div class="card">
         <h3 style="margin-top:0">Co se TADY děje?</h3>
-        <textarea id="msg" rows="3" placeholder="Sdílejte moment, akci nebo zprávu..."></textarea>
-        <select id="typ">
-            <option value="public">💬 Veřejná stopa</option>
-            <option value="biz">🏆 Patriot / Akce</option>
-            <option value="sos">🚨 SOS / Pomoc</option>
-        </select>
+        <textarea id="msg" rows="3" placeholder="Sdílejte moment..."></textarea>
         <button class="btn" onclick="ulozit()">PŘIŠPENDLIT</button>
     </div>
 
     <div class="card" style="background: #0b1118; color: white;">
         <h3 style="margin-top:0; color: var(--cyan);">🤖 AI Inteligence sítě</h3>
-        <div id="ai-status" style="margin-bottom: 15px; font-size: 0.9rem; color: #adffd2;">
+        <div id="ai-status" style="margin-bottom: 15px; font-size: 0.9rem; color: #adffd2; min-height: 20px;">
             Připravena k analýze...
         </div>
         <button class="btn btn-ai" onclick="runAI()">ZEPTAT SE AI</button>
@@ -76,76 +49,66 @@
 </div>
 
 <nav>
-    <div class="nav-item" onclick="location.reload()">🏠</div>
-    <div class="nav-item" onclick="startAR()">✨</div>
-    <div class="nav-item" onclick="alert('Profil: Marcel Drvota')">👤</div>
+    <div onclick="location.reload()">🏠</div>
+    <div onclick="alert('AR vyžaduje HTTPS')">✨</div>
+    <div onclick="alert('Profil: Marcel Drvota')">👤</div>
 </nav>
-
-<div id="ar-screen">
-    <video id="camera-feed" autoplay playsinline></video>
-    <button onclick="stopAR()" style="position:fixed; bottom:50px; left:50%; transform:translateX(-50%); padding:20px 50px; border-radius:40px; border:none; background:white; font-weight:bold;">ZAVŘÍT</button>
-</div>
 
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script>
-    // --- VLOŽENÝ API KLÍČ Z OBRÁZKU ---
-    const GEMINI_KEY = "AIzaSyBpLgP3XXhS6UuNfWcuY79lL_0-UDA4"; 
+    const GEMINI_KEY = "AIzaSyBpLgP3XXhS6UuNfWcuY79lL_0-UDA4"; // Tvůj klíč z obrázku
 
     let map;
     function init() {
         map = L.map('map').setView([50.91, 14.62], 14);
         L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}.png').addTo(map);
-        zobrazStopy();
+        const data = JSON.parse(localStorage.getItem('tady_vize')) || [];
+        data.forEach(s => L.circle([s.lat, s.lng], { radius: 100, color: 'purple' }).addTo(map));
     }
 
     function ulozit() {
         const text = document.getElementById('msg').value;
-        const typ = document.getElementById('typ').value;
         if(!text) return;
         navigator.geolocation.getCurrentPosition(p => {
-            const stopa = { text, typ, lat: p.coords.latitude, lng: p.coords.longitude, d: new Date() };
+            const stopa = { text, lat: p.coords.latitude, lng: p.coords.longitude };
             let data = JSON.parse(localStorage.getItem('tady_vize')) || [];
             data.push(stopa);
             localStorage.setItem('tady_vize', JSON.stringify(data));
             location.reload();
-        });
-    }
-
-    function zobrazStopy() {
-        const data = JSON.parse(localStorage.getItem('tady_vize')) || [];
-        data.forEach(s => {
-            const c = s.typ === 'sos' ? 'red' : (s.typ === 'biz' ? 'orange' : 'purple');
-            L.circle([s.lat, s.lng], { radius: 100, color: c }).addTo(map);
-        });
+        }, () => alert("Povolte GPS v prohlížeči."));
     }
 
     async function runAI() {
         const box = document.getElementById('ai-status');
-        box.innerText = "Analyzuji...";
+        box.innerText = "Komunikuji s AI servery...";
+        
         const stopy = JSON.parse(localStorage.getItem('tady_vize')) || [];
-        const kontext = stopy.slice(-3).map(s => s.text).join("; ");
+        const kontext = stopy.length > 0 ? stopy.slice(-3).map(s => s.text).join("; ") : "Žádné stopy v okolí.";
 
         try {
-            const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_KEY}`, {
+            // Správná URL pro Gemini API v1beta
+            const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_KEY}`;
+            
+            const response = await fetch(url, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ contents: [{ parts: [{ text: `Jsi AI mozek aplikace TADY. Vize: všechno důležité je tady. Rozpočet 75tis EUR schválen. Analyzuj stopy: ${kontext}` }] }] })
+                body: JSON.stringify({
+                    contents: [{ parts: [{ text: `Jsi AI aplikace TADY (slogan: všechno důležité je tady). Máme rozpočet 75tis EUR. Udělej krátký postřeh z těchto zpráv: ${kontext}` }] }]
+                })
             });
-            const d = await res.json();
-            box.innerText = d.candidates[0].content.parts[0].text;
-        } catch(e) { box.innerText = "Chyba AI. Zkontrolujte připojení nebo klíč."; }
-    }
 
-    async function startAR() {
-        const s = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } });
-        document.getElementById('camera-feed').srcObject = s;
-        document.getElementById('ar-screen').style.display = 'block';
-    }
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.error.message || "Chyba API");
+            }
 
-    function stopAR() {
-        document.getElementById('ar-screen').style.display = 'none';
-        const s = document.getElementById('camera-feed').srcObject;
-        if(s) s.getTracks().forEach(t => t.stop());
+            const resData = await response.json();
+            box.innerText = resData.candidates[0].content.parts[0].text;
+            
+        } catch(e) { 
+            console.error(e);
+            box.innerText = "Chyba: " + e.message; 
+        }
     }
 
     window.onload = init;
