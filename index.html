@@ -2,38 +2,44 @@
 <html lang="cs">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TADY - M.D.</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>TADY - Projekt M.D.</title>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <style>
         :root { --p: #764ba2; --s: #667eea; --cyan: #00f2ff; --bg: #0b1118; }
-        body { margin: 0; font-family: sans-serif; background: var(--bg); color: #fff; text-align: center; }
-        header { background: linear-gradient(135deg, var(--s), var(--p)); padding: 20px; border-bottom-radius: 30px; }
-        .container { padding: 15px; max-width: 500px; margin: auto; }
-        .card { background: white; border-radius: 20px; padding: 20px; margin-bottom: 15px; color: #333; }
-        textarea { width: 100%; padding: 10px; border-radius: 10px; border: 1px solid #ddd; box-sizing: border-box; }
-        .btn { background: var(--p); color: white; border: none; padding: 15px; width: 100%; border-radius: 15px; font-weight: bold; margin-top: 10px; cursor: pointer; }
-        .btn-ai { background: cyan; color: black; }
-        #map { height: 200px; border-radius: 15px; margin-top: 10px; }
-        #ai-status { color: #adffd2; font-weight: bold; margin-bottom: 10px; min-height: 40px; }
+        body { margin: 0; font-family: 'Segoe UI', sans-serif; background: var(--bg); color: #fff; }
+        header { 
+            background: linear-gradient(135deg, var(--s), var(--p)); padding: 25px 15px; 
+            text-align: center; border-bottom-left-radius: 35px; border-bottom-right-radius: 35px; 
+            box-shadow: 0 10px 40px rgba(0,0,0,0.6);
+        }
+        .budget-tag { background: rgba(0,0,0,0.3); padding: 5px 15px; border-radius: 20px; font-size: 0.8rem; display: inline-block; margin-top: 10px; border: 1px solid var(--cyan); }
+        .container { padding: 15px; max-width: 500px; margin: 0 auto; }
+        .card { background: white; border-radius: 25px; padding: 20px; margin-bottom: 20px; color: #333; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
+        textarea { width: 100%; padding: 15px; border-radius: 15px; border: none; background: #f0f2f5; font-size: 1rem; box-sizing: border-box; }
+        .btn { background: var(--p); color: white; border: none; padding: 16px; width: 100%; border-radius: 18px; font-weight: 800; cursor: pointer; margin-top: 10px; }
+        .btn-ai { background: linear-gradient(90deg, var(--cyan), var(--s)); color: #000; }
+        #map { height: 300px; border-radius: 20px; border: 2px solid var(--p); }
+        #ai-response { color: var(--cyan); font-weight: 600; font-size: 0.95rem; text-align: center; min-height: 50px; display: flex; align-items: center; justify-content: center; }
     </style>
 </head>
 <body>
 
 <header>
-    <h1>TADY</h1>
-    <p>M.D.</p>
+    <div style="font-size: 2rem; font-weight: 900; letter-spacing: 5px;">TADY</div>
+    <div style="font-size: 0.7rem; letter-spacing: 2px;">VŠECHNY INFORMACE JSOU TADY</div>
+    <div class="budget-tag">ROZPOČET: 75.000 EUR | Správce: M.D.</div>
 </header>
 
 <div class="container">
-    <div class="card">
-        <textarea id="msg" placeholder="Co se děje ve Varnsdorfu?"></textarea>
-        <button class="btn" onclick="ulozit()">PŘIŠPENDLIT</button>
+    <div class="card" style="background: #16212e; border: 1px solid var(--cyan);">
+        <div id="ai-response">Klepněte na tlačítko a propojte se s AI...</div>
+        <button class="btn btn-ai" onclick="runAI()">ZEPTAT SE AI NA VARNSDORF</button>
     </div>
 
-    <div class="card" style="background: #16212e;">
-        <div id="ai-status">AI připravena...</div>
-        <button class="btn btn-ai" onclick="runAI()">ZEPTAT SE AI</button>
+    <div class="card">
+        <textarea id="msg" rows="2" placeholder="Napište vzkaz pro mapu Varnsdorfu..."></textarea>
+        <button class="btn" onclick="ulozit()">PŘIŠPENDLIT NA MAPU</button>
     </div>
 
     <div class="card">
@@ -44,9 +50,8 @@
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script>
     const API_KEY = "AIzaSyDOLpRJ9EOJvjPEWayPnWztnVdj8btUDA4";
-
-    let map = L.map('map').setView([50.91, 14.62], 14);
-    L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}.png').addTo(map);
+    let map = L.map('map', {zoomControl: false}).setView([50.91, 14.62], 14);
+    L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}.png').addTo(map);
 
     function ulozit() {
         const text = document.getElementById('msg').value;
@@ -55,35 +60,36 @@
             let stopy = JSON.parse(localStorage.getItem('stopy_tady')) || [];
             stopy.push({text, lat: p.coords.latitude, lng: p.coords.longitude});
             localStorage.setItem('stopy_tady', JSON.stringify(stopy));
-            alert("Uloženo!");
             location.reload();
         });
     }
 
     async function runAI() {
-        const box = document.getElementById('ai-status');
-        box.innerText = "Uvažuji...";
+        const status = document.getElementById('ai-response');
+        status.innerText = "⏳ Propojuji se se sítí...";
         
         try {
             const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${API_KEY}`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
-                    contents: [{ parts: [{ text: "Jsi asistent pro projekt TADY ve Varnsdorfu. Pozdrav uživatele M.D. a napiš mu jednu krátkou větu o tom, že jeho projekt s rozpočtem 75 000 EUR má velkou budoucnost." }] }]
+                    contents: [{ parts: [{ text: "Jsi inteligentní mozek sítě TADY. Projekt vede M.D. ve Varnsdorfu s rozpočtem 75.000 EUR. Pozdrav M.D. a napiš mu jednu velmi krátkou, vizionářskou větu o tom, jak jeho digitální mapa změní město." }] }]
                 })
             });
 
             const data = await response.json();
-            // OPRAVA: Přímé zobrazení textu z Gemini
-            if (data.candidates && data.candidates[0].content) {
-                box.innerText = data.candidates[0].content.parts[0].text;
-            } else {
-                box.innerText = "Zkuste to znovu za moment.";
+            if (data.candidates) {
+                status.innerText = data.candidates[0].content.parts[0].text;
             }
         } catch (e) {
-            box.innerText = "Chyba spojení.";
+            status.innerText = "Chyba spojení. Zkuste to za chvíli.";
         }
     }
+
+    // Načtení stop na mapu
+    JSON.parse(localStorage.getItem('stopy_tady') || '[]').forEach(s => {
+        L.circle([s.lat, s.lng], {radius: 100, color: '#00f2ff'}).addTo(map).bindPopup(s.text);
+    });
 </script>
 </body>
 </html>
