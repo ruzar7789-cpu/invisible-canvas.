@@ -14,32 +14,30 @@
             text-align: center; border-bottom-left-radius: 40px; border-bottom-right-radius: 40px; 
             box-shadow: 0 10px 40px rgba(0,0,0,0.6); position: sticky; top: 0; z-index: 1000;
         }
-        .logo { font-size: 2.5rem; font-weight: 900; letter-spacing: 8px; margin: 0; text-shadow: 2px 2px 10px rgba(0,0,0,0.3); }
-        .slogan { font-size: 0.9rem; opacity: 1; letter-spacing: 1px; margin-top: 8px; font-weight: 600; color: #adffd2; }
+        .logo { font-size: 2.5rem; font-weight: 900; letter-spacing: 8px; margin: 0; }
+        .slogan { font-size: 0.9rem; color: #adffd2; margin-top: 8px; font-weight: 600; }
 
         .container { padding: 20px; max-width: 600px; margin: 0 auto; padding-bottom: 120px; }
-        .card { background: white; border-radius: 30px; padding: 25px; margin-bottom: 30px; box-shadow: 0 20px 50px rgba(0,0,0,0.3); color: #333; border: none; }
+        .card { background: white; border-radius: 30px; padding: 25px; margin-bottom: 30px; box-shadow: 0 20px 50px rgba(0,0,0,0.3); color: #333; }
         
         textarea, select { 
             width: 100%; padding: 18px; border: 2px solid #f0f0f0; border-radius: 20px; 
-            box-sizing: border-box; margin-bottom: 15px; background: #f9f9f9; font-size: 1rem; font-family: inherit;
+            box-sizing: border-box; margin-bottom: 15px; background: #f9f9f9; font-size: 1rem;
         }
         .btn { 
             background: var(--p); color: white; border: none; padding: 20px; width: 100%; 
-            border-radius: 20px; font-weight: 800; cursor: pointer; font-size: 1.1rem; box-shadow: 0 10px 20px rgba(118,75,162,0.3);
+            border-radius: 20px; font-weight: 800; cursor: pointer; font-size: 1.1rem;
         }
         .btn-ai { background: linear-gradient(90deg, #00f2ff, #667eea); border: none; }
 
-        .biz-badge { background: var(--gold); color: #000; padding: 5px 12px; border-radius: 10px; font-size: 0.7rem; font-weight: bold; margin-bottom: 10px; display: inline-block; }
-
-        #map { height: 350px; border-radius: 30px; width: 100%; border: 5px solid white; box-shadow: 0 10px 30px rgba(0,0,0,0.2); }
+        #map { height: 350px; border-radius: 30px; width: 100%; border: 5px solid white; }
         #ar-screen { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: black; display: none; z-index: 5000; }
         #camera-feed { width: 100%; height: 100%; object-fit: cover; }
 
         nav { 
             position: fixed; bottom: 25px; left: 50%; transform: translateX(-50%); width: 85%; 
             background: rgba(255,255,255,0.95); backdrop-filter: blur(20px); display: flex; 
-            justify-content: space-around; padding: 18px 0; border-radius: 40px; box-shadow: 0 20px 50px rgba(0,0,0,0.4); z-index: 1000; 
+            justify-content: space-around; padding: 18px 0; border-radius: 40px; z-index: 1000; 
         }
         .nav-item { font-size: 1.6rem; cursor: pointer; color: #444; }
     </style>
@@ -52,13 +50,6 @@
 </header>
 
 <div class="container">
-    <div class="card" style="border: 2px solid var(--gold);">
-        <div class="biz-badge">PATRIOT PROGRAM</div>
-        <h3 style="margin:0 0 10px">Zviditelnit podnikání</h3>
-        <p style="font-size: 0.85rem; color: #666;">Ukotvěte svou firmu v digitálním prostoru TADY.</p>
-        <button class="btn" style="background: #000;" onclick="alert('Sekce Patriot se připravuje')">VSTOUPIT DO BYZNYSU</button>
-    </div>
-
     <div class="card">
         <h3 style="margin-top:0">Co se TADY děje?</h3>
         <textarea id="msg" rows="3" placeholder="Sdílejte moment, akci nebo zprávu..."></textarea>
@@ -73,7 +64,7 @@
     <div class="card" style="background: #0b1118; color: white;">
         <h3 style="margin-top:0; color: var(--cyan);">🤖 AI Inteligence sítě</h3>
         <div id="ai-status" style="margin-bottom: 15px; font-size: 0.9rem; color: #adffd2;">
-            Připravena k analýze vašich stop...
+            Připravena k analýze...
         </div>
         <button class="btn btn-ai" onclick="runAI()">ZEPTAT SE AI</button>
     </div>
@@ -87,18 +78,18 @@
 <nav>
     <div class="nav-item" onclick="location.reload()">🏠</div>
     <div class="nav-item" onclick="startAR()">✨</div>
-    <div class="nav-item" onclick="alert('Profil uživatele')">👤</div>
+    <div class="nav-item" onclick="alert('Profil: Marcel Drvota')">👤</div>
 </nav>
 
 <div id="ar-screen">
     <video id="camera-feed" autoplay playsinline></video>
-    <button onclick="stopAR()" style="position:fixed; bottom:50px; left:50%; transform:translateX(-50%); padding:20px 50px; border-radius:40px; border:none; background:white; font-weight:bold; font-size:1.1rem;">ZAVŘÍT AR</button>
+    <button onclick="stopAR()" style="position:fixed; bottom:50px; left:50%; transform:translateX(-50%); padding:20px 50px; border-radius:40px; border:none; background:white; font-weight:bold;">ZAVŘÍT</button>
 </div>
 
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script>
-    // --- KONFIGURACE S TVÝM KLÍČEM ---
-    const GEMINI_KEY = "AIzaSyB" + "pLgP3X" + "XhS6U" + "uNfWc" + "uY79l" + "L_0-UDA4"; // Klíč z tvého obrázku bezpečně spojený
+    // --- VLOŽENÝ API KLÍČ Z OBRÁZKU ---
+    const GEMINI_KEY = "AIzaSyBpLgP3XXhS6UuNfWcuY79lL_0-UDA4"; 
 
     let map;
     function init() {
@@ -111,7 +102,6 @@
         const text = document.getElementById('msg').value;
         const typ = document.getElementById('typ').value;
         if(!text) return;
-
         navigator.geolocation.getCurrentPosition(p => {
             const stopa = { text, typ, lat: p.coords.latitude, lng: p.coords.longitude, d: new Date() };
             let data = JSON.parse(localStorage.getItem('tady_vize')) || [];
@@ -131,7 +121,7 @@
 
     async function runAI() {
         const box = document.getElementById('ai-status');
-        box.innerText = "Analyzuji globální vizi...";
+        box.innerText = "Analyzuji...";
         const stopy = JSON.parse(localStorage.getItem('tady_vize')) || [];
         const kontext = stopy.slice(-3).map(s => s.text).join("; ");
 
@@ -139,11 +129,11 @@
             const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_KEY}`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ contents: [{ parts: [{ text: `Jsi AI mozek aplikace TADY. Slogan: "všechno důležité je tady". Marcel Drvota realizuje vizi za 75tis EUR. Analyzuj: ${kontext}` }] }] })
+                body: JSON.stringify({ contents: [{ parts: [{ text: `Jsi AI mozek aplikace TADY. Vize: všechno důležité je tady. Rozpočet 75tis EUR schválen. Analyzuj stopy: ${kontext}` }] }] })
             });
             const d = await res.json();
             box.innerText = d.candidates[0].content.parts[0].text;
-        } catch(e) { box.innerText = "Chyba AI. Zkontrolujte připojení."; }
+        } catch(e) { box.innerText = "Chyba AI. Zkontrolujte připojení nebo klíč."; }
     }
 
     async function startAR() {
