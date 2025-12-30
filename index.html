@@ -1,61 +1,138 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>TADY | M.D. Business FIXED</title>
+    
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@900&family=Inter:wght@400;700&display=swap" rel="stylesheet">
+
+    <style>
+        :root { --glow: #00f2ff; --gold: #ffd700; --glass: rgba(5, 10, 15, 0.9); }
+        body, html { margin: 0; padding: 0; width: 100%; height: 100%; font-family: 'Inter', sans-serif; background: #000; color: #fff; overflow: hidden; }
+        
+        #ar-engine { position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: cover; z-index: 1; }
+        #ar-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 50; pointer-events: none; }
+        #map-view { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 500; display: none; background: #000; }
+        #map-view.active { display: block; }
+
+        /* REKLAMY - Posunuté a klikatelné */
+        #ad-bar { position: fixed; top: 40px; width: 90%; left: 5%; z-index: 600; pointer-events: auto; }
+        .ad-card { background: var(--glass); backdrop-filter: blur(10px); border-radius: 15px; padding: 12px; border: 1px solid rgba(255,255,255,0.2); text-align: center; display: none; cursor: pointer; border-left: 4px solid var(--gold); }
+        .ad-card.active { display: block; }
+        
+        /* Ostatní UI */
+        .footer-ui { position: fixed; bottom: 0; width: 100%; z-index: 1000; padding: 25px 0; background: linear-gradient(to top, #000 90%, transparent); text-align: center; }
+        .nav-icon { cursor: pointer; display: inline-block; margin: 0 25px; font-size: 2.5rem; }
+        .modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 2000; background: rgba(0,0,0,0.95); display: none; align-items: center; justify-content: center; }
+        .offer-box { background: #050505; padding: 30px; border-radius: 40px; border: 1px solid #333; width: 85%; text-align: center; }
+    </style>
+</head>
+<body>
+
 <div id="ad-bar">
     <div class="ad-card active" onclick="fastTrack('FIREMNÍ')">
         <span style="float:right; font-size:0.6rem; color:var(--gold)">Verified by M.D.</span>
         <h4>ZLATÁ STOPA</h4>
-        <p>Chcete zde své menu? Klikněte a ukažte se!</p>
+        <p>Klikni a přidej menu své firmy!</p>
     </div>
     <div class="ad-card" onclick="fastTrack('OSOBNÍ')">
         <span style="float:right; font-size:0.6rem; color:var(--glow)">Verified by M.D.</span>
-        <h4>OSOBNÍ VZKAZ</h4>
-        <p>Zanechte stopu za 29 Kč. Viditelná pro všechny.</p>
-    </div>
-    <div class="ad-card" onclick="alert('Časové kapsle: Již brzy v M.D. Systému!')">
-        <span style="float:right; font-size:0.6rem; color:var(--gold)">NEW</span>
-        <h4>ČASOVÁ KAPSLE</h4>
-        <p>Pošli vzkaz do budoucnosti. Otevře se za rok!</p>
+        <h4>POSLAT VZKAZ</h4>
+        <p>Zanech stopu za 29 Kč.</p>
     </div>
 </div>
 
+<video id="ar-engine" autoplay playsinline muted></video>
+<div id="ar-overlay"></div>
+<div id="map-view"><div id="map" style="width:100%; height:100%;"></div></div>
+
+<div id="tier-modal" class="modal">
+    <div class="offer-box">
+        <h2 style="font-family:'Orbitron'; color:var(--gold)">VÝBĚR TARIFU</h2>
+        <div onclick="initiatePayment('OSOBNÍ', 29)" style="padding:15px; border:1px solid var(--glow); border-radius:15px; margin:10px 0; cursor:pointer;">OSOBNÍ (29 Kč)</div>
+        <div onclick="initiatePayment('FIREMNÍ', 149)" style="padding:15px; border:1px solid var(--gold); border-radius:15px; margin:10px 0; cursor:pointer;">ZLATÁ (149 Kč)</div>
+        <button onclick="document.getElementById('tier-modal').style.display='none'">Zavřít</button>
+    </div>
+</div>
+
+<div id="pay-modal" class="modal">
+    <div class="offer-box">
+        <h2 style="font-family:'Orbitron'; color:var(--gold)">PLATBA</h2>
+        <div style="background:#fff; padding:10px; border-radius:15px; display:inline-block; margin:15px 0;"><img id="qr-code" style="width:180px;"></div>
+        <div id="pay-info" style="font-size:1.5rem; font-weight:900; color:#fff;"></div>
+        <button onclick="document.getElementById('pay-modal').style.display='none'" style="width:100%; padding:15px; background:var(--gold); border:none; border-radius:15px; font-weight:900;">MÁM ZAPLACENO</button>
+    </div>
+</div>
+
+<div class="footer-ui">
+    <nav>
+        <span class="nav-icon" onclick="toggleMap()">🗺️</span>
+        <span class="nav-icon" onclick="openCreator()" style="font-size:3.2rem;">💬</span>
+        <span class="nav-icon" onclick="adminAccess()">👤</span>
+    </nav>
+</div>
+
 <script>
-    // ... (předchozí proměnné zůstávají) ...
+    let map, isMapActive = false, selectedLat, selectedLng, isAdmin = false;
+    let pendingType = null;
+    const IBAN = "LT533250082844018353";
 
-    // Nová funkce pro rychlou objednávku z banneru
-    function fastTrack(type) {
-        if(!isMapActive) toggleMap();
-        alert(`Vyberte nyní na mapě místo pro vaši ${type} stopu.`);
-        // Systém si zapamatuje, že po kliku na mapu má hned nabídnout daný tarif
-        window.pendingType = type;
-    }
+    setInterval(() => {
+        if(isMapActive) return;
+        const ads = document.querySelectorAll('.ad-card');
+        let activeIdx = Array.from(ads).findIndex(ad => ad.classList.contains('active'));
+        ads[activeIdx].classList.remove('active');
+        activeIdx = (activeIdx + 1) % ads.length;
+        ads[activeIdx].classList.add('active');
+    }, 5000);
 
-    // Upravený klik na mapu pro FastTrack
-    function setupMapEvents() {
-        map.on('click', e => {
-            selectedLat = e.latlng.lat;
-            selectedLng = e.latlng.lng;
-            if(window.pendingType) {
-                initiatePayment(window.pendingType, window.pendingType === 'FIREMNÍ' ? 149 : 29);
-                window.pendingType = null;
-            } else {
-                document.getElementById('tier-modal').style.display = 'flex';
-            }
-        });
-    }
-
-    // Upravená funkce toggleMap
     function toggleMap() {
         isMapActive = !isMapActive;
-        const mapView = document.getElementById('map-view');
-        const arEngine = document.getElementById('ar-engine');
-        mapView.classList.toggle('active', isMapActive);
-        arEngine.style.display = isMapActive ? 'none' : 'block';
-        
+        document.getElementById('map-view').classList.toggle('active', isMapActive);
+        document.getElementById('ad-bar').style.display = isMapActive ? 'none' : 'block';
         if (isMapActive && !map) {
             map = L.map('map', { zoomControl: false }).setView([50.91, 14.62], 15);
             L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png').addTo(map);
-            setupMapEvents(); // Volání nové funkce eventů
+            map.on('click', e => {
+                selectedLat = e.latlng.lat;
+                selectedLng = e.latlng.lng;
+                if(pendingType) {
+                    initiatePayment(pendingType, pendingType === 'FIREMNÍ' ? 149 : 29);
+                    pendingType = null;
+                } else {
+                    document.getElementById('tier-modal').style.display = 'flex';
+                }
+            });
         }
-        if(isMapActive) setTimeout(() => map.invalidateSize(), 100);
+        if(isMapActive) setTimeout(() => map.invalidateSize(), 200);
     }
 
-    // Ostatní funkce zůstávají stejné...
+    function fastTrack(type) {
+        pendingType = type;
+        toggleMap();
+        alert(`Vyber na mapě místo pro tvou ${type} stopu.`);
+    }
+
+    function initiatePayment(type, price) {
+        const text = prompt(`Vzkaz pro ${type}:`);
+        if(!text) return;
+        const qrData = `SPD*1.0*ACC:${IBAN}*AM:${price}.00*CC:CZK*MSG:TADY-${encodeURIComponent(text.substring(0,8))}`;
+        document.getElementById('qr-code').src = `https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=${qrData}`;
+        document.getElementById('pay-info').innerText = `${price} Kč`;
+        document.getElementById('tier-modal').style.display = 'none';
+        document.getElementById('pay-modal').style.display = 'flex';
+    }
+
+    function openCreator() { if(!isMapActive) toggleMap(); }
+    function adminAccess() { if(prompt("HESLO:") === "2025") isAdmin = true; }
+
+    window.onload = () => {
+        navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } })
+        .then(s => document.getElementById('ar-engine').srcObject = s);
+    };
 </script>
+</body>
+</html>
