@@ -3,129 +3,149 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>TADY - Tvůj digitální svět</title>
+    <title>TADY - Oficiální verze</title>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <style>
-        :root { --p: #764ba2; --s: #667eea; --gold: #ffc107; --bg: #f8f9fa; --ar-ui: rgba(0, 210, 255, 0.7); }
-        body { font-family: sans-serif; margin: 0; background: var(--bg); overflow-x: hidden; padding-bottom: 90px; color: #333; }
-        
-        header { background: linear-gradient(135deg, var(--s), var(--p)); color: white; padding: 15px; position: sticky; top: 0; z-index: 1000; text-align: center; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+        :root { --p: #764ba2; --s: #667eea; --gold: #ffc107; --sos: #ff4b2b; --bg: #0b1118; --ar-ui: rgba(0, 210, 255, 0.7); }
+        body, html { margin: 0; padding: 0; width: 100%; height: 100%; font-family: sans-serif; background: var(--bg); color: #333; }
+
+        /* ÚVODNÍ STRÁNKA */
+        #landing-page {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: radial-gradient(circle at center, #162a35 0%, #0b1118 100%);
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            z-index: 5000; transition: 0.5s;
+        }
+        .landing-logo { font-size: 3.5rem; color: #00f2ff; font-weight: 900; letter-spacing: 5px; margin-bottom: 10px; }
+        .btn-vstoupit { background: #00f2ff; color: #0b1118; padding: 15px 45px; border-radius: 30px; font-weight: bold; border: none; cursor: pointer; box-shadow: 0 0 20px rgba(0,242,255,0.4); }
+
+        /* APLIKACE */
+        #app-interface { display: none; background: #f8f9fa; min-height: 100vh; padding-bottom: 90px; }
+        header { background: linear-gradient(135deg, var(--s), var(--p)); color: white; padding: 15px; position: sticky; top: 0; z-index: 1000; text-align: center; }
         .xp-bar { height: 4px; background: rgba(255,255,255,0.3); width: 100%; position: absolute; bottom: 0; left: 0; }
         #xp-fill { height: 100%; background: var(--gold); width: 45%; transition: 0.5s; }
-        .status-info { font-size: 0.7rem; font-weight: bold; margin-bottom: 5px; }
-        .balance-tag { margin-top: 8px; font-weight: 800; background: rgba(0,0,0,0.1); display: inline-block; padding: 4px 12px; border-radius: 15px; }
+        .balance-tag { margin-top: 8px; font-weight: 800; background: rgba(0,0,0,0.1); display: inline-block; padding: 4px 12px; border-radius: 15px; font-size: 0.9rem; }
 
         .container { padding: 15px; max-width: 600px; margin: 0 auto; }
         .section { display: none; animation: fadeIn 0.3s; }
         .section.active { display: block; }
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-        
+
         .card { background: white; border-radius: 20px; padding: 18px; margin-bottom: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); border: 1px solid #eee; }
         .btn { background: var(--p); color: white; border: none; padding: 15px; width: 100%; border-radius: 15px; font-weight: bold; cursor: pointer; font-size: 1rem; }
-        textarea { width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 12px; margin: 10px 0; box-sizing: border-box; }
+        
+        select, textarea { width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 12px; margin: 8px 0; font-family: inherit; box-sizing: border-box; }
 
+        /* AR REŽIM */
         #ar-screen { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: black; display: none; z-index: 2000; }
         #camera-feed { width: 100%; height: 100%; object-fit: cover; }
         .ar-hud { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; }
         .floating-label { 
             position: absolute; background: var(--ar-ui); color: white; padding: 12px 20px; 
             border-radius: 20px; border: 1px solid rgba(255,255,255,0.5); backdrop-filter: blur(8px);
-            animation: float 4s infinite ease-in-out;
+            animation: float 4s infinite ease-in-out; min-width: 120px; text-align: center;
         }
+        .floating-label.gold { background: rgba(255, 193, 7, 0.8); border-color: gold; color: black; }
+        .floating-label.sos { background: rgba(255, 75, 43, 0.8); border-color: white; }
         @keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-15px); } }
 
+        /* NAVIGACE */
         .nav-bar { position: fixed; bottom: 0; width: 100%; background: white; display: flex; justify-content: space-around; padding: 12px 0; border-top: 1px solid #eee; z-index: 1000; }
         .nav-item { text-align: center; font-size: 0.7rem; color: #888; flex: 1; cursor: pointer; }
         .nav-item.active { color: var(--p); font-weight: bold; }
-        .nav-icon { font-size: 1.5rem; display: block; margin-bottom: 3px; }
-
+        
         #map { height: 380px; border-radius: 20px; width: 100%; }
-        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 3000; justify-content: center; align-items: center; }
-        .modal-content { background: white; width: 85%; padding: 30px; border-radius: 30px; text-align: center; }
+        
+        /* ADMIN PANEL */
+        #admin-panel { display: none; background: #fff; border: 2px solid var(--p); padding: 15px; border-radius: 20px; margin-top: 15px; }
     </style>
 </head>
 <body>
 
-<header id="app-header">
-    <div class="status-info">LVL 1 • 45 XP</div>
-    <h1 style="margin:0; font-size: 1.5rem; letter-spacing: 1px;">TADY</h1>
-    <div style="font-size: 0.75rem; opacity: 0.8;">tady se děje všechno</div>
-    <div class="balance-tag">💰 <span id="tc-balance">120</span> TC</div>
-    <div class="xp-bar"><div id="xp-fill"></div></div>
-</header>
+<div id="landing-page">
+    <div class="landing-logo">TADY</div>
+    <div style="color:white; margin-bottom:30px; opacity:0.8;">Všechno důležité je tady.</div>
+    <button class="btn-vstoupit" onclick="enterApp()">VSTOUPIT</button>
+</div>
 
-<div class="container" id="app-body">
-    <div id="section-home" class="section active">
-        <div class="card" style="border: 2px solid var(--gold); background: #fffdf5;">
-            <h3 style="margin:0; color: #b8860b;">✨ Zanechat digitální stopu</h3>
-            <textarea id="new-vzkaz" rows="2" placeholder="Napište vzkaz nebo reklamu..."></textarea>
-            <button class="btn" style="background:var(--gold); color:black;" onclick="placeMarker()">PŘIŠPENDLIT (29 TC)</button>
+<div id="app-interface">
+    <header>
+        <div style="font-size: 0.7rem; font-weight: bold;">LVL 1 • 45 XP</div>
+        <h1 style="margin:0; font-size: 1.5rem; letter-spacing: 1px;">TADY</h1>
+        <div class="balance-tag">💰 <span id="tc-balance">120</span> TC</div>
+        <div class="xp-bar"><div id="xp-fill"></div></div>
+    </header>
+
+    <div class="container">
+        <div id="section-home" class="section active">
+            <div class="card" style="border: 2px solid var(--gold);">
+                <h3 style="margin:0;">✨ Vytvořit digitální stopu</h3>
+                <select id="stopa-type">
+                    <option value="vzkaz">💬 Vzkaz (Zdarma)</option>
+                    <option value="reklama">🏆 Reklama (Patriot - 29 TC)</option>
+                    <option value="sos">🚨 SOS (Priorita)</option>
+                </select>
+                <textarea id="new-vzkaz" rows="2" placeholder="Co chcete vzkázat světu?"></textarea>
+                <button class="btn" style="background:var(--gold); color:black;" onclick="placeMarker()">PŘIŠPENDLIT NA MÍSTĚ</button>
+            </div>
+            <div id="feed-list">
+                <div class="card"><b>M.D.</b><p>Vítejte v plné verzi. Zkuste vytvořit SOS stopu nebo reklamu!</p></div>
+            </div>
         </div>
-        <div id="feed-list">
-            <div class="card">
-                <b style="color: var(--p);">M.D.</b> <small style="color:#999">• Ambasador</small>
-                <p>Systém AR je aktivní. Přidejte první digitální nápis do ulic Varnsdorfu!</p>
+
+        <div id="section-map" class="section">
+            <div class="card"><h3>Digitální mapa města</h3><div id="map"></div></div>
+        </div>
+
+        <div id="section-biz" class="section">
+            <div class="card" style="border: 2px solid var(--p);">
+                <h3>Tarif PATRIOT</h3>
+                <div style="font-size: 2rem; font-weight: 800; color: var(--p);">490 Kč</div>
+                <button class="btn" onclick="openPayment('Patriot', 490)">AKTIVOVAT</button>
+            </div>
+        </div>
+
+        <div id="section-profile" class="section">
+            <div class="card" style="text-align:center;">
+                <div onclick="toggleAdmin()" style="width:80px; height:80px; background:linear-gradient(var(--s),var(--p)); border-radius:50%; margin:0 auto 10px; display:flex; align-items:center; justify-content:center; color:white; font-size:2rem; cursor:pointer;">M</div>
+                <h2>M.D.</h2>
+                <p>Ambasador projektu</p>
+                <div id="admin-panel">
+                    <h4 style="color:var(--p); margin:0;">Administrace M.D.</h4>
+                    <p style="font-size:0.8rem;">Celkem stop v systému: <span id="admin-count">0</span></p>
+                    <button class="btn" style="background:#666; font-size:0.8rem; padding:8px;" onclick="clearAllData()">VYMAZAT VŠECHNY STOPY</button>
+                </div>
             </div>
         </div>
     </div>
 
-    <div id="section-map" class="section">
-        <div class="card"><h3>Mapa stopy</h3><div id="map"></div></div>
-    </div>
-
-    <div id="section-biz" class="section">
-        <h2 style="text-align:center">Růst s TADY</h2>
-        <div class="card" style="border: 2px solid var(--p);">
-            <h3>Tarif PATRIOT</h3>
-            <div style="font-size: 2rem; font-weight: 800; color: var(--p); margin: 10px 0;">490 Kč</div>
-            <button class="btn" onclick="openPayment('Patriot', 490)">AKTIVOVAT PATRIOT</button>
-        </div>
-        <div class="card">
-            <h3>Tarif PARTNER</h3>
-            <div style="font-size: 1.6rem; font-weight: 800; margin: 10px 0;">1 990 Kč</div>
-            <button class="btn" style="background:#666" onclick="openPayment('Partner', 1990)">KONTAKTOVAT M.D.</button>
-        </div>
-    </div>
-
-    <div id="section-profile" class="section">
-        <div class="card" style="text-align:center;">
-            <div style="width: 80px; height: 80px; background: linear-gradient(var(--s), var(--p)); border-radius: 50%; margin: 0 auto 15px; color: white; display: flex; align-items: center; justify-content: center; font-size: 2rem; font-weight: bold; border: 4px solid white; box-shadow: 0 4px 10px rgba(0,0,0,0.1);">M</div>
-            <h2 style="margin:0">M.D.</h2>
-            <p style="color: #888;">Ambasador projektu</p>
-            <hr style="opacity: 0.1; margin: 20px 0;">
-            <button class="btn" style="background:var(--gold); color:black;">MOJE DIGITÁLNÍ STOPY</button>
-        </div>
+    <div class="nav-bar">
+        <div class="nav-item active" onclick="showTab('home', this)">🏠<br>Dění</div>
+        <div class="nav-item" onclick="launchAR()">✨<br>AR Svět</div>
+        <div class="nav-item" onclick="showTab('map', this)">📍<br>Mapa</div>
+        <div class="nav-item" onclick="showTab('biz', this)">💼<br>Byznys</div>
+        <div class="nav-item" onclick="showTab('profile', this)">👤<br>Profil</div>
     </div>
 </div>
 
 <div id="ar-screen">
     <video id="camera-feed" autoplay playsinline></video>
     <div class="ar-hud" id="ar-content"></div>
-    <button onclick="closeAR()" style="position:fixed; top:25px; right:25px; background:white; border:none; border-radius:50%; width:50px; height:50px; font-weight:bold; font-size: 1.2rem; box-shadow: 0 4px 15px rgba(0,0,0,0.3); z-index:2100;">✕</button>
-</div>
-
-<div id="payment-modal" class="modal">
-    <div class="modal-content">
-        <h2 id="modal-title">Platba</h2>
-        <div id="qr-target" style="background: #f0f0f0; padding: 20px; border-radius: 20px; margin-bottom: 20px;"></div>
-        <button class="btn" onclick="confirmPayment()">MÁM ZAPLACENO</button>
-        <p style="margin-top:15px; font-size: 0.8rem; color: #888; cursor:pointer;" onclick="closeModal()">Zrušit</p>
-    </div>
-</div>
-
-<div class="nav-bar">
-    <div class="nav-item active" onclick="showTab('home', this)"><span class="nav-icon">🏠</span>Dění</div>
-    <div class="nav-item" onclick="launchAR()"><span class="nav-icon">✨</span>AR Svět</div>
-    <div class="nav-item" onclick="showTab('map', this)"><span class="nav-icon">📍</span>Mapa</div>
-    <div class="nav-item" onclick="showTab('biz', this)"><span class="nav-icon">💼</span>Byznys</div>
-    <div class="nav-item" onclick="showTab('profile', this)"><span class="nav-icon">👤</span>Profil</div>
+    <button onclick="closeAR()" style="position:fixed; top:25px; right:25px; background:white; border:none; border-radius:50%; width:50px; height:50px; font-weight:bold;">✕</button>
 </div>
 
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script>
-    let savedStopy = JSON.parse(localStorage.getItem('tady_stopy')) || [];
-    let mapInstance = null;
+    function enterApp() {
+        document.getElementById('landing-page').style.opacity = '0';
+        setTimeout(() => {
+            document.getElementById('landing-page').style.display = 'none';
+            document.getElementById('app-interface').style.display = 'block';
+        }, 500);
+    }
 
+    let savedStopy = JSON.parse(localStorage.getItem('tady_stopy')) || [];
+    
     function showTab(id, el) {
         document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
         document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
@@ -133,12 +153,12 @@
         el.classList.add('active');
         if(id === 'map') {
             setTimeout(() => {
-                if(!mapInstance) {
-                    mapInstance = L.map('map').setView([50.911, 14.622], 14);
-                    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(mapInstance);
+                if(!window.m) {
+                    window.m = L.map('map').setView([50.911, 14.622], 14);
+                    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(window.m);
                 }
-                refreshMapMarkers();
-            }, 200);
+                savedStopy.forEach(s => L.marker([s.lat, s.lng]).addTo(window.m).bindPopup(s.txt));
+            }, 300);
         }
     }
 
@@ -147,61 +167,56 @@
             const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } });
             document.getElementById('camera-feed').srcObject = stream;
             document.getElementById('ar-screen').style.display = 'block';
-            document.getElementById('app-header').style.display = 'none';
-            document.getElementById('app-body').style.display = 'none';
-            renderARWorld();
+            renderAR();
         } catch (err) { alert("Povolte kameru."); }
+    }
+
+    function renderAR() {
+        const container = document.getElementById('ar-content');
+        container.innerHTML = "";
+        savedStopy.slice(-6).forEach((s, i) => {
+            const el = document.createElement('div');
+            el.className = `floating-label ${s.type === 'reklama' ? 'gold' : ''} ${s.type === 'sos' ? 'sos' : ''}`;
+            el.style.top = (20 + (i * 12)) + "%";
+            el.style.left = (10 + (i * 4)) + "%";
+            el.innerHTML = `<b>${s.type.toUpperCase()}</b><br>${s.txt}`;
+            container.appendChild(el);
+        });
     }
 
     function closeAR() {
         const stream = document.getElementById('camera-feed').srcObject;
         if(stream) stream.getTracks().forEach(t => t.stop());
         document.getElementById('ar-screen').style.display = 'none';
-        document.getElementById('app-header').style.display = 'block';
-        document.getElementById('app-body').style.display = 'block';
     }
 
     function placeMarker() {
         const text = document.getElementById('new-vzkaz').value;
-        if(!text) return alert("Napište text.");
+        const type = document.getElementById('stopa-type').value;
+        if(!text) return alert("Napište vzkaz.");
+        
         navigator.geolocation.getCurrentPosition((pos) => {
-            const stopa = { txt: text, lat: pos.coords.latitude, lng: pos.coords.longitude };
+            const stopa = { txt: text, type: type, lat: pos.coords.latitude, lng: pos.coords.longitude, time: new Date().toLocaleTimeString() };
             savedStopy.push(stopa);
             localStorage.setItem('tady_stopy', JSON.stringify(savedStopy));
-            alert("Uloženo TADY!");
+            alert("Stopa uložena TADY!");
             document.getElementById('new-vzkaz').value = "";
+            location.reload(); 
         });
     }
 
-    function renderARWorld() {
-        const container = document.getElementById('ar-content');
-        container.innerHTML = "";
-        savedStopy.slice(-5).forEach((s, i) => {
-            const el = document.createElement('div');
-            el.className = "floating-label";
-            el.style.top = (25 + (i * 15)) + "%";
-            el.style.left = (15 + (i * 5)) + "%";
-            el.innerHTML = `<b>M.D.</b><br>${s.txt}`;
-            container.appendChild(el);
-        });
+    function toggleAdmin() {
+        const panel = document.getElementById('admin-panel');
+        panel.style.display = panel.style.display === 'block' ? 'none' : 'block';
+        document.getElementById('admin-count').innerText = savedStopy.length;
     }
 
-    function refreshMapMarkers() {
-        if(!mapInstance) return;
-        savedStopy.forEach(s => L.marker([s.lat, s.lng]).addTo(mapInstance).bindPopup(s.txt));
+    function clearAllData() {
+        if(confirm("Opravdu smazat vše?")) {
+            localStorage.removeItem('tady_stopy');
+            location.reload();
+        }
     }
-
-    function openPayment(typ, cena) {
-        document.getElementById('modal-title').innerText = "Aktivace: " + typ;
-        document.getElementById('qr-target').innerHTML = `
-            <img src="https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=SPD*1.0*ACC:TVUJ-UCET*AM:${cena}*CC:CZK*MSG:TADY-${typ}">
-            <p>Částka: ${cena} Kč</p>
-        `;
-        document.getElementById('payment-modal').style.display = 'flex';
-    }
-
-    function confirmPayment() { alert("Prověříme platbu, M.D."); closeModal(); }
-    function closeModal() { document.getElementById('payment-modal').style.display = 'none'; }
 </script>
 </body>
 </html>
