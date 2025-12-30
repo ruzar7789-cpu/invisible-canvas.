@@ -3,137 +3,181 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>TADY - Digitální svět</title>
+    <title>TADY - Tvůj digitální svět</title>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <style>
-        :root { --p: #764ba2; --s: #667eea; --gold: #ffc107; --bg: #f8f9fa; --ar-blue: rgba(0, 210, 255, 0.6); }
+        :root { --p: #764ba2; --s: #667eea; --gold: #ffc107; --bg: #f8f9fa; --ar-blue: rgba(0, 210, 255, 0.7); }
         body { font-family: sans-serif; margin: 0; background: var(--bg); overflow-x: hidden; padding-bottom: 100px; }
         
-        /* UI PRVKY */
+        /* HEADER & XP */
         header { background: linear-gradient(135deg, var(--s), var(--p)); color: white; padding: 15px; position: sticky; top: 0; z-index: 1000; text-align: center; }
-        .container { padding: 15px; }
+        .xp-bar { height: 4px; background: rgba(255,255,255,0.3); width: 100%; position: absolute; bottom: 0; left: 0; }
+        #xp-fill { height: 100%; background: var(--gold); width: 45%; transition: 0.5s; }
+
+        .container { padding: 15px; max-width: 600px; margin: 0 auto; }
         .section { display: none; }
         .section.active { display: block; }
-        .card { background: white; border-radius: 20px; padding: 15px; margin-bottom: 15px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); border: 1px solid #eee; }
-        .btn { background: var(--p); color: white; border: none; padding: 15px; width: 100%; border-radius: 15px; font-weight: bold; cursor: pointer; }
+        .card { background: white; border-radius: 20px; padding: 15px; margin-bottom: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); border: 1px solid #eee; position: relative; }
+        .btn { background: var(--p); color: white; border: none; padding: 15px; width: 100%; border-radius: 15px; font-weight: bold; cursor: pointer; margin-top: 10px; }
         
-        /* AR MÓD - KAMERA */
-        #ar-section { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: black; display: none; z-index: 500; }
+        /* AR SYSTÉM */
+        #ar-view { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: black; display: none; z-index: 2000; }
         #video-feed { width: 100%; height: 100%; object-fit: cover; }
         .ar-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; }
-        
-        /* AR KARTY (z tvého obrázku) */
-        .ar-card { 
-            position: absolute; background: var(--ar-blue); color: white; padding: 15px; 
-            border-radius: 15px; border: 1px solid rgba(255,255,255,0.4); backdrop-filter: blur(8px);
-            width: 200px; animation: float 3s ease-in-out infinite; 
+        .ar-label { 
+            position: absolute; background: var(--ar-blue); color: white; padding: 12px; 
+            border-radius: 12px; border: 1px solid rgba(255,255,255,0.4); backdrop-filter: blur(10px);
+            min-width: 150px; text-align: center; animation: float 3s infinite ease-in-out;
         }
-        @keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
+        @keyframes float { 0%, 100% { transform: translateY(0) scale(1); } 50% { transform: translateY(-10px) scale(1.02); } }
 
         /* NAVIGACE */
-        .nav-bar { position: fixed; bottom: 0; width: 100%; background: white; display: flex; justify-content: space-around; padding: 15px 0; border-top: 1px solid #eee; z-index: 1000; }
-        .nav-item { text-align: center; font-size: 0.7rem; color: #888; flex: 1; }
+        .nav-bar { position: fixed; bottom: 0; width: 100%; background: white; display: flex; justify-content: space-around; padding: 12px 0; border-top: 1px solid #eee; z-index: 1000; }
+        .nav-item { text-align: center; font-size: 0.7rem; color: #888; flex: 1; cursor: pointer; }
         .nav-item.active { color: var(--p); font-weight: bold; }
-        .nav-icon { font-size: 1.5rem; display: block; }
-        #map { height: 350px; border-radius: 20px; }
-        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.75); z-index: 2000; justify-content: center; align-items: center; }
+        .nav-icon { font-size: 1.4rem; display: block; margin-bottom: 2px; }
+
+        #map { height: 350px; border-radius: 20px; width: 100%; }
+        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 3000; justify-content: center; align-items: center; }
         .modal-body { background: white; width: 85%; padding: 25px; border-radius: 25px; text-align: center; }
+        textarea { width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 10px; margin-top: 10px; box-sizing: border-box; }
     </style>
 </head>
 <body>
 
-<header id="main-header">
-    <div style="font-size: 0.7rem;">LVL 1 • 45 XP</div>
-    <h1 style="margin:5px 0; font-size: 1.4rem;">TADY</h1>
-    <div style="background: rgba(0,0,0,0.1); display: inline-block; padding: 4px 12px; border-radius: 15px;">💰 <span id="balance">120</span> TC</div>
+<header>
+    <div style="font-size: 0.7rem; font-weight: bold;">LVL 1 • 45 XP</div>
+    <h1 style="margin:5px 0 0 0; font-size: 1.4rem;">TADY</h1>
+    <div style="margin-top:8px; font-weight: 800; background: rgba(0,0,0,0.1); display: inline-block; padding: 4px 12px; border-radius: 15px;">💰 <span id="balance">120</span> TC</div>
+    <div class="xp-bar"><div id="xp-fill"></div></div>
 </header>
 
-<div class="container" id="main-content">
+<div class="container">
     <div id="feeds" class="section active">
-        <div class="card"><b>Marcel DRVOTA</b><p>Vítejte ve své vizi. AR mód je nyní připraven.</p></div>
+        <div class="card" style="border: 2px solid var(--gold);">
+            <h3 style="margin:0">✨ Vytvořit digitální stopu</h3>
+            <p style="font-size: 0.8rem; color: #666;">Napište vzkaz nebo reklamu, která zůstane na tomto místě pro ostatní.</p>
+            <textarea id="spot-text" rows="3" placeholder="Ahoj! Zítra v 5 tady?"></textarea>
+            <button class="btn" style="background:var(--gold); color:black;" onclick="createDigitalSpot()">PŘIŠPENDLIT NA MÍSTĚ (29 TC)</button>
+        </div>
+        <div id="news-feed">
+            <div class="card">
+                <b>Marcel DRVOTA</b> <small style="color:#888">• nyní</small>
+                <p>Vítejte v první AR síti ve Varnsdorfu. Umístěte svůj první nápis!</p>
+            </div>
+        </div>
     </div>
 
     <div id="map-section" class="section">
-        <div class="card"><h3>Mapa Varnsdorfu</h3><div id="map"></div></div>
+        <div class="card">
+            <h3>Mapa stopy</h3>
+            <div id="map"></div>
+        </div>
     </div>
 
     <div id="business" class="section">
+        <h2 style="text-align:center">Růst s TADY</h2>
         <div class="card" style="border: 2px solid var(--p);">
             <h3>Tarif PATRIOT</h3>
-            <div style="font-size: 1.8rem; font-weight: 800; color: var(--p);">490 Kč</div>
-            <button class="btn" onclick="openQR('Patriot', 490)">Objednat</button>
+            <div style="font-size: 1.8rem; font-weight: 800; color: var(--p);">490 Kč <small style="font-size:0.8rem">/měsíc</small></div>
+            <p style="font-size: 0.85rem;">Neomezené digitální nápisy a reklamy na mapě.</p>
+            <button class="btn" onclick="showPay('Patriot', 490)">Objednat</button>
         </div>
         <div class="card">
             <h3>Tarif PARTNER</h3>
             <div style="font-size: 1.5rem; font-weight: 800;">1 990 Kč</div>
-            <button class="btn" style="background:#888" onclick="openQR('Partner', 1990)">Kontaktovat</button>
+            <button class="btn" style="background:#888" onclick="showPay('Partner', 1990)">Kontaktovat</button>
         </div>
     </div>
 </div>
 
-<div id="ar-section">
+<div id="ar-view">
     <video id="video-feed" autoplay playsinline></video>
-    <div class="ar-overlay">
-        <div class="ar-card" style="top: 20%; left: 10%;">
-            <h4 style="margin:0">Denní menu</h4>
-            <hr>
-            <p style="font-size: 0.8rem;">Svíčková - 145 Kč<br>Guláš - 130 Kč</p>
+    <div class="ar-overlay" id="ar-labels">
         </div>
-        <div class="ar-card" style="top: 50%; right: 10%; background: rgba(118, 75, 162, 0.6);">
-            <p style="margin:0; font-size: 0.9rem;">Ahoj! Zítra v 5 tady?</p>
-        </div>
-    </div>
-    <button onclick="closeAR()" style="position:fixed; top:20px; right:20px; background:white; border:none; border-radius:50%; width:40px; height:40px; font-weight:bold; z-index:600;">X</button>
+    <button onclick="stopAR()" style="position:fixed; top:20px; right:20px; background:white; border:none; border-radius:50%; width:45px; height:45px; font-weight:bold; z-index:2500;">X</button>
 </div>
 
-<div id="payment-modal" class="modal">
+<div id="pay-modal" class="modal">
     <div class="modal-body">
-        <h3 id="pay-title">Platba</h3>
-        <div id="qr-display"></div>
-        <button class="btn" style="margin-top:15px" onclick="document.getElementById('payment-modal').style.display='none'">MÁM ZAPLACENO</button>
+        <h3 id="pay-title">Aktivace</h3>
+        <div id="qr-space"></div>
+        <button class="btn" style="margin-top:15px" onclick="document.getElementById('pay-modal').style.display='none'">MÁM ZAPLACENO</button>
     </div>
 </div>
 
 <div class="nav-bar">
-    <div class="nav-item active" onclick="nav('feeds', this)"><span class="nav-icon">🏠</span>Dění</div>
+    <div class="nav-item active" onclick="switchNav('feeds', this)"><span class="nav-icon">🏠</span>Dění</div>
     <div class="nav-item" onclick="startAR()"><span class="nav-icon">✨</span>AR Svět</div>
-    <div class="nav-item" onclick="nav('map-section', this)"><span class="nav-icon">📍</span>Mapa</div>
-    <div class="nav-item" onclick="nav('business', this)"><span class="nav-icon">💼</span>Byznys</div>
+    <div class="nav-item" onclick="switchNav('map-section', this)"><span class="nav-icon">📍</span>Mapa</div>
+    <div class="nav-item" onclick="switchNav('business', this)"><span class="nav-icon">💼</span>Byznys</div>
 </div>
 
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script>
-    function nav(id, el) {
+    let mySpots = JSON.parse(localStorage.getItem('t_spots')) || [];
+
+    function switchNav(id, el) {
         document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
         document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
         document.getElementById(id).classList.add('active');
-        if(el) el.classList.add('active');
+        el.classList.add('active');
         if(id === 'map-section') {
-            setTimeout(() => { if(!window.m) { window.m = L.map('map').setView([50.911, 14.622], 14); L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(window.m); } }, 300);
+            setTimeout(() => {
+                if(!window.m) {
+                    window.m = L.map('map').setView([50.911, 14.622], 14);
+                    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(window.m);
+                }
+                mySpots.forEach(s => L.marker([s.lat, s.lng]).addTo(window.m).bindPopup(s.txt));
+            }, 300);
         }
     }
 
     async function startAR() {
-        const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } });
-        document.getElementById('video-feed').srcObject = stream;
-        document.getElementById('ar-section').style.display = 'block';
-        document.getElementById('main-header').style.display = 'none';
-        document.getElementById('main-content').style.display = 'none';
+        try {
+            const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } });
+            document.getElementById('video-feed').srcObject = stream;
+            document.getElementById('ar-view').style.display = 'block';
+            renderARLabels();
+        } catch (e) { alert("Kamera nebyla povolena."); }
     }
 
-    function closeAR() {
+    function stopAR() {
         const stream = document.getElementById('video-feed').srcObject;
-        stream.getTracks().forEach(track => track.stop());
-        document.getElementById('ar-section').style.display = 'none';
-        document.getElementById('main-header').style.display = 'block';
-        document.getElementById('main-content').style.display = 'block';
-        nav('feeds');
+        if(stream) stream.getTracks().forEach(t => t.stop());
+        document.getElementById('ar-view').style.display = 'none';
     }
 
-    function openQR(tarif, cena) {
-        document.getElementById('pay-title').innerText = tarif + " - " + cena + " Kč";
-        document.getElementById('qr-display').innerHTML = `<img src="https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=SPD*1.0*ACC:TVUJ-UCET*AM:${cena}*CC:CZK*MSG:TADY-${tarif}">`;
-        document.getElementById('payment-modal').style.display = 'flex';
+    function createDigitalSpot() {
+        const txt = document.getElementById('spot-text').value;
+        if(!txt) return alert("Napište text své reklamy!");
+        
+        navigator.geolocation.getCurrentPosition((p) => {
+            const spot = { txt: txt, lat: p.coords.latitude, lng: p.coords.longitude };
+            mySpots.push(spot);
+            localStorage.setItem('t_spots', JSON.stringify(mySpots));
+            alert("Úspěšně uloženo TADY! Váš nápis je nyní v AR světě.");
+            document.getElementById('spot-text').value = "";
+        });
+    }
+
+    function renderARLabels() {
+        const container = document.getElementById('ar-labels');
+        container.innerHTML = "";
+        mySpots.forEach((s, i) => {
+            const div = document.createElement('div');
+            div.className = "ar-label";
+            div.style.top = (20 + (i * 15)) + "%";
+            div.style.left = (10 + (i * 5)) + "%";
+            div.innerHTML = `<b>M.D.</b><br>${s.txt}`;
+            container.appendChild(div);
+        });
+    }
+
+    function showPay(t, c) {
+        document.getElementById('pay-title').innerText = t + " - " + c + " Kč";
+        document.getElementById('qr-space').innerHTML = `<img src="https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=SPD*1.0*ACC:TVUJ-UCET*AM:${c}*CC:CZK*MSG:TADY-${t}">`;
+        document.getElementById('pay-modal').style.display = 'flex';
     }
 </script>
 </body>
