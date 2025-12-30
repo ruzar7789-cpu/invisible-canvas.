@@ -18,11 +18,10 @@
         .lead { font-size: 0.7rem; opacity: 0.9; margin-top: 5px; letter-spacing: 2px; font-weight: bold; }
         .container { padding: 20px; max-width: 600px; margin: 0 auto; padding-bottom: 120px; }
         .card { background: white; border-radius: 30px; padding: 25px; margin-bottom: 25px; box-shadow: 0 20px 50px rgba(0,0,0,0.3); color: #333; }
-        textarea { width: 100%; padding: 18px; border: 2px solid #f0f0f0; border-radius: 20px; box-sizing: border-box; margin-bottom: 15px; background: #f9f9f9; font-size: 1rem; resize: none; border: none; outline: none; box-shadow: inset 0 2px 5px rgba(0,0,0,0.05); }
-        .btn { background: var(--p); color: white; border: none; padding: 18px; width: 100%; border-radius: 20px; font-weight: 800; cursor: pointer; font-size: 1.1rem; transition: 0.3s; }
-        .btn:active { transform: scale(0.98); opacity: 0.9; }
+        textarea { width: 100%; padding: 18px; border: 2px solid #f0f0f0; border-radius: 20px; box-sizing: border-box; margin-bottom: 15px; background: #f9f9f9; font-size: 1rem; resize: none; border: none; outline: none; }
+        .btn { background: var(--p); color: white; border: none; padding: 18px; width: 100%; border-radius: 20px; font-weight: 800; cursor: pointer; font-size: 1.1rem; }
         .btn-ai { background: linear-gradient(90deg, #00f2ff, #667eea); border: none; margin-top: 10px; color: #000; }
-        #map { height: 300px; border-radius: 25px; width: 100%; border: 4px solid white; margin-top: 10px; z-index: 1; }
+        #map { height: 300px; border-radius: 25px; width: 100%; border: 4px solid white; margin-top: 10px; }
         nav { position: fixed; bottom: 25px; left: 50%; transform: translateX(-50%); width: 85%; background: rgba(255,255,255,0.95); backdrop-filter: blur(20px); display: flex; justify-content: space-around; padding: 18px 0; border-radius: 40px; z-index: 1000; box-shadow: 0 15px 35px rgba(0,0,0,0.3); }
         .nav-item { font-size: 1.6rem; cursor: pointer; color: #444; }
     </style>
@@ -44,8 +43,8 @@
 
     <div class="card" style="background: #0b1118; color: white; border: 1px solid var(--cyan);">
         <h3 style="margin-top:0; color: var(--cyan);">🤖 AI Inteligence sítě</h3>
-        <div id="ai-status" style="margin-bottom: 15px; font-size: 0.95rem; color: #adffd2; min-height: 40px; font-weight: 500;">
-            Připravena k analýze okolí...
+        <div id="ai-status" style="margin-bottom: 15px; font-size: 0.95rem; color: #adffd2; min-height: 40px;">
+            Připravena k analýze digitálních stop...
         </div>
         <button class="btn btn-ai" onclick="runAI()">ZEPTAT SE AI</button>
     </div>
@@ -58,45 +57,44 @@
 
 <nav>
     <div class="nav-item" onclick="location.reload()">🏠</div>
-    <div class="nav-item" onclick="alert('Vize: Propojujeme lidi a byznys v reálném čase.')">✨</div>
+    <div class="nav-item" onclick="alert('Vize: Propojujeme lidi v reálném čase.')">✨</div>
     <div class="nav-item" onclick="alert('Profil: M.D.')">👤</div>
 </nav>
 
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script>
+    // Tvůj ověřený API klíč
     const GEMINI_KEY = "AIzaSyDOLpRJ9EOJvjPEWayPnWztnVdj8btUDA4"; 
 
     let map;
     function initMap() {
         map = L.map('map').setView([50.91, 14.62], 14);
         L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}.png').addTo(map);
-        const data = JSON.parse(localStorage.getItem('tady_final_data')) || [];
-        data.forEach(s => {
-            L.circle([s.lat, s.lng], { radius: 100, color: '#764ba2', fillOpacity: 0.4 }).addTo(map).bindPopup(s.text);
-        });
+        const stopy = JSON.parse(localStorage.getItem('tady_stopy')) || [];
+        stopy.forEach(s => L.circle([s.lat, s.lng], { radius: 100, color: '#764ba2' }).addTo(map).bindPopup(s.text));
     }
 
     function ulozit() {
         const text = document.getElementById('msg').value;
         if(!text) return;
         navigator.geolocation.getCurrentPosition(p => {
-            const stopa = { text, lat: p.coords.latitude, lng: p.coords.longitude, time: new Date().toISOString() };
-            let data = JSON.parse(localStorage.getItem('tady_final_data')) || [];
-            data.push(stopa);
-            localStorage.setItem('tady_final_data', JSON.stringify(data));
+            const novaStopa = { text, lat: p.coords.latitude, lng: p.coords.longitude };
+            let stopy = JSON.parse(localStorage.getItem('tady_stopy')) || [];
+            stopy.push(novaStopa);
+            localStorage.setItem('tady_stopy', JSON.stringify(stopy));
             document.getElementById('msg').value = "";
             location.reload();
-        }, () => alert("Povolte prosím GPS pro vložení stopy."));
+        }, () => alert("Prosím povolte GPS."));
     }
 
     async function runAI() {
         const box = document.getElementById('ai-status');
-        box.innerText = "Analyzuji digitální stopy...";
+        box.innerText = "Komunikuji s mozkem sítě...";
         
-        const stopy = JSON.parse(localStorage.getItem('tady_final_data')) || [];
-        const kontext = stopy.length > 0 ? stopy.slice(-5).map(s => s.text).join(", ") : "Zatím žádné zprávy v této lokalitě.";
+        const stopy = JSON.parse(localStorage.getItem('tady_stopy')) || [];
+        const kontext = stopy.length > 0 ? stopy.slice(-3).map(s => s.text).join(", ") : "Žádné stopy v okolí.";
 
-        // Použití nejstabilnější adresy pro model Flash
+        // PŘESNÁ ADRESA PRO TVŮJ KLÍČ (v1beta + gemini-1.5-flash)
         const api_url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_KEY}`;
 
         try {
@@ -104,22 +102,20 @@
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
-                    contents: [{ parts: [{ text: `Jsi AI mozek sítě TADY. Projekt vede M.D. s rozpočtem 75.000 EUR. Na základě těchto stop: "${kontext}", napiš jeden inspirativní postřeh pro uživatele v reálném čase. Buď stručný a profesionální.` }] }]
+                    contents: [{ parts: [{ text: `Jsi mozek aplikace TADY. Projekt vede M.D. s rozpočtem 75.000 EUR. Na základě těchto stop: "${kontext}" napiš krátký, inspirativní postřeh pro uživatele.` }] }]
                 })
             });
 
-            const resData = await response.json();
+            const data = await response.json();
             
-            if (resData.candidates && resData.candidates[0].content) {
-                box.innerText = resData.candidates[0].content.parts[0].text;
-            } else if (resData.error) {
-                box.innerText = "AI se aktualizuje (Kód: " + resData.error.status + "). Zkuste to za chvíli.";
+            if (data.candidates && data.candidates[0].content) {
+                box.innerText = data.candidates[0].content.parts[0].text;
             } else {
-                box.innerText = "AI právě zpracovává data, zkuste to prosím znovu.";
+                box.innerText = "AI zrovna přemýšlí, zkuste to za chvíli znovu.";
             }
 
         } catch(e) { 
-            box.innerText = "Spojení se přerušilo. Zkontrolujte signál a zkuste to znovu.";
+            box.innerText = "Chyba spojení. Zkuste to za okamžik.";
             console.error(e);
         }
     }
