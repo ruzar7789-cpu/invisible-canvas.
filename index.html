@@ -3,64 +3,62 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>TADY | M.D. SYSTÉM</title>
+    <title>TADY | M.D. Command Center</title>
     
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@900&family=Inter:wght@400;700&display=swap" rel="stylesheet">
 
     <style>
-        :root { --glow: #00f2ff; --gold: #ffd700; --glass: rgba(5, 10, 15, 0.95); }
+        :root { --glow: #00f2ff; --gold: #ffd700; --glass: rgba(10, 15, 25, 0.95); }
         body, html { margin: 0; padding: 0; width: 100%; height: 100%; font-family: 'Inter', sans-serif; background: #000; color: #fff; overflow: hidden; }
+        #ar-engine { position: fixed; top: 0; width: 100%; height: 100%; object-fit: cover; z-index: 5; }
+        #map-view { position: fixed; top: 0; width: 100%; height: 100%; z-index: 100; display: none; }
         
-        /* ZÁKLADNÍ VRSTVY */
-        #ar-engine { position: fixed; top: 0; left: 0; width: 100%; height: 100%; object-fit: cover; z-index: 10; }
-        #map-view { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 100; display: none; }
-        #ui-layer { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 200; pointer-events: none; }
-
-        /* REKLAMY - MUSÍ BÝT KLIKATELNÉ */
-        .ad-container { position: absolute; top: 50px; width: 90%; left: 5%; pointer-events: auto; }
-        .ad-card { background: var(--glass); border-radius: 15px; padding: 15px; border-left: 5px solid var(--gold); text-align: center; cursor: pointer; display: none; }
+        /* REKLAMY */
+        .ad-container { position: fixed; top: 60px; width: 90%; left: 5%; z-index: 200; pointer-events: auto; }
+        .ad-card { background: var(--glass); border-radius: 15px; padding: 15px; border-left: 5px solid var(--gold); display: none; animation: fadeIn 0.5s; cursor: pointer; border: 1px solid rgba(255,255,255,0.1); }
         .ad-card.active { display: block; }
+        .ad-card h4 { margin: 0; color: var(--gold); font-family: 'Orbitron'; font-size: 0.8rem; }
 
-        /* MODALY - NEJVYŠŠÍ PRIORITA */
-        .modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 1000; background: rgba(0,0,0,0.9); display: none; align-items: center; justify-content: center; pointer-events: auto; }
-        .offer-box { background: #111; padding: 30px; border-radius: 30px; border: 1px solid #333; width: 80%; text-align: center; }
+        /* ADMIN DASHBOARD */
+        #admin-dash { position: fixed; bottom: 100px; width: 90%; left: 5%; background: var(--gold); color: #000; border-radius: 20px; padding: 15px; z-index: 2000; display: none; max-height: 40vh; overflow-y: auto; box-shadow: 0 0 30px rgba(0,0,0,0.5); }
+        .admin-item { background: rgba(0,0,0,0.1); padding: 10px; border-radius: 10px; margin-bottom: 10px; border: 1px solid rgba(0,0,0,0.2); }
+        .admin-btn { padding: 8px; border: none; border-radius: 5px; font-weight: 900; cursor: pointer; margin-top: 5px; }
 
-        /* MENU */
-        .footer-ui { position: fixed; bottom: 0; width: 100%; z-index: 500; padding: 20px 0; background: linear-gradient(to top, #000 80%, transparent); text-align: center; pointer-events: auto; }
+        /* MODALY */
+        .modal { position: fixed; top: 0; width: 100%; height: 100%; z-index: 3000; background: rgba(0,0,0,0.95); display: none; align-items: center; justify-content: center; }
+        .offer-box { background: #111; padding: 30px; border-radius: 30px; width: 80%; text-align: center; border: 1px solid #333; }
+        
+        .footer-ui { position: fixed; bottom: 0; width: 100%; z-index: 1000; padding: 20px 0; background: linear-gradient(to top, #000, transparent); text-align: center; }
         .nav-icon { cursor: pointer; display: inline-block; margin: 0 20px; font-size: 2.5rem; }
-
-        #admin-panel { position: fixed; top: 0; width: 100%; background: var(--gold); color: #000; z-index: 1100; padding: 10px; display: none; text-align: center; font-weight: 900; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
     </style>
 </head>
 <body>
 
-<div id="admin-panel">ADMIN MÓD M.D. <button onclick="location.reload()">ODHLÁSIT</button></div>
-
 <video id="ar-engine" autoplay playsinline muted></video>
+<div id="map-view"><div id="map" style="width:100%; height:100%;"></div></div>
 
-<div id="map-view"><div id="map" style="width: 100%; height: 100%;"></div></div>
+<div class="ad-container">
+    <div class="ad-card active" onclick="fastTrack('FIREMNÍ')"><h4>ZLATÁ STOPA</h4><p>Ukažte své menu celému městu!</p></div>
+    <div class="ad-card" onclick="fastTrack('OSOBNÍ')"><h4>TADY SE DĚJE VŠE</h4><p>Zanech vzkaz na tomto místě za 29 Kč.</p></div>
+    <div class="ad-card" onclick="alert('Již brzy!')"><h4>ČASOVÁ KAPSLE</h4><p>Otevřete vzkazy z minulosti.</p></div>
+    <div class="ad-card" onclick="fastTrack('FIREMNÍ')"><h4>M.D. BUSINESS</h4><p>Certifikované firemní zápisy.</p></div>
+</div>
 
-<div id="ui-layer">
-    <div class="ad-container">
-        <div class="ad-card active" onclick="fastTrack('FIREMNÍ')">
-            <h4>ZLATÁ STOPA</h4>
-            <p>Klikněte pro firemní menu!</p>
-        </div>
-        <div class="ad-card" onclick="fastTrack('OSOBNÍ')">
-            <h4>OSOBNÍ VZKAZ</h4>
-            <p>Zanechte stopu za 29 Kč.</p>
-        </div>
-    </div>
+<div id="admin-dash">
+    <h3 style="margin-top:0; font-family:'Orbitron'">M.D. SPRÁVA VZKAZŮ</h3>
+    <div id="admin-list">Žádné nové vzkazy k vyřízení.</div>
+    <button onclick="location.reload()" style="width:100%; background:#000; color:#fff; padding:10px; border-radius:10px; margin-top:10px; font-weight:900;">ODHLÁSIT ADMINA</button>
 </div>
 
 <div id="pay-modal" class="modal">
     <div class="offer-box">
-        <h2 style="font-family:'Orbitron'; color:var(--gold)">PLATBA</h2>
-        <div style="background:#fff; padding:10px; border-radius:15px; margin:15px 0;"><img id="qr-img" style="width:200px;"></div>
-        <div id="price-tag" style="font-size:1.8rem; font-weight:900;"></div>
-        <button onclick="closePay()" style="width:100%; padding:15px; background:var(--gold); border:none; border-radius:15px; font-weight:900; margin-top:10px;">HOTOVO</button>
+        <h2 style="font-family:'Orbitron'; color:var(--gold)">PLATBA QR</h2>
+        <div style="background:#fff; padding:10px; border-radius:15px; margin:15px 0;"><img id="qr-img" style="width:180px;"></div>
+        <div id="price-tag" style="font-size:1.5rem; font-weight:900;"></div>
+        <button onclick="document.getElementById('pay-modal').style.display='none'" style="width:100%; padding:15px; background:var(--gold); border:none; border-radius:15px; font-weight:900;">HOTOVO</button>
     </div>
 </div>
 
@@ -73,59 +71,66 @@
 </div>
 
 <script>
-    let map, isMap = false, pType = null;
+    let map, isMap = false, isAdmin = false, vzkazy = [];
     const IBAN = "LT533250082844018353";
 
-    // Reklamní cyklus
     setInterval(() => {
-        if(isMap) return;
         let ads = document.querySelectorAll('.ad-card');
         let current = Array.from(ads).findIndex(a => a.classList.contains('active'));
         ads[current].classList.remove('active');
         ads[(current + 1) % ads.length].classList.add('active');
-    }, 4000);
+    }, 5000);
 
     function toggleMap() {
         isMap = !isMap;
         document.getElementById('map-view').style.display = isMap ? 'block' : 'none';
-        document.getElementById('ui-layer').style.display = isMap ? 'none' : 'block';
-        
         if(isMap && !map) {
             map = L.map('map', { zoomControl: false }).setView([50.91, 14.62], 15);
             L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png').addTo(map);
             map.on('click', e => {
-                let type = pType || (confirm("Chcete Firemní stopu? (OK=Ano, Zrušit=Osobní)") ? 'FIREMNÍ' : 'OSOBNÍ');
-                showPayment(type);
-                pType = null;
+                let type = confirm("Klikněte OK pro Firemní (149,-) nebo Zrušit pro Osobní (29,-)") ? 'FIREMNÍ' : 'OSOBNÍ';
+                let txt = prompt("Text vzkazu:");
+                if(txt) {
+                    vzkazy.push({ type, txt, lat: e.latlng.lat, lng: e.latlng.lng, active: false });
+                    showQR(type);
+                    updateAdminList();
+                }
             });
         }
         if(isMap) setTimeout(() => map.invalidateSize(), 200);
     }
 
-    function fastTrack(t) { pType = t; toggleMap(); }
-
-    function showPayment(type) {
-        let msg = prompt(`Napište vzkaz pro ${type}:`);
-        if(!msg) return;
-        let price = type === 'FIREMNÍ' ? 149 : 29;
-        let qrData = `SPD*1.0*ACC:${IBAN}*AM:${price}.00*CC:CZK*MSG:TADY-${type}`;
-        document.getElementById('qr-img').src = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${qrData}`;
-        document.getElementById('price-tag').innerText = price + " Kč";
+    function showQR(type) {
+        let p = type === 'FIREMNÍ' ? 149 : 29;
+        document.getElementById('qr-img').src = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=SPD*1.0*ACC:${IBAN}*AM:${p}.00*CC:CZK*MSG:TADY`;
+        document.getElementById('price-tag').innerText = p + " Kč";
         document.getElementById('pay-modal').style.display = 'flex';
     }
 
-    function closePay() {
-        document.getElementById('pay-modal').style.display = 'none';
-        toggleMap();
-        alert("Vzkaz uložen. Po schválení M.D. se objeví v AR.");
-    }
-
     function adminLogin() {
-        if(prompt("HESLO:") === "2025") {
-            document.getElementById('admin-panel').style.display = 'block';
-            alert("ADMIN AKTIVNÍ");
+        if(prompt("HESLO M.D.:") === "2025") {
+            isAdmin = true;
+            document.getElementById('admin-dash').style.display = 'block';
+            updateAdminList();
         }
     }
+
+    function updateAdminList() {
+        const list = document.getElementById('admin-list');
+        list.innerHTML = vzkazy.length === 0 ? "Žádné vzkazy." : "";
+        vzkazy.forEach((v, i) => {
+            list.innerHTML += `
+                <div class="admin-item">
+                    <b>${v.type}:</b> ${v.txt} <br>
+                    <button class="admin-btn" style="background:lime" onclick="approve(${i})">POVOLIT</button>
+                    <button class="admin-btn" style="background:red; color:white" onclick="remove(${i})">SMAZAT</button>
+                </div>`;
+        });
+    }
+
+    function approve(i) { vzkazy[i].active = true; alert("Vzkaz aktivován v AR!"); updateAdminList(); }
+    function remove(i) { vzkazy.splice(i, 1); updateAdminList(); }
+    function fastTrack(t) { toggleMap(); alert(`Vyberte místo pro ${t} stopu.`); }
 
     window.onload = () => {
         navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } })
