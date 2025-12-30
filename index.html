@@ -11,79 +11,152 @@
 
     <style>
         :root { --p: #764ba2; --s: #667eea; --acc: #00d2ff; --gold: #ffc107; --danger: #ff5252; --bg: #f4f7f6; --card: #ffffff; }
-        body { font-family: 'Plus Jakarta Sans', sans-serif; margin: 0; background: var(--bg); padding-bottom: 90px; }
-        header { background: linear-gradient(135deg, var(--s), var(--p)); color: white; padding: 15px 20px; position: sticky; top: 0; z-index: 1000; display: flex; justify-content: space-between; align-items: center; }
+        
+        body { font-family: 'Plus Jakarta Sans', sans-serif; margin: 0; background: var(--bg); color: #2d3436; padding-bottom: 90px; }
+        
+        /* Horní Lišta */
+        header { 
+            background: linear-gradient(135deg, var(--s), var(--p)); 
+            color: white; padding: 15px 20px; 
+            position: sticky; top: 0; z-index: 1000; 
+            display: flex; justify-content: space-between; align-items: center;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .status-bar { background: white; padding: 8px 20px; display: flex; align-items: center; gap: 15px; font-size: 0.75rem; border-bottom: 1px solid #eee; }
+        .xp-bg { flex-grow: 1; height: 6px; background: #eee; border-radius: 3px; overflow: hidden; }
+        #xp-fill { height: 100%; width: 0%; background: var(--acc); transition: 0.5s; }
+
         .container { max-width: 600px; margin: 0 auto; padding: 15px; }
-        .section { display: none; }
+        .section { display: none; animation: fadeIn 0.3s; }
         .section.active { display: block; }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+        /* Karty a Design */
         .card { background: var(--card); border-radius: 18px; padding: 16px; margin-bottom: 15px; box-shadow: 0 4px 12px rgba(0,0,0,0.03); border: 1px solid #eee; }
-        .price-box { border: 2px solid #eee; border-radius: 15px; padding: 15px; margin-bottom: 10px; }
+        .sos-card { border: 2px solid var(--danger); background: #fffefe; }
+        
+        /* Ceník */
+        .price-box { border: 2px solid #eee; border-radius: 15px; padding: 15px; margin-bottom: 15px; position: relative; }
         .price-box.featured { border-color: var(--p); background: #fdfbff; }
-        .price-tag { font-size: 1.5rem; font-weight: 800; color: var(--p); margin: 10px 0; }
+        .price-tag { font-size: 1.6rem; font-weight: 800; color: var(--p); margin: 10px 0; }
+        
+        /* Tlačítka */
+        .btn { background: var(--p); color: white; border: none; padding: 14px; width: 100%; border-radius: 12px; font-weight: 700; cursor: pointer; transition: 0.2s; }
+        .btn:active { transform: scale(0.98); }
+        .btn-gold { background: var(--gold); color: black; }
+        
+        /* Navigace */
         .nav-bar { position: fixed; bottom: 0; width: 100%; background: white; display: flex; justify-content: space-around; padding: 12px 0; box-shadow: 0 -4px 10px rgba(0,0,0,0.05); z-index: 1000; }
         .nav-item { color: #b2bec3; text-align: center; font-size: 0.7rem; cursor: pointer; flex: 1; }
-        .nav-item.active { color: var(--p); }
+        .nav-item.active { color: var(--p); font-weight: 800; }
         .nav-item i { font-size: 1.3rem; display: block; margin-bottom: 4px; }
-        .btn { background: var(--p); color: white; border: none; padding: 14px; width: 100%; border-radius: 12px; font-weight: 700; cursor: pointer; }
+
+        /* Mapa a Modály */
+        #map { height: 350px; width: 100%; border-radius: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
+        .fab { position: fixed; bottom: 100px; right: 20px; width: 60px; height: 60px; background: var(--p); color: white; border-radius: 50%; border: none; font-size: 24px; z-index: 999; box-shadow: 0 5px 15px rgba(0,0,0,0.2); }
         .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 2000; justify-content: center; align-items: center; backdrop-filter: blur(5px); }
-        .modal-body { background: white; width: 90%; max-width: 400px; padding: 25px; border-radius: 28px; max-height: 80vh; overflow-y: auto; }
-        input, textarea, select { width: 100%; padding: 12px; margin: 8px 0; border: 1px solid #eee; border-radius: 10px; box-sizing: border-box; }
+        .modal-body { background: white; width: 90%; max-width: 400px; padding: 25px; border-radius: 28px; max-height: 85vh; overflow-y: auto; }
+        
+        input, textarea, select { width: 100%; padding: 12px; margin: 8px 0; border: 1px solid #eee; border-radius: 12px; font-family: inherit; font-size: 1rem; box-sizing: border-box; }
     </style>
 </head>
 <body>
 
+    <div class="status-bar">
+        <div style="font-weight: 800;">LVL <span id="lvl">1</span></div>
+        <div class="xp-bg"><div id="xp-fill"></div></div>
+        <div id="xp-text" style="color: var(--p); font-weight: 700;">0 XP</div>
+    </div>
+
     <header>
-        <h1 style="margin:0; font-size: 1.4rem;">TADY</h1>
-        <div style="background: rgba(255,255,255,0.2); padding: 5px 12px; border-radius: 20px; font-size: 0.85rem; font-weight: 800;"><span id="balance">120</span> TC</div>
+        <h1 style="margin:0; font-size: 1.4rem; font-weight: 800; letter-spacing: 1px;">TADY</h1>
+        <div style="background: rgba(255,255,255,0.2); padding: 5px 15px; border-radius: 20px; font-size: 0.9rem; font-weight: 800;">
+            <i class="fas fa-coins" style="color:var(--gold)"></i> <span id="balance">120</span> TC
+        </div>
     </header>
 
     <div class="container">
-        <div id="feeds" class="section active"><div id="feed-list"></div></div>
+        <div id="feeds" class="section active">
+            <div id="feed-list"></div>
+        </div>
 
-        <div id="map-section" class="section"><div id="map" style="height: 350px; border-radius: 20px;"></div></div>
+        <div id="map-section" class="section">
+            <div id="map"></div>
+            <p style="text-align:center; font-size: 0.8rem; color:#b2bec3; margin-top:10px;">Všechny důležité události ve Varnsdorfu</p>
+        </div>
 
         <div id="business" class="section">
             <h2 style="margin-top:0">Růst s TADY</h2>
+            <p style="color:#636e72; font-size:0.9rem; margin-bottom:20px;">Vyberte si tarif a zviditelněte své podnikání.</p>
+            
             <div class="price-box">
-                <b>Soused (Zdarma)</b><div class="price-tag">0 Kč</div>
-                <button class="btn" style="background:#b2bec3" onclick="openOrder('Soused')">Aktivovat</button>
+                <b>Soused (Zdarma)</b>
+                <div class="price-tag">0 Kč</div>
+                <button class="btn" style="background:#b2bec3" onclick="openOrder('Soused')">Získat základ</button>
             </div>
+
             <div class="price-box featured">
-                <b>Patriot (PRO)</b><div class="price-tag">490 Kč <small>/měsíc</small></div>
-                <button class="btn" onclick="openOrder('Patriot')">Objednat a zaplatit</button>
+                <div style="position:absolute; top: -10px; right: 10px; background:var(--p); color:white; padding:2px 10px; border-radius:10px; font-size:0.6rem;">NEJOBLÍBENĚJŠÍ</div>
+                <b>Patriot (PRO)</b>
+                <div class="price-tag">490 Kč <small>/měsíc</small></div>
+                <button class="btn" onclick="openOrder('Patriot')">Objednat tarif</button>
             </div>
+
             <div class="price-box">
-                <b>Partner (TOP)</b><div class="price-tag">1 990 Kč <small>/měsíc</small></div>
+                <b>Partner (TOP)</b>
+                <div class="price-tag">1 990 Kč <small>/měsíc</small></div>
                 <button class="btn" onclick="openOrder('Partner')">Chci být partnerem</button>
             </div>
         </div>
 
         <div id="profile" class="section">
             <div class="card" style="text-align: center;">
-                <div style="width: 70px; height: 70px; background: var(--p); border-radius: 50%; margin: 0 auto 10px; color: white; display: flex; align-items: center; justify-content: center; font-size: 1.5rem; font-weight: 800;">M</div>
-                <h3>Marcel DRVOTA</h3>
-                <button class="btn" style="background:var(--gold); color:black;" onclick="openAdmin()"><i class="fas fa-crown"></i> Správa objednávek</button>
+                <div style="width: 80px; height: 80px; background: var(--p); border-radius: 50%; margin: 0 auto 15px; color: white; display: flex; align-items: center; justify-content: center; font-size: 2rem; font-weight: 800;">M</div>
+                <h2 style="margin-bottom:5px;">Marcel DRVOTA</h2>
+                <p style="color:#b2bec3; margin-top:0;">Ambasador projektu TADY</p>
+                <hr style="border:0; border-top:1px solid #eee; margin:20px 0;">
+                <button class="btn btn-gold" onclick="openAdmin()"><i class="fas fa-crown"></i> Správa objednávek</button>
+                <div style="text-align:left; margin-top:20px; font-size:0.8rem;">
+                    <b>MOJE STATISTIKY:</b><br>
+                    Uděleno XP: <span id="stat-xp">0</span><br>
+                    Aktivních postů: <span id="stat-posts">0</span>
+                </div>
             </div>
         </div>
     </div>
 
     <div id="order-modal" class="modal">
         <div class="modal-body">
-            <h3 id="order-title">Objednávka tarifu</h3>
-            <input type="text" id="biz-name" placeholder="Název firmy / Jméno">
-            <input type="text" id="biz-ico" placeholder="IČO (volitelné)">
-            <input type="email" id="biz-email" placeholder="E-mail pro fakturaci">
-            <textarea id="biz-note" placeholder="Vaše zpráva pro Marcela..."></textarea>
-            <button class="btn" onclick="submitOrder()">Odeslat objednávku</button>
-            <button onclick="closeModal('order-modal')" style="border:none; background:none; color:#b2bec3; width:100%; margin-top:10px; cursor:pointer;">Zrušit</button>
+            <h3 id="order-title">Objednávka</h3>
+            <p style="font-size:0.8rem; color:#636e72;">Zadejte údaje pro vystavení faktury.</p>
+            <input type="text" id="biz-name" placeholder="Název firmy">
+            <input type="text" id="biz-ico" placeholder="IČO">
+            <input type="email" id="biz-email" placeholder="Kontaktní e-mail">
+            <textarea id="biz-note" rows="3" placeholder="Poznámka..."></textarea>
+            <button class="btn" onclick="submitOrder()">Odeslat požadavek</button>
+            <button onclick="closeModal('order-modal')" style="border:none; background:none; color:#b2bec3; width:100%; margin-top:15px; cursor:pointer;">Zrušit</button>
         </div>
     </div>
 
     <div id="admin-modal" class="modal">
         <div class="modal-body">
-            <h3>Nové objednávky</h3>
-            <div id="admin-orders">Žádné nové požadavky.</div>
-            <button class="btn" style="margin-top:15px" onclick="closeModal('admin-modal')">Zavřít</button>
+            <h3>Poptávky od firem</h3>
+            <div id="admin-orders-list" style="margin-bottom:15px;"></div>
+            <button class="btn" onclick="closeModal('admin-modal')">Zavřít</button>
+        </div>
+    </div>
+
+    <div id="post-modal" class="modal">
+        <div class="modal-body">
+            <h3>Sdílet moment</h3>
+            <select id="post-type">
+                <option value="post">Běžná novinka (+10 XP)</option>
+                <option value="sos">SOS Pomoc (+50 XP)</option>
+            </select>
+            <textarea id="post-input" rows="4" placeholder="Co se TADY děje?"></textarea>
+            <button class="btn" onclick="submitPost()">Publikovat</button>
+            <button onclick="closeModal('post-modal')" style="border:none; background:none; color:#b2bec3; width:100%; margin-top:15px; cursor:pointer;">Zrušit</button>
         </div>
     </div>
 
@@ -94,47 +167,98 @@
         <div class="nav-item" onclick="nav('profile', this)"><i class="fas fa-user-shield"></i>Profil</div>
     </div>
 
+    <button class="fab" onclick="openPostModal()"><i class="fas fa-plus"></i></button>
+
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script>
+        // DATA A PERSISTENCE
+        let xp = parseInt(localStorage.getItem('t_xp')) || 0;
+        let lvl = parseInt(localStorage.getItem('t_lvl')) || 1;
+        let tc = parseInt(localStorage.getItem('t_tc')) || 120;
+        let posts = JSON.parse(localStorage.getItem('t_posts')) || [];
         let orders = JSON.parse(localStorage.getItem('t_orders')) || [];
         let currentTarif = "";
 
+        function updateUI() {
+            document.getElementById('lvl').innerText = lvl;
+            document.getElementById('balance').innerText = tc;
+            document.getElementById('xp-fill').style.width = xp + "%";
+            document.getElementById('xp-text').innerText = xp + " XP";
+            document.getElementById('stat-xp').innerText = (lvl-1)*100 + xp;
+            document.getElementById('stat-posts').innerText = posts.length;
+
+            const list = document.getElementById('feed-list');
+            list.innerHTML = posts.length ? "" : "<div class='card'>Zatím tu nic není. Buďte první!</div>";
+            posts.forEach(p => {
+                const card = document.createElement('div');
+                card.className = p.type === 'sos' ? "card sos-card" : "card";
+                card.innerHTML = `<b>${p.user}</b> <small style='color:#b2bec3'>• ${p.time}</small><p style='margin:10px 0'>${p.text}</p>`;
+                list.insertBefore(card, list.firstChild);
+            });
+
+            localStorage.setItem('t_xp', xp);
+            localStorage.setItem('t_lvl', lvl);
+            localStorage.setItem('t_tc', tc);
+            localStorage.setItem('t_posts', JSON.stringify(posts));
+            localStorage.setItem('t_orders', JSON.stringify(orders));
+        }
+
+        // NAVIGACE
         function nav(id, el) {
             document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
             document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
             document.getElementById(id).classList.add('active');
             el.classList.add('active');
-            if(id === 'map-section') setTimeout(() => { if(!window.mI){ window.mI = L.map('map').setView([50.911, 14.622], 14); L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png').addTo(window.mI); }}, 200);
+            if(id === 'map-section') setTimeout(initMap, 200);
         }
 
-        function openOrder(tarif) { currentTarif = tarif; document.getElementById('order-title').innerText = "Tarif: " + tarif; document.getElementById('order-modal').style.display = 'flex'; }
+        function initMap() {
+            if (window.mapInstance) return;
+            window.mapInstance = L.map('map', { zoomControl: false }).setView([50.911, 14.622], 14);
+            L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png').addTo(window.mapInstance);
+            L.marker([50.911, 14.622]).addTo(window.mapInstance).bindPopup("Varnsdorf - TADY");
+        }
+
+        // MODÁLY A AKCE
+        function openPostModal() { document.getElementById('post-modal').style.display = 'flex'; }
+        function openOrder(tarif) { currentTarif = tarif; document.getElementById('order-title').innerText = "Objednat " + tarif; document.getElementById('order-modal').style.display = 'flex'; }
         function closeModal(id) { document.getElementById(id).style.display = 'none'; }
-        
+
+        function submitPost() {
+            const txt = document.getElementById('post-input').value;
+            const type = document.getElementById('post-type').value;
+            if(!txt) return;
+
+            xp += (type === 'sos' ? 50 : 10);
+            if(xp >= 100) { xp -= 100; lvl++; alert("LEVEL UP!"); }
+
+            posts.push({ user: "Marcel DRVOTA", text: txt, type: type, time: new Date().toLocaleTimeString() });
+            updateUI(); closeModal('post-modal'); document.getElementById('post-input').value = "";
+        }
+
         function submitOrder() {
             const order = {
                 tarif: currentTarif,
-                name: document.getElementById('biz-name').value,
-                ico: document.getElementById('biz-ico').value,
+                biz: document.getElementById('biz-name').value,
                 email: document.getElementById('biz-email').value,
                 time: new Date().toLocaleString()
             };
-            if(!order.name || !order.email) { alert("Vyplňte prosím jméno a email."); return; }
+            if(!order.biz || !order.email) return alert("Vyplňte prosím název a e-mail.");
             orders.push(order);
-            localStorage.setItem('t_orders', JSON.stringify(orders));
-            alert("Objednávka odeslána! Marcel se vám brzy ozve.");
-            closeModal('order-modal');
+            updateUI(); closeModal('order-modal');
+            alert("Objednávka byla odeslána Marcelovi. Brzy vás kontaktujeme.");
         }
 
         function openAdmin() {
-            const list = document.getElementById('admin-orders');
-            list.innerHTML = orders.length ? "" : "Žádné nové požadavky.";
-            orders.forEach((o, i) => {
-                list.innerHTML += `<div class="card" style="font-size:0.8rem"><b>${o.tarif}</b>: ${o.name}<br>${o.email}<br><small>${o.time}</small></div>`;
+            const list = document.getElementById('admin-orders-list');
+            list.innerHTML = orders.length ? "" : "Žádné nové objednávky.";
+            orders.forEach(o => {
+                list.innerHTML += `<div class='card' style='font-size:0.8rem'><b>${o.tarif}</b><br>${o.biz}<br>${o.email}</div>`;
             });
             document.getElementById('admin-modal').style.display = 'flex';
         }
 
-        nav('feeds', document.querySelector('.nav-item'));
+        updateUI();
     </script>
 </body>
 </html>
