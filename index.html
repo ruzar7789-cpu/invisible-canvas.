@@ -63,14 +63,14 @@
 
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script>
-    // Váš ověřený klíč ze screenshotu 1000023656.jpg
+    // Klíč z vašeho Google AI Studio
     const GEMINI_KEY = "AIzaSyDOLpRJ9EOJvjPEWayPnWztnVdj8btUDA4"; 
 
     let map;
     function initMap() {
         map = L.map('map').setView([50.91, 14.62], 14);
         L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}.png').addTo(map);
-        const data = JSON.parse(localStorage.getItem('tady_v6_data')) || [];
+        const data = JSON.parse(localStorage.getItem('tady_v7_data')) || [];
         data.forEach(s => L.circle([s.lat, s.lng], { radius: 100, color: '#764ba2' }).addTo(map));
     }
 
@@ -79,55 +79,43 @@
         if(!text) return;
         navigator.geolocation.getCurrentPosition(p => {
             const stopa = { text, lat: p.coords.latitude, lng: p.coords.longitude };
-            let data = JSON.parse(localStorage.getItem('tady_v6_data')) || [];
+            let data = JSON.parse(localStorage.getItem('tady_v7_data')) || [];
             data.push(stopa);
-            localStorage.setItem('tady_v6_data', JSON.stringify(data));
+            localStorage.setItem('tady_v7_data', JSON.stringify(data));
             location.reload();
         }, () => alert("Povolte GPS."));
     }
 
     async function runAI() {
         const box = document.getElementById('ai-status');
-        box.innerText = "Komunikuji s mozkem sítě...";
+        box.innerText = "Hledám odpověď v síti...";
         
-        const stopy = JSON.parse(localStorage.getItem('tady_v6_data')) || [];
+        const stopy = JSON.parse(localStorage.getItem('tady_v7_data')) || [];
         const kontext = stopy.length > 0 ? stopy.slice(-3).map(s => s.text).join("; ") : "Žádné zprávy.";
 
-        // OPRAVENÁ URL: používáme verzi v1 místo v1beta a správný název modelu
-        const api_url = `https://generativelanguage.googleapis.com/v1/models/gemini-pro:generateContent?key=${GEMINI_KEY}`;
+        // POUŽÍVÁME PŘESNÝ NÁZEV MODELU, KTERÝ GOOGLE AKCEPTUJE
+        const api_url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=${GEMINI_KEY}`;
 
         try {
             const response = await fetch(api_url, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
-                    contents: [{ parts: [{ text: `Jsi AI aplikace TADY. Slogan: všechno důležité je tady. Projekt vede M.D. s rozpočtem 75tis EUR. Na základě těchto stop napiš krátký postřeh: ${kontext}` }] }]
+                    contents: [{ parts: [{ text: `Jsi AI mozek sociální sítě TADY. Projekt vede M.D. s rozpočtem 75.000 EUR. Analyzuj tyto zprávy z okolí a napiš jeden krátký, inspirativní postřeh: ${kontext}` }] }]
                 })
             });
 
             const resData = await response.json();
             
-            if (resData.error) {
-                // Pokud gemini-pro nepůjde, zkusíme záložní flash model
-                throw new Error(resData.error.message);
+            if (resData.candidates && resData.candidates[0].content) {
+                box.innerText = resData.candidates[0].content.parts[0].text;
+            } else {
+                throw new Error("Neplatná odpověď");
             }
-
-            box.innerText = resData.candidates[0].content.parts[0].text;
 
         } catch(e) { 
-            // ZÁLOŽNÍ POKUS s jiným formátem názvu modelu
-            try {
-                const retry_url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=${GEMINI_KEY}`;
-                const retry_res = await fetch(retry_url, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ contents: [{ parts: [{ text: `Postřeh pro M.D. a aplikaci TADY k těmto zprávám: ${kontext}` }] }] })
-                });
-                const retryData = await retry_res.json();
-                box.innerText = retryData.candidates[0].content.parts[0].text;
-            } catch(e2) {
-                box.innerText = "AI se aktualizuje, zkuste to za chvíli. " + e.message;
-            }
+            box.innerText = "AI se probouzí. Zkuste to prosím za 10 sekund.";
+            console.error(e);
         }
     }
 
