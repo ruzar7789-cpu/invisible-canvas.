@@ -3,198 +3,117 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>TADY | M.D. Global Solution</title>
+    <title>TADY | M.D. Digital World</title>
     <script src="https://unpkg.com/html5-qrcode"></script>
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <style>
-        :root { --gold: #ffd700; --cyan: #00f2ff; --bg: #000; --glass: rgba(255,255,255,0.1); }
-        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; font-family: 'Inter', sans-serif; }
-        body, html { margin: 0; padding: 0; width: 100%; height: 100%; background: var(--bg); color: #fff; overflow: hidden; }
+        :root { --glow: #00f2ff; --gold: #ffd700; --glass: rgba(20, 40, 60, 0.5); --text: #fff; }
+        body, html { margin: 0; padding: 0; width: 100%; height: 100%; font-family: 'Inter', sans-serif; background: #000; overflow: hidden; color: var(--text); }
         
-        /* LAYERS */
-        #map { height: 100vh; width: 100vw; position: absolute; z-index: 5; }
-        #ar-view { position: fixed; top: 0; left: 0; width: 100%; height: 100%; object-fit: cover; z-index: 10; display: none; }
-        #ar-bubbles { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 11; pointer-events: none; }
-        #qr-reader { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 2000; background: #000; display: none; }
+        /* KAMERA */
+        #ar-engine { position: fixed; top: 0; left: 0; width: 100%; height: 100%; object-fit: cover; z-index: 1; }
+        #ar-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 10; pointer-events: none; }
 
-        /* BRANDING M.D. */
-        header { position: fixed; top: 0; width: 100%; z-index: 100; padding: 40px 20px; text-align: center; pointer-events: none; }
-        .logo { font-size: 3.5rem; font-weight: 900; letter-spacing: 15px; text-shadow: 0 0 30px var(--cyan); pointer-events: auto; }
-        .tag-md { position: fixed; top: 20px; right: 20px; z-index: 1000; color: var(--cyan); font-weight: 900; cursor: pointer; }
+        /* HOLOGRAFICKÉ KARTY (Dle tvého obrázku) */
+        .hologram {
+            position: absolute; background: var(--glass); backdrop-filter: blur(15px);
+            border: 1px solid rgba(0, 242, 255, 0.4); border-radius: 20px; padding: 18px;
+            box-shadow: 0 0 25px rgba(0, 242, 255, 0.15); animation: float 5s infinite ease-in-out;
+            min-width: 180px; pointer-events: auto; cursor: pointer;
+        }
+        .hologram.premium { border: 1px solid var(--gold); box-shadow: 0 0 25px rgba(255, 215, 0, 0.2); }
+        .hologram h3 { margin: 0 0 8px 0; font-size: 1rem; color: var(--glow); border-bottom: 1px solid rgba(0, 242, 255, 0.2); padding-bottom: 5px; text-transform: uppercase; }
+        .hologram.premium h3 { color: var(--gold); border-bottom: 1px solid rgba(255, 215, 0, 0.3); }
+        .hologram p { margin: 5px 0; font-size: 0.85rem; line-height: 1.4; opacity: 0.9; }
 
-        /* UI PANELS */
-        .panel { position: fixed; bottom: 120px; left: 50%; transform: translateX(-50%); width: 90%; max-width: 450px; z-index: 100; background: rgba(0,0,0,0.85); backdrop-filter: blur(30px); border-radius: 40px; padding: 30px; border: 1px solid var(--glass); }
-        .modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); z-index: 3000; display: none; align-items: center; justify-content: center; flex-direction: column; }
-        .modal-box { background: #111; padding: 40px; border-radius: 40px; text-align: center; border: 1px solid var(--gold); width: 85%; }
+        /* PLATEBNÍ BRÁNA (MODAL) */
+        #pay-modal {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
+            background: rgba(0,0,0,0.95); z-index: 1000; display: none;
+            align-items: center; justify-content: center; flex-direction: column;
+        }
+        .pay-box { background: #111; padding: 35px; border-radius: 40px; text-align: center; border: 1px solid var(--gold); width: 85%; max-width: 400px; }
+        .pay-box img { background: white; padding: 10px; border-radius: 15px; width: 220px; margin: 20px 0; }
 
-        /* BUTTONS */
-        .btn { width: 100%; padding: 18px; border-radius: 20px; border: none; font-weight: 900; cursor: pointer; margin-top: 10px; text-transform: uppercase; font-size: 0.8rem; }
-        .btn-gold { background: var(--gold); color: #000; box-shadow: 0 0 20px rgba(255,215,0,0.3); }
-        .btn-cyan { background: var(--cyan); color: #000; }
+        /* SPODNÍ NÁPIS A NAVIGACE (Dle tvého obrázku) */
+        .footer-ui { position: fixed; bottom: 0; width: 100%; z-index: 100; padding-bottom: 30px; text-align: center; background: linear-gradient(to top, rgba(0,0,0,0.8), transparent); }
+        .footer-ui h2 { margin: 0; font-size: 2.2rem; font-weight: 900; letter-spacing: 6px; }
+        .footer-ui p { margin: 5px 0 20px 0; font-size: 0.7rem; letter-spacing: 2px; opacity: 0.6; }
 
-        /* AR BUBBLE ANIMATION */
-        .bubble { position: absolute; padding: 20px; border-radius: 25px; background: var(--glass); backdrop-filter: blur(15px); border: 1px solid rgba(255,255,255,0.2); animation: float 4s infinite ease-in-out; pointer-events: auto; }
-        @keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-20px); } }
-
-        /* NAVIGATION */
-        nav { position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%); z-index: 1000; background: rgba(0,0,0,0.9); padding: 15px 45px; border-radius: 100px; display: flex; gap: 40px; border: 1px solid var(--glass); }
-        .nav-i { font-size: 2.2rem; opacity: 0.3; cursor: pointer; }
-        .nav-i.active { opacity: 1; transform: scale(1.2); }
-
+        nav { display: flex; justify-content: center; gap: 50px; }
+        .nav-btn { font-size: 1.8rem; cursor: pointer; filter: drop-shadow(0 0 5px var(--glow)); transition: 0.3s; }
+        
+        @keyframes float { 0%, 100% { transform: translateY(0) rotate(0deg); } 50% { transform: translateY(-15px) rotate(1deg); } }
         .hidden { display: none !important; }
     </style>
 </head>
 <body>
 
-<div id="qr-reader"></div>
-<video id="ar-view" autoplay playsinline></video>
-<div id="ar-bubbles"></div>
-<div id="map"></div>
+<video id="ar-engine" autoplay playsinline></video>
+<div id="ar-overlay"></div>
 
-<div id="pay-modal" class="modal">
-    <div class="modal-box">
-        <h2 style="color:var(--gold); letter-spacing: 2px;">PLATEBNÍ BRÁNA TADY</h2>
-        <p style="font-size: 0.8rem; opacity: 0.7;">Příjemce: M.D.</p>
-        <div id="my-qr-code" style="background: white; padding: 15px; border-radius: 20px; margin: 20px 0;">
-            <img src="https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=https://your-bank-qr-link" style="width:100%;" alt="M.D. QR Platba">
-        </div>
-        <p style="font-size: 1.2rem; font-weight: 900;">29,- Kč</p>
-        <button class="btn btn-gold" onclick="finishPayment()">POTVRDIT ZAPLACENÍ</button>
-        <button class="btn" style="background:transparent; color:gray;" onclick="document.getElementById('pay-modal').style.display='none'">ZRUŠIT</button>
+<div id="pay-modal">
+    <div class="pay-box">
+        <h2 style="color:var(--gold); margin:0;">M.D. PLATBA</h2>
+        <p style="font-size:0.8rem; opacity:0.6;">Zlatá stopa TADY</p>
+        <img src="https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=https://your-bank-qr-details" alt="Platební QR">
+        <div style="font-size: 1.5rem; font-weight: 900; margin-bottom: 20px;">29,- Kč</div>
+        <button onclick="closePay()" style="width:100%; padding:15px; border-radius:15px; border:none; background:var(--gold); font-weight:900; cursor:pointer;">MÁM ZAPLACENO</button>
+        <button onclick="closePay()" style="background:none; border:none; color:gray; margin-top:15px; cursor:pointer;">ZAVŘÍT</button>
     </div>
 </div>
 
-<div class="tag-md" onclick="admin()">M.D.</div>
-
-<header>
-    <div class="logo">TADY</div>
-    <div style="font-size: 0.6rem; letter-spacing: 5px; color: var(--cyan); font-weight: bold;">VŠE DŮLEŽITÉ JE TADY</div>
-</header>
-
-<div class="panel" id="ui">
-    <textarea id="msg" placeholder="Napište vzkaz světu..." rows="2" style="width:100%; background:transparent; border:none; color:white; font-size:1.2rem; outline:none;"></textarea>
-    <div style="display:flex; gap:10px; margin-top:15px;">
-        <button class="btn" style="background:#fff; color:#000;" onclick="place('social')">SOCIÁLNÍ</button>
-        <button class="btn btn-gold" onclick="pay()">BYZNYS 29,-</button>
-    </div>
-    <button class="btn btn-cyan" onclick="scan()">📷 SKENOVAT QR KÓD</button>
+<div class="footer-ui">
+    <h2>DOHROMADY</h2>
+    <p>Vytvoř si svůj digitální svět</p>
+    <nav>
+        <div class="nav-btn" onclick="alert('Hledám okolní stopy...')">🔍</div>
+        <div class="nav-btn" onclick="openCreate()">💬</div>
+        <div class="nav-btn" onclick="location.reload()">👤</div>
+    </nav>
 </div>
 
-<nav>
-    <div class="nav-i active" id="m1" onclick="sw('map')">🌍</div>
-    <div class="nav-i" id="m2" onclick="sw('ar')">✨</div>
-    <div class="nav-i" id="m3" onclick="sw('ai')">🧠</div>
-</nav>
-
-<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script>
-    let map, points = JSON.parse(localStorage.getItem('TADY_DB')) || [];
-    let qrScanner;
+    const overlay = document.getElementById('ar-overlay');
 
-    function init() {
-        map = L.map('map', {zoomControl: false, attributionControl: false}).setView([50.91, 14.62], 16);
-        L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}.png').addTo(map);
-        
-        // Načtení bodů z DB
-        points.forEach((p, idx) => {
-            const color = p.type === 'gold' ? '#ffd700' : '#00f2ff';
-            L.circle([p.lat, p.lng], {radius: 20, color: color, fillOpacity: 0.8}).addTo(map)
-             .bindPopup(`${p.text}<br><button onclick="shareLink(${idx})" style="border:none; background:none; color:#00f2ff; cursor:pointer;">🔗 SDÍLET</button>`);
-        });
-
-        // Kontrola, zda někdo nepřišel přes sdílený odkaz
-        checkSharedLink();
+    async function startAR() {
+        try {
+            const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } });
+            document.getElementById('ar-engine').srcObject = stream;
+            loadWorld();
+        } catch (e) { alert("Povolte kameru pro AR."); }
     }
 
-    // MODUL SDÍLENÍ
-    function shareLink(idx) {
-        const p = points[idx];
-        const url = window.location.origin + window.location.pathname + `?lat=${p.lat}&lng=${p.lng}&msg=${encodeURIComponent(p.text)}`;
-        if (navigator.share) {
-            navigator.share({ title: 'TADY Stopa', text: p.text, url: url });
-        } else {
-            prompt("Zkopírujte tento odkaz pro sdílení:", url);
-        }
-    }
+    function loadWorld() {
+        // Data z tvé sítě TADY
+        const spots = [
+            { title: "Denni menu", text: "Svidova s knedliky<br>Gulas: 220<br>Lasagne: 180", x: 45, y: 20, type: 'social' },
+            { title: "Premium M.D.", text: "Tady bude tvá reklama.<br>Klikni pro aktivaci.", x: 20, y: 50, type: 'gold' }
+        ];
 
-    function checkSharedLink() {
-        const params = new URLSearchParams(window.location.search);
-        if(params.has('lat') && params.has('lng')) {
-            const lat = parseFloat(params.get('lat'));
-            const lng = parseFloat(params.get('lng'));
-            map.setView([lat, lng], 19);
-            L.marker([lat, lng]).addTo(map).bindPopup(params.get('msg')).openPopup();
-        }
-    }
-
-    // QR & AR LOGIKA
-    function scan() {
-        const r = document.getElementById('qr-reader');
-        r.style.display = 'block';
-        qrScanner = new Html5Qrcode("qr-reader");
-        qrScanner.start({ facingMode: "environment" }, { fps: 10, qrbox: 250 }, (txt) => {
-            if(txt.includes('TADY-PAY')) { pay(); } 
-            else { document.getElementById('msg').value = txt; }
-            qrScanner.stop(); r.style.display = 'none';
+        spots.forEach(s => {
+            const div = document.createElement('div');
+            div.className = `hologram ${s.type === 'gold' ? 'premium' : ''}`;
+            div.style.left = s.x + '%';
+            div.style.top = s.y + '%';
+            div.innerHTML = `<h3>${s.title}</h3><p>${s.text}</p>`;
+            
+            // Kliknutí na zlatou kartu otevře tvůj QR kód
+            if(s.type === 'gold') {
+                div.onclick = () => document.getElementById('pay-modal').style.display = 'flex';
+            }
+            
+            overlay.appendChild(div);
         });
     }
 
-    function pay() { document.getElementById('pay-modal').style.display = 'flex'; }
-    function finishPayment() {
-        alert("M.D. potvrzuje přijetí platby. Stopa se generuje...");
-        document.getElementById('pay-modal').style.display = 'none';
-        place('gold');
+    function openCreate() {
+        const m = prompt("Co chceš nechat TADY?");
+        if(m) alert("Tvá stopa byla odeslána do sítě M.D.");
     }
 
-    async function sw(mode) {
-        document.querySelectorAll('.nav-i').forEach(n => n.classList.remove('active'));
-        document.getElementById('m' + (mode === 'map' ? '1' : mode === 'ar' ? '2' : '3')).classList.add('active');
-        const ar = document.getElementById('ar-view');
-        const mapE = document.getElementById('map');
-        const ui = document.getElementById('ui');
+    function closePay() { document.getElementById('pay-modal').style.display = 'none'; }
 
-        if(mode === 'ar') {
-            const s = await navigator.mediaDevices.getUserMedia({video: {facingMode: "environment"}});
-            ar.srcObject = s; ar.style.display = 'block'; mapE.style.display = 'none'; ui.style.display = 'none';
-            renderAR();
-        } else {
-            ar.style.display = 'none'; mapE.style.display = 'block'; ui.style.display = 'block';
-            if(ar.srcObject) ar.srcObject.getTracks().forEach(t => t.stop());
-            if(mode === 'ai') alert("AI analyzuje světovou síť M.D...");
-        }
-    }
-
-    function place(type) {
-        const t = document.getElementById('msg').value;
-        navigator.geolocation.getCurrentPosition(p => {
-            points.push({text: t, type, lat: p.coords.latitude, lng: p.coords.longitude});
-            localStorage.setItem('TADY_DB', JSON.stringify(points));
-            location.reload();
-        });
-    }
-
-    function renderAR() {
-        const b = document.getElementById('ar-bubbles');
-        b.innerHTML = '';
-        points.slice(-8).forEach((p, i) => {
-            const d = document.createElement('div');
-            d.className = `bubble ${p.type === 'gold' ? 'gold' : ''}`;
-            d.style.left = (Math.random() * 50 + 10) + '%';
-            d.style.top = (15 + (i * 12)) + '%';
-            d.innerHTML = `<strong>${p.type === 'gold' ? '🌟' : '💬'}</strong><br>${p.text || "Stopa TADY"}`;
-            b.appendChild(d);
-        });
-    }
-
-    function admin() {
-        const pass = prompt("Heslo správce:");
-        if(pass === "tady") {
-            const total = points.filter(p => p.type === 'gold').length * 29;
-            alert(`M.D. Statistiky:\nCelkový obrat: ${total} Kč\nPočet stop: ${points.length}`);
-        }
-    }
-
-    window.onload = init;
+    window.onload = startAR;
 </script>
 </body>
 </html>
