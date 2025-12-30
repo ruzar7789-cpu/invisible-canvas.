@@ -20,25 +20,28 @@
         /* BRANDING M.D. */
         header { position: fixed; top: 0; width: 100%; z-index: 100; padding: 40px 20px; text-align: center; pointer-events: none; }
         .logo { font-size: 3.5rem; font-weight: 900; letter-spacing: 15px; text-shadow: 0 0 30px var(--cyan); pointer-events: auto; }
-        .tag-md { position: fixed; top: 20px; right: 20px; z-index: 1000; color: var(--cyan); font-weight: 900; cursor: pointer; letter-spacing: 2px; }
+        .tag-md { position: fixed; top: 20px; right: 20px; z-index: 1000; color: var(--cyan); font-weight: 900; cursor: pointer; }
 
-        /* UI & PAYMENT MODAL */
+        /* UI PANELS */
         .panel { position: fixed; bottom: 120px; left: 50%; transform: translateX(-50%); width: 90%; max-width: 450px; z-index: 100; background: rgba(0,0,0,0.85); backdrop-filter: blur(30px); border-radius: 40px; padding: 30px; border: 1px solid var(--glass); }
         .modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); z-index: 3000; display: none; align-items: center; justify-content: center; flex-direction: column; }
         .modal-box { background: #111; padding: 40px; border-radius: 40px; text-align: center; border: 1px solid var(--gold); width: 85%; }
 
         /* BUTTONS */
-        .btn { width: 100%; padding: 18px; border-radius: 20px; border: none; font-weight: 900; cursor: pointer; margin-top: 10px; text-transform: uppercase; }
+        .btn { width: 100%; padding: 18px; border-radius: 20px; border: none; font-weight: 900; cursor: pointer; margin-top: 10px; text-transform: uppercase; font-size: 0.8rem; }
         .btn-gold { background: var(--gold); color: #000; box-shadow: 0 0 20px rgba(255,215,0,0.3); }
         .btn-cyan { background: var(--cyan); color: #000; }
 
         /* AR BUBBLE ANIMATION */
-        .bubble { position: absolute; padding: 20px; border-radius: 25px; background: var(--glass); backdrop-filter: blur(15px); border: 1px solid rgba(255,255,255,0.2); animation: float 4s infinite ease-in-out; }
+        .bubble { position: absolute; padding: 20px; border-radius: 25px; background: var(--glass); backdrop-filter: blur(15px); border: 1px solid rgba(255,255,255,0.2); animation: float 4s infinite ease-in-out; pointer-events: auto; }
         @keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-20px); } }
 
+        /* NAVIGATION */
         nav { position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%); z-index: 1000; background: rgba(0,0,0,0.9); padding: 15px 45px; border-radius: 100px; display: flex; gap: 40px; border: 1px solid var(--glass); }
         .nav-i { font-size: 2.2rem; opacity: 0.3; cursor: pointer; }
         .nav-i.active { opacity: 1; transform: scale(1.2); }
+
+        .hidden { display: none !important; }
     </style>
 </head>
 <body>
@@ -53,7 +56,7 @@
         <h2 style="color:var(--gold); letter-spacing: 2px;">PLATEBNÍ BRÁNA TADY</h2>
         <p style="font-size: 0.8rem; opacity: 0.7;">Příjemce: M.D.</p>
         <div id="my-qr-code" style="background: white; padding: 15px; border-radius: 20px; margin: 20px 0;">
-            <img src="https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=https://your-payment-account-details" style="width:100%;" alt="M.D. QR Platební kód">
+            <img src="https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=https://your-bank-qr-link" style="width:100%;" alt="M.D. QR Platba">
         </div>
         <p style="font-size: 1.2rem; font-weight: 900;">29,- Kč</p>
         <button class="btn btn-gold" onclick="finishPayment()">POTVRDIT ZAPLACENÍ</button>
@@ -86,29 +89,57 @@
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script>
     let map, points = JSON.parse(localStorage.getItem('TADY_DB')) || [];
-    let qr;
+    let qrScanner;
 
     function init() {
         map = L.map('map', {zoomControl: false, attributionControl: false}).setView([50.91, 14.62], 16);
         L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}.png').addTo(map);
-        points.forEach(p => {
-            L.circle([p.lat, p.lng], {radius: 20, color: p.type==='gold'?'#ffd700':'#00f2ff', fillOpacity: 0.8}).addTo(map);
+        
+        // Načtení bodů z DB
+        points.forEach((p, idx) => {
+            const color = p.type === 'gold' ? '#ffd700' : '#00f2ff';
+            L.circle([p.lat, p.lng], {radius: 20, color: color, fillOpacity: 0.8}).addTo(map)
+             .bindPopup(`${p.text}<br><button onclick="shareLink(${idx})" style="border:none; background:none; color:#00f2ff; cursor:pointer;">🔗 SDÍLET</button>`);
         });
+
+        // Kontrola, zda někdo nepřišel přes sdílený odkaz
+        checkSharedLink();
     }
 
+    // MODUL SDÍLENÍ
+    function shareLink(idx) {
+        const p = points[idx];
+        const url = window.location.origin + window.location.pathname + `?lat=${p.lat}&lng=${p.lng}&msg=${encodeURIComponent(p.text)}`;
+        if (navigator.share) {
+            navigator.share({ title: 'TADY Stopa', text: p.text, url: url });
+        } else {
+            prompt("Zkopírujte tento odkaz pro sdílení:", url);
+        }
+    }
+
+    function checkSharedLink() {
+        const params = new URLSearchParams(window.location.search);
+        if(params.has('lat') && params.has('lng')) {
+            const lat = parseFloat(params.get('lat'));
+            const lng = parseFloat(params.get('lng'));
+            map.setView([lat, lng], 19);
+            L.marker([lat, lng]).addTo(map).bindPopup(params.get('msg')).openPopup();
+        }
+    }
+
+    // QR & AR LOGIKA
     function scan() {
         const r = document.getElementById('qr-reader');
         r.style.display = 'block';
-        qr = new Html5Qrcode("qr-reader");
-        qr.start({ facingMode: "environment" }, { fps: 10, qrbox: 250 }, (txt) => {
+        qrScanner = new Html5Qrcode("qr-reader");
+        qrScanner.start({ facingMode: "environment" }, { fps: 10, qrbox: 250 }, (txt) => {
             if(txt.includes('TADY-PAY')) { pay(); } 
             else { document.getElementById('msg').value = txt; }
-            qr.stop(); r.style.display = 'none';
+            qrScanner.stop(); r.style.display = 'none';
         });
     }
 
     function pay() { document.getElementById('pay-modal').style.display = 'flex'; }
-
     function finishPayment() {
         alert("M.D. potvrzuje přijetí platby. Stopa se generuje...");
         document.getElementById('pay-modal').style.display = 'none';
@@ -117,6 +148,7 @@
 
     async function sw(mode) {
         document.querySelectorAll('.nav-i').forEach(n => n.classList.remove('active'));
+        document.getElementById('m' + (mode === 'map' ? '1' : mode === 'ar' ? '2' : '3')).classList.add('active');
         const ar = document.getElementById('ar-view');
         const mapE = document.getElementById('map');
         const ui = document.getElementById('ui');
@@ -128,6 +160,7 @@
         } else {
             ar.style.display = 'none'; mapE.style.display = 'block'; ui.style.display = 'block';
             if(ar.srcObject) ar.srcObject.getTracks().forEach(t => t.stop());
+            if(mode === 'ai') alert("AI analyzuje světovou síť M.D...");
         }
     }
 
@@ -148,9 +181,17 @@
             d.className = `bubble ${p.type === 'gold' ? 'gold' : ''}`;
             d.style.left = (Math.random() * 50 + 10) + '%';
             d.style.top = (15 + (i * 12)) + '%';
-            d.innerHTML = p.text || "Zlatá stopa TADY";
+            d.innerHTML = `<strong>${p.type === 'gold' ? '🌟' : '💬'}</strong><br>${p.text || "Stopa TADY"}`;
             b.appendChild(d);
         });
+    }
+
+    function admin() {
+        const pass = prompt("Heslo správce:");
+        if(pass === "tady") {
+            const total = points.filter(p => p.type === 'gold').length * 29;
+            alert(`M.D. Statistiky:\nCelkový obrat: ${total} Kč\nPočet stop: ${points.length}`);
+        }
     }
 
     window.onload = init;
