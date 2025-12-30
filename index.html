@@ -2,45 +2,37 @@
 <html lang="cs">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>TADY - M.D.</title>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <style>
         :root { --p: #764ba2; --s: #667eea; --cyan: #00f2ff; --bg: #0b1118; }
-        body, html { margin: 0; padding: 0; width: 100%; height: 100%; font-family: 'Segoe UI', sans-serif; background: var(--bg); color: #fff; overflow-x: hidden; }
-        header { 
-            background: linear-gradient(135deg, var(--s), var(--p)); padding: 25px 15px; 
-            text-align: center; border-bottom-left-radius: 35px; border-bottom-right-radius: 35px; 
-            box-shadow: 0 10px 40px rgba(0,0,0,0.6);
-        }
-        .logo { font-size: 2.2rem; font-weight: 900; letter-spacing: 6px; margin: 0; }
-        .slogan { font-size: 0.8rem; color: #adffd2; margin-top: 5px; font-weight: 600; text-transform: uppercase; }
-        .lead { font-size: 0.7rem; opacity: 0.9; margin-top: 3px; font-weight: bold; letter-spacing: 3px; }
-        .container { padding: 15px; max-width: 500px; margin: 0 auto; }
-        .card { background: white; border-radius: 25px; padding: 20px; margin-bottom: 20px; box-shadow: 0 15px 35px rgba(0,0,0,0.4); color: #333; }
-        textarea { width: 100%; padding: 15px; border-radius: 15px; box-sizing: border-box; margin-bottom: 12px; background: #f0f2f5; font-size: 1rem; border: none; outline: none; resize: none; }
-        .btn { background: var(--p); color: white; border: none; padding: 16px; width: 100%; border-radius: 18px; font-weight: 800; cursor: pointer; font-size: 1rem; }
-        .btn-ai { background: linear-gradient(90deg, #00f2ff, #667eea); color: #000; margin-top: 10px; }
-        #map { height: 250px; border-radius: 20px; width: 100%; border: 3px solid white; margin-top: 5px; }
-        #ai-status { margin-bottom: 10px; font-size: 0.95rem; line-height: 1.4; color: #adffd2; font-weight: 600; min-height: 45px; }
+        body { margin: 0; font-family: sans-serif; background: var(--bg); color: #fff; text-align: center; }
+        header { background: linear-gradient(135deg, var(--s), var(--p)); padding: 20px; border-bottom-radius: 30px; }
+        .container { padding: 15px; max-width: 500px; margin: auto; }
+        .card { background: white; border-radius: 20px; padding: 20px; margin-bottom: 15px; color: #333; }
+        textarea { width: 100%; padding: 10px; border-radius: 10px; border: 1px solid #ddd; box-sizing: border-box; }
+        .btn { background: var(--p); color: white; border: none; padding: 15px; width: 100%; border-radius: 15px; font-weight: bold; margin-top: 10px; cursor: pointer; }
+        .btn-ai { background: cyan; color: black; }
+        #map { height: 200px; border-radius: 15px; margin-top: 10px; }
+        #ai-status { color: #adffd2; font-weight: bold; margin-bottom: 10px; min-height: 40px; }
     </style>
 </head>
 <body>
 
 <header>
-    <div class="logo">TADY</div>
-    <div class="slogan">VŠECHNY INFORMACE JSOU TADY</div>
-    <div class="lead">M.D.</div>
+    <h1>TADY</h1>
+    <p>M.D.</p>
 </header>
 
 <div class="container">
     <div class="card">
-        <textarea id="msg" rows="2" placeholder="Napište, co se ve Varnsdorfu děje..."></textarea>
+        <textarea id="msg" placeholder="Co se děje ve Varnsdorfu?"></textarea>
         <button class="btn" onclick="ulozit()">PŘIŠPENDLIT</button>
     </div>
 
-    <div class="card" style="background: #16212e; color: white; border: 1px solid var(--cyan);">
-        <div id="ai-status">Váš osobní AI asistent je připraven...</div>
+    <div class="card" style="background: #16212e;">
+        <div id="ai-status">AI připravena...</div>
         <button class="btn btn-ai" onclick="runAI()">ZEPTAT SE AI</button>
     </div>
 
@@ -51,69 +43,47 @@
 
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script>
-    // Klíč potvrzený z vašeho Google AI Studio
-    const API_KEY = "AIzaSyDOLpRJ9EOJvjPEWayPnWztnVdj8btUDA4"; 
+    const API_KEY = "AIzaSyDOLpRJ9EOJvjPEWayPnWztnVdj8btUDA4";
 
-    let map;
-    function initMap() {
-        map = L.map('map', {zoomControl: false}).setView([50.91, 14.62], 14);
-        L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}.png').addTo(map);
-        nacistStopy();
-    }
-
-    function nacistStopy() {
-        const stopy = JSON.parse(localStorage.getItem('tady_stopy')) || [];
-        stopy.forEach(s => L.circle([s.lat, s.lng], { radius: 80, color: '#764ba2' }).addTo(map));
-    }
+    let map = L.map('map').setView([50.91, 14.62], 14);
+    L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}.png').addTo(map);
 
     function ulozit() {
         const text = document.getElementById('msg').value;
         if(!text) return;
         navigator.geolocation.getCurrentPosition(p => {
-            let stopy = JSON.parse(localStorage.getItem('tady_stopy')) || [];
-            stopy.push({ text, lat: p.coords.latitude, lng: p.coords.longitude });
-            localStorage.setItem('tady_stopy', JSON.stringify(stopy));
-            document.getElementById('msg').value = "";
+            let stopy = JSON.parse(localStorage.getItem('stopy_tady')) || [];
+            stopy.push({text, lat: p.coords.latitude, lng: p.coords.longitude});
+            localStorage.setItem('stopy_tady', JSON.stringify(stopy));
+            alert("Uloženo!");
             location.reload();
-        }, () => alert("Povolte GPS pro umístění stopy."));
+        });
     }
 
     async function runAI() {
         const box = document.getElementById('ai-status');
-        box.innerText = "⏳ Generuji inteligentní analýzu...";
+        box.innerText = "Uvažuji...";
         
-        const stopy = JSON.parse(localStorage.getItem('tady_stopy')) || [];
-        const kontext = stopy.length > 0 ? stopy.map(s => s.text).join(". ") : "Varnsdorf je připraven na projekt TADY.";
-
-        // Použití verze v1beta pro nejlepší stabilitu vašeho klíče
-        const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${API_KEY}`;
-
         try {
-            const response = await fetch(url, {
+            const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${API_KEY}`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
-                    contents: [{ 
-                        parts: [{ 
-                            text: `Jsi inteligentní mozek aplikace TADY, kterou vede M.D. s rozpočtem 75.000 EUR. Lokalita: Varnsdorf. Na základě těchto informací: "${kontext}" napiš jednu krátkou, velmi inspirativní větu pro uživatele. Pokud je kontext prázdný, pozdrav M.D. a popřej úspěšný start projektu.` 
-                        }] 
-                    }]
+                    contents: [{ parts: [{ text: "Jsi asistent pro projekt TADY ve Varnsdorfu. Pozdrav uživatele M.D. a napiš mu jednu krátkou větu o tom, že jeho projekt s rozpočtem 75 000 EUR má velkou budoucnost." }] }]
                 })
             });
 
             const data = await response.json();
-            
+            // OPRAVA: Přímé zobrazení textu z Gemini
             if (data.candidates && data.candidates[0].content) {
-                // Úspěšné zobrazení odpovědi
                 box.innerText = data.candidates[0].content.parts[0].text;
             } else {
-                box.innerText = "AI se restartuje. Zkuste to prosím za 5 sekund.";
+                box.innerText = "Zkuste to znovu za moment.";
             }
-        } catch(e) { 
-            box.innerText = "Chyba spojení. Zkontrolujte signál.";
+        } catch (e) {
+            box.innerText = "Chyba spojení.";
         }
     }
-    window.onload = initMap;
 </script>
 </body>
 </html>
