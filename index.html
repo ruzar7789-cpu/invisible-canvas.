@@ -4,137 +4,162 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>TADY - tady se děje všechno</title>
-    
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;800&display=swap" rel="stylesheet">
-
     <style>
-        :root { --p: #764ba2; --s: #667eea; --acc: #00d2ff; --gold: #ffc107; --danger: #ff5252; --bg: #f8f9fa; --card: #ffffff; }
-        body { font-family: 'Plus Jakarta Sans', sans-serif; margin: 0; background: var(--bg); color: #1a1a1a; padding-bottom: 110px; -webkit-tap-highlight-color: transparent; }
+        :root { --p: #764ba2; --s: #667eea; --gold: #ffc107; --danger: #ff5252; --bg: #f8f9fa; }
+        body { font-family: sans-serif; margin: 0; background: var(--bg); padding-bottom: 110px; }
         
-        header { background: linear-gradient(135deg, var(--s), var(--p)); color: white; padding: 20px; position: sticky; top: 0; z-index: 1000; display: flex; justify-content: space-between; align-items: center; }
-        .slogan { font-size: 0.7rem; font-weight: 600; text-transform: uppercase; letter-spacing: 1px; opacity: 0.9; }
+        /* HEADER & XP BAR */
+        header { background: linear-gradient(135deg, var(--s), var(--p)); color: white; padding: 15px; position: sticky; top: 0; z-index: 1000; text-align: center; }
+        .xp-bar { height: 5px; background: rgba(255,255,255,0.3); width: 100%; position: absolute; bottom: 0; left: 0; }
+        #xp-fill { height: 100%; background: var(--gold); width: 45%; transition: 0.5s; }
 
-        .filter-bar { display: flex; gap: 10px; padding: 15px; overflow-x: auto; background: white; border-bottom: 1px solid #eee; position: sticky; top: 80px; z-index: 999; }
-        .filter-chip { padding: 10px 18px; background: #f0f0f0; border-radius: 25px; font-size: 0.85rem; font-weight: 700; cursor: pointer; white-space: nowrap; }
-        .filter-chip.active { background: var(--p); color: white; }
-
-        .container { padding: 15px; }
+        .container { padding: 15px; max-width: 600px; margin: 0 auto; }
         .section { display: none; }
         .section.active { display: block; }
 
-        .card { background: var(--card); border-radius: 22px; padding: 18px; margin-bottom: 15px; box-shadow: 0 5px 15px rgba(0,0,0,0.05); border: 1px solid #eee; }
+        /* KARTY A DESIGN */
+        .card { background: white; border-radius: 20px; padding: 15px; margin-bottom: 15px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); border: 1px solid #eee; position: relative; }
         .sos-card { border: 2px solid var(--danger); background: #fff5f5; }
+        .btn { background: var(--p); color: white; border: none; padding: 15px; width: 100%; border-radius: 15px; font-weight: bold; cursor: pointer; margin-top: 10px; }
         
-        .interaction-bar { display: flex; gap: 20px; margin-top: 15px; padding-top: 10px; border-top: 1px solid #eee; }
-        .action-btn { background: none; border: none; font-size: 1rem; cursor: pointer; display: flex; align-items: center; gap: 6px; }
+        /* FILTRY */
+        .filters { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 10px; }
+        .chip { padding: 8px 15px; background: #ddd; border-radius: 20px; font-size: 0.8rem; white-space: nowrap; font-weight: bold; }
+        .chip.active { background: var(--p); color: white; }
 
-        .nav-bar { position: fixed; bottom: 0; width: 100%; background: white; display: flex; justify-content: space-around; padding: 12px 0; box-shadow: 0 -5px 15px rgba(0,0,0,0.05); z-index: 1000; }
-        .nav-item { color: #b2bec3; text-align: center; font-size: 0.75rem; flex: 1; text-decoration: none; }
-        .nav-item.active { color: var(--p); font-weight: 800; }
-        .nav-icon { font-size: 1.6rem; display: block; margin-bottom: 2px; }
+        /* NAVIGACE */
+        .nav-bar { position: fixed; bottom: 0; width: 100%; background: white; display: flex; justify-content: space-around; padding: 12px 0; border-top: 1px solid #eee; z-index: 1000; }
+        .nav-item { text-align: center; font-size: 0.7rem; color: #888; flex: 1; text-decoration: none; }
+        .nav-item.active { color: var(--p); font-weight: bold; }
+        .nav-icon { font-size: 1.5rem; display: block; }
 
-        .btn { background: var(--p); color: white; border: none; padding: 18px; width: 100%; border-radius: 18px; font-weight: 800; font-size: 1rem; }
-        .fab { position: fixed; bottom: 95px; right: 20px; width: 65px; height: 65px; background: var(--p); color: white; border-radius: 50%; border: none; font-size: 30px; z-index: 999; box-shadow: 0 5px 20px rgba(0,0,0,0.2); }
-        
-        #map { height: 350px; border-radius: 25px; width: 100%; }
-        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 2000; justify-content: center; align-items: center; backdrop-filter: blur(5px); }
-        .modal-body { background: white; width: 85%; padding: 25px; border-radius: 30px; }
-        textarea, input, select { width: 100%; padding: 15px; margin: 10px 0; border: 1px solid #eee; border-radius: 15px; font-size: 1rem; box-sizing: border-box; }
+        #map { height: 300px; border-radius: 20px; width: 100%; margin-top: 10px; }
+        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 2000; justify-content: center; align-items: center; }
+        .modal-body { background: white; width: 85%; padding: 25px; border-radius: 25px; }
+        input, textarea { width: 100%; padding: 12px; margin: 8px 0; border: 1px solid #eee; border-radius: 10px; box-sizing: border-box; }
     </style>
 </head>
 <body>
 
-    <header>
-        <div>
-            <h1 style="margin:0; font-size: 1.5rem;">TADY</h1>
-            <div class="slogan">tady se děje všechno</div>
-        </div>
-        <div style="background: rgba(255,255,255,0.2); padding: 6px 15px; border-radius: 20px; font-weight: 800;">
-            💰 <span id="balance">120</span> TC
-        </div>
-    </header>
+<header>
+    <div style="font-size: 0.7rem; font-weight: bold; letter-spacing: 1px;">LVL <span id="lvl">1</span> • <span id="xp-text">45</span> XP</div>
+    <h1 style="margin:5px 0 0 0; font-size: 1.4rem;">TADY</h1>
+    <div style="font-size: 0.7rem; opacity: 0.9;">tady se děje všechno</div>
+    <div style="margin-top:8px; font-weight: 800; background: rgba(0,0,0,0.1); display: inline-block; padding: 4px 12px; border-radius: 15px;">💰 <span id="balance">120</span> TC</div>
+    <div class="xp-bar"><div id="xp-fill"></div></div>
+</header>
 
-    <div class="filter-bar">
-        <div class="filter-chip active" onclick="filterPosts('all', this)">Vše</div>
-        <div class="filter-chip" onclick="filterPosts('sos', this)">🆘 SOS</div>
-        <div class="filter-chip" onclick="filterPosts('promo', this)">💎 Akce</div>
-    </div>
-
-    <div class="container">
-        <div id="feeds" class="section active"><div id="feed-list"></div></div>
-        <div id="map-section" class="section"><div id="map"></div></div>
-        <div id="business" class="section">
-            <h2>Růst s TADY</h2>
-            <div class="card" style="border: 2px solid var(--p);">
-                <b>Patriot (PRO)</b><br>
-                <div style="font-size: 1.5rem; font-weight: 800; margin: 10px 0;">490 Kč</div>
-                <button class="btn" onclick="openOrder('Patriot')">Objednat</button>
-            </div>
+<div class="container">
+    <div id="feeds" class="section active">
+        <div class="filters">
+            <div class="chip active">Všechno</div>
+            <div class="chip">🆘 SOS</div>
+            <div class="chip">💎 Akce</div>
         </div>
-        <div id="profile" class="section">
-            <div class="card" style="text-align: center;">
-                <div style="width: 80px; height: 80px; background: var(--p); border-radius: 50%; margin: 0 auto 15px; color: white; display: flex; align-items: center; justify-content: center; font-size: 2rem; font-weight: 800;">MD</div>
-                <h3>M.D.</h3>
-                <p>Ambasador projektu</p>
-                <button class="btn" style="background:var(--gold); color:black;" onclick="openAdmin()">👑 Správa objednávek</button>
+        <div id="post-list">
+            <div class="card">
+                <b>M.D.</b> <small style="color:#888">• nyní</small>
+                <p>Vítejte v plné verzi aplikace! Všechny funkce jsou nyní aktivní.</p>
+                <div style="margin-top:10px; font-size: 0.9rem;">❤️ 12 • 💬 2</div>
             </div>
         </div>
     </div>
 
-    <div class="nav-bar">
-        <div class="nav-item active" onclick="nav('feeds', this)"><span class="nav-icon">🏠</span>Dění</div>
-        <div class="nav-item" onclick="nav('map-section', this)"><span class="nav-icon">📍</span>Mapa</div>
-        <div class="nav-item" onclick="nav('business', this)"><span class="nav-icon">💼</span>Byznys</div>
-        <div class="nav-item" onclick="nav('profile', this)"><span class="nav-icon">👤</span>Profil</div>
+    <div id="map-section" class="section">
+        <div class="card">
+            <h3>Mapa Varnsdorfu</h3>
+            <div id="map"></div>
+        </div>
     </div>
 
-    <button class="fab" onclick="document.getElementById('post-modal').style.display='flex'">+</button>
+    <div id="business" class="section">
+        <h2 style="text-align:center">Růst s TADY</h2>
+        <div class="card" style="border: 2px solid var(--p);">
+            <div style="position:absolute; top:-12px; right:15px; background:var(--p); color:white; padding:2px 10px; border-radius:10px; font-size:0.7rem;">TOP</div>
+            <h3 style="margin:0">Tarif PATRIOT</h3>
+            <div style="font-size: 1.8rem; font-weight: 800; color: var(--p); margin: 10px 0;">490 Kč <small style="font-size: 0.8rem; color:#888;">/měsíc</small></div>
+            <ul style="padding-left: 20px; font-size: 0.85rem;">
+                <li>Zápis na mapu</li>
+                <li>Vlastní akce a slevy</li>
+                <li>Přednostní SOS podpora</li>
+            </ul>
+            <button class="btn" onclick="openOrder('Patriot')">Objednat a zaplatit</button>
+        </div>
+        <div class="card">
+            <h3>Tarif PARTNER</h3>
+            <div style="font-size: 1.5rem; font-weight: 800; margin: 10px 0;">1 990 Kč</div>
+            <p style="font-size: 0.85rem;">Individuální spolupráce a maximální dosah v regionu.</p>
+            <button class="btn" style="background:#888" onclick="openOrder('Partner')">Kontaktovat M.D.</button>
+        </div>
+    </div>
 
-    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-    <script>
-        let posts = JSON.parse(localStorage.getItem('t_posts')) || [
-            {user: "M.D.", text: "Vítejte! Aplikace je teď optimalizovaná pro váš telefon.", type: "news", likes: 3, time: "nyní"}
-        ];
+    <div id="profile" class="section">
+        <div class="card" style="text-align: center;">
+            <div style="width: 80px; height: 80px; background: var(--p); border-radius: 50%; margin: 0 auto 15px; color: white; display: flex; align-items: center; justify-content: center; font-size: 2rem; font-weight: bold;">MD</div>
+            <h2>M.D.</h2>
+            <p style="color:#888">Hlavní Ambasador Varnsdorfu</p>
+            <hr style="border:0; border-top: 1px solid #eee; margin: 20px 0;">
+            <button class="btn" style="background:var(--gold); color:black;" onclick="openAdmin()">👑 SPRÁVA OBJEDNÁVEK</button>
+        </div>
+    </div>
+</div>
 
-        function updateUI(f = 'all') {
-            const list = document.getElementById('feed-list');
-            list.innerHTML = "";
-            const filtered = f === 'all' ? posts : posts.filter(p => p.type === f);
-            filtered.forEach((p, i) => {
-                const card = document.createElement('div');
-                card.className = p.type === 'sos' ? "card sos-card" : "card";
-                card.innerHTML = `
-                    <div style="display:flex; justify-content:space-between; font-size:0.8rem; color:#b2bec3; margin-bottom:10px;">
-                        <b>${p.user}</b> <span>${p.time}</span>
-                    </div>
-                    <p style="margin:0; font-weight:600;">${p.text}</p>
-                    <div class="interaction-bar">
-                        <button class="action-btn" onclick="like(${i})">❤️ ${p.likes || 0}</button>
-                        <button class="action-btn">💬 Komentovat</button>
-                    </div>`;
-                list.insertBefore(card, list.firstChild);
-            });
-            localStorage.setItem('t_posts', JSON.stringify(posts));
+<div id="order-modal" class="modal">
+    <div class="modal-body">
+        <h3 id="order-title">Objednávka</h3>
+        <input type="text" id="biz-name" placeholder="Název firmy">
+        <input type="text" id="biz-ico" placeholder="IČO">
+        <input type="email" id="biz-email" placeholder="E-mail">
+        <button class="btn" onclick="submitOrder()">Odeslat požadavek</button>
+        <button onclick="closeModal()" style="background:none; border:none; color:#888; width:100%; margin-top:10px;">Zrušit</button>
+    </div>
+</div>
+
+<div class="nav-bar">
+    <div class="nav-item active" onclick="nav('feeds', this)"><span class="nav-icon">🏠</span>Dění</div>
+    <div class="nav-item" onclick="nav('map-section', this)"><span class="nav-icon">📍</span>Mapa</div>
+    <div class="nav-item" onclick="nav('business', this)"><span class="nav-icon">💼</span>Byznys</div>
+    <div class="nav-item" onclick="nav('profile', this)"><span class="nav-icon">👤</span>Profil</div>
+</div>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+    let orders = JSON.parse(localStorage.getItem('t_orders')) || [];
+    let curTarif = "";
+
+    function nav(id, el) {
+        document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+        document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+        document.getElementById(id).classList.add('active');
+        el.classList.add('active');
+        if(id === 'map-section') {
+            setTimeout(() => {
+                if(!window.m) {
+                    window.m = L.map('map', {zoomControl: false}).setView([50.911, 14.622], 14);
+                    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(window.m);
+                }
+            }, 300);
         }
+    }
 
-        function like(i) { posts[i].likes++; updateUI(); }
-        
-        function nav(id, el) {
-            document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
-            document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
-            document.getElementById(id).classList.add('active');
-            el.classList.add('active');
-            if(id === 'map-section') {
-                setTimeout(() => {
-                    if(!window.mI) {
-                        window.mI = L.map('map', {zoomControl: false}).setView([50.911, 14.622], 14);
-                        L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png').addTo(window.mI);
-                    }
-                }, 300);
-            }
-        }
-        updateUI();
-    </script>
+    function openOrder(t) { curTarif = t; document.getElementById('order-title').innerText = "Objednat " + t; document.getElementById('order-modal').style.display='flex'; }
+    function closeModal() { document.getElementById('order-modal').style.display='none'; }
+    
+    function submitOrder() {
+        const o = { tarif: curTarif, biz: document.getElementById('biz-name').value, email: document.getElementById('biz-email').value, date: new Date().toLocaleString() };
+        if(!o.biz || !o.email) return alert("Doplňte údaje.");
+        orders.push(o);
+        localStorage.setItem('t_orders', JSON.stringify(orders));
+        alert("Odesláno! M.D. vás bude kontaktovat.");
+        closeModal();
+    }
+
+    function openAdmin() {
+        let msg = orders.length ? orders.map(o => `${o.tarif}: ${o.biz} (${o.email})`).join('\n\n') : "Žádné objednávky.";
+        alert("PŘEHLED OBJEDNÁVEK:\n\n" + msg);
+    }
+</script>
+
 </body>
 </html>
