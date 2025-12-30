@@ -7,7 +7,7 @@
     
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@900&family=Inter:wght@400;700&display=swap" rel="stylesheet">
+    <link rel="manifest" href="data:application/manifest+json;base64,ewogICJuYW1lIjogIlRBRFkiLAogICJzaG9ydF9uYW1lIjogIlRBRFkiLAogICJzdGFydF91cmwiOiAiLiIsCiAgImRpc3BsYXkiOiAic3RhbmRhbG9uZSIsCiAgImJhY2tncm91bmRfY29sb3IiOiAiIzAwMDAwMCIsCiAgInRoZW1lX2NvbG9yIjogIiMwMGYyZmYiLAogICJpY29ucyI6IFt7InNyYyI6ICJodHRwczovL2Nkbi1pY29ucy1wbmcuZmxhdGljb24uY29tLzUxMi8yNTMxLzI1MzE2NjkucG5nIiwgInNpemVzIjogIjUxMng1MTIiLCAidHlwZSI6ICJpbWFnZS9wbmciLCAncHVycG9zZSc6ICdhbnknfV0KfQ==">
 
     <style>
         :root { --glow: #00f2ff; --gold: #ffd700; --glass: rgba(10, 20, 30, 0.9); }
@@ -18,38 +18,41 @@
         #ar-engine { width: 100%; height: 100%; object-fit: cover; }
         .view-hidden { transform: translateY(100%); opacity: 0; pointer-events: none; }
 
-        /* Karty - Osobní vs Firemní */
+        /* Karty s efektem pulzování */
         .hologram {
             position: absolute; background: var(--glass); backdrop-filter: blur(15px);
             border-radius: 15px; padding: 15px; border-left: 4px solid var(--glow);
             animation: float 4s infinite ease-in-out; pointer-events: auto; min-width: 170px;
             box-shadow: 0 10px 30px rgba(0,0,0,0.5);
         }
-        .hologram.business { border-left-color: var(--gold); border-top: 1px solid rgba(255,215,0,0.2); }
-        .hologram h3 { margin: 0; font-size: 0.7rem; letter-spacing: 2px; color: var(--glow); text-transform: uppercase; }
-        .hologram.business h3 { color: var(--gold); font-family: 'Orbitron'; }
-        .hologram p { margin: 10px 0; font-weight: 700; font-size: 1.1rem; }
+        .hologram.business { 
+            border-left-color: var(--gold); 
+            animation: float 4s infinite ease-in-out, pulseGold 2s infinite; 
+        }
+        
+        @keyframes pulseGold {
+            0% { box-shadow: 0 0 0 0 rgba(255, 215, 0, 0.4); }
+            70% { box-shadow: 0 0 0 15px rgba(255, 215, 0, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(255, 215, 0, 0); }
+        }
 
-        /* Akční tlačítko pro firmy */
-        .biz-btn { background: var(--gold); color: #000; border: none; padding: 8px 12px; border-radius: 8px; font-weight: 900; font-size: 0.7rem; cursor: pointer; width: 100%; margin-top: 5px; }
-
-        /* Výběr tarifu (Modal) */
-        .modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); z-index: 2000; display: none; align-items: center; justify-content: center; }
-        .offer-box { width: 85%; max-width: 380px; background: #0a0a0a; border: 1px solid #333; border-radius: 30px; padding: 25px; text-align: center; }
-        .tier { border: 1px solid #333; border-radius: 20px; padding: 15px; margin: 10px 0; cursor: pointer; transition: 0.3s; }
-        .tier:hover { border-color: var(--glow); background: rgba(0, 242, 255, 0.05); }
-        .tier.gold { border-color: var(--gold); }
-        .tier.gold:hover { background: rgba(255, 215, 0, 0.05); }
+        /* Instalace vyskakovací okno */
+        #pwa-modal { position: fixed; bottom: 100px; left: 50%; transform: translateX(-50%); background: var(--glow); color: #000; padding: 15px 25px; border-radius: 50px; z-index: 9999; font-weight: 900; display: none; cursor: pointer; box-shadow: 0 0 20px var(--glow); }
 
         .footer-ui { position: fixed; bottom: 0; width: 100%; z-index: 1000; padding: 25px 0; background: linear-gradient(to top, #000 80%, transparent); text-align: center; }
         .brand { font-family: 'Orbitron'; font-size: 1.8rem; letter-spacing: 8px; margin-bottom: 10px; }
         nav { display: flex; justify-content: center; gap: 40px; }
-        .nav-btn { font-size: 2.2rem; cursor: pointer; filter: drop-shadow(0 0 10px var(--glow)); }
+        .nav-btn { font-size: 2.2rem; cursor: pointer; }
 
+        .modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); z-index: 2000; display: none; align-items: center; justify-content: center; }
+        .offer-box { width: 85%; max-width: 380px; background: #0a0a0a; border-radius: 30px; padding: 25px; text-align: center; border: 1px solid #333; }
+        
         @keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-15px); } }
     </style>
 </head>
 <body>
+
+<div id="pwa-modal" onclick="installApp()">📲 INSTALOVAT TADY NA PLOCHU</div>
 
 <div id="ar-view">
     <video id="ar-engine" autoplay playsinline></video>
@@ -62,31 +65,10 @@
 
 <div id="tier-modal" class="modal">
     <div class="offer-box">
-        <h2 style="font-family:'Orbitron'">VYBERTE TYP STOPY</h2>
-        
-        <div class="tier" onclick="startOrder('OSOBNÍ', 29)">
-            <h3 style="color:var(--glow); margin:0;">OSOBNÍ VZKAZ</h3>
-            <p style="font-size:0.8rem; margin:5px 0;">Platnost 24 hodin • Emoce</p>
-            <div style="font-size:1.2rem; font-weight:900;">29 Kč</div>
-        </div>
-
-        <div class="tier gold" onclick="startOrder('FIREMNÍ', 149)">
-            <h3 style="color:var(--gold); margin:0;">ZLATÁ STOPA (FIRMA)</h3>
-            <p style="font-size:0.8rem; margin:5px 0;">Prioritní zobrazení • Web • Navigace</p>
-            <div style="font-size:1.2rem; font-weight:900;">149 Kč / týden</div>
-        </div>
-        
-        <button onclick="closeModal()" style="background:none; border:none; color:gray; margin-top:10px;">Zrušit</button>
-    </div>
-</div>
-
-<div id="pay-modal" class="modal">
-    <div class="offer-box" style="border-color:var(--gold)">
-        <h2 id="pay-title" style="color:var(--gold); margin:0;">PLATBA</h2>
-        <img id="qr-img" src="" style="width:200px; background:white; padding:10px; border-radius:15px; margin:20px 0;">
-        <div id="pay-amount" style="font-size:2rem; font-weight:900;"></div>
-        <p style="font-size:0.7rem; opacity:0.5;">ID: TADY-MD-SYSTEM</p>
-        <button onclick="finishOrder()" style="width:100%; padding:15px; border-radius:15px; background:var(--gold); border:none; font-weight:900; margin-top:15px;">MÁM ZAPLACENO</button>
+        <h2 style="font-family:'Orbitron'">VOLBA TARIFU</h2>
+        <div onclick="startOrder('OSOBNÍ', 29)" style="padding:15px; border:1px solid var(--glow); border-radius:15px; margin:10px 0;">OSOBNÍ (29 Kč)</div>
+        <div onclick="startOrder('FIREMNÍ', 149)" style="padding:15px; border:1px solid var(--gold); border-radius:15px; margin:10px 0;">ZLATÁ STOPA (149 Kč)</div>
+        <button onclick="document.getElementById('tier-modal').style.display='none'">Zrušit</button>
     </div>
 </div>
 
@@ -100,59 +82,53 @@
 </div>
 
 <script>
-    let isMap = false, map, selectedLat, selectedLng;
-    const IBAN = "LT533250082844018353";
+    let deferredPrompt;
+    let isAdmin = false;
+
+    // Detekce instalace
+    window.addEventListener('beforeinstallprompt', (e) => {
+        e.preventDefault();
+        deferredPrompt = e;
+        document.getElementById('pwa-modal').style.display = 'block';
+    });
+
+    function installApp() {
+        if (deferredPrompt) {
+            deferredPrompt.prompt();
+            deferredPrompt.userChoice.then((choice) => {
+                if (choice.outcome === 'accepted') document.getElementById('pwa-modal').style.display = 'none';
+            });
+        }
+    }
 
     async function initAR() {
         const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } });
         document.getElementById('ar-engine').srcObject = stream;
-        loadStops(); // Načtení z Neonu
-        startRadar();
+        loadStops();
     }
 
     function toggleView() {
-        isMap = !isMap;
-        document.getElementById('map-view').classList.toggle('view-hidden', !isMap);
-        document.getElementById('ar-view').classList.toggle('view-hidden', isMap);
+        isMap = !document.getElementById('map-view').classList.toggle('view-hidden');
         if(isMap && !map) initMap();
     }
 
     function initMap() {
         map = L.map('map', { zoomControl: false }).setView([50.91, 14.62], 15);
         L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png').addTo(map);
-        map.on('click', e => { selectedLat = e.latlng.lat; selectedLng = e.latlng.lng; openTiers(); });
     }
 
     function openTiers() { document.getElementById('tier-modal').style.display = 'flex'; }
-    function closeModal() { document.getElementById('tier-modal').style.display = 'none'; }
 
     function startOrder(type, price) {
-        const msg = prompt(`Napište váš ${type} vzkaz:`);
+        const msg = prompt(`Vzkaz pro ${type}:`);
         if(!msg) return;
-        
-        closeModal();
-        const qrData = `SPD*1.0*ACC:${IBAN}*AM:${price}.00*CC:CZK*MSG:TADY-${type}-${encodeURIComponent(msg.substring(0,5))}`;
-        document.getElementById('qr-img').src = `https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=${qrData}`;
-        document.getElementById('pay-amount').innerText = `${price} Kč`;
-        document.getElementById('pay-modal').style.display = 'flex';
-
-        // Zápis do tvého NEONU přes API
-        fetch('/api/save', { method: 'POST', body: JSON.stringify({ lat: selectedLat, lng: selectedLng, text: msg, tier: type, owner: 'M.D.' }) });
-    }
-
-    function finishOrder() { document.getElementById('pay-modal').style.display = 'none'; alert("Zpracovávám přenos do AR prostoru..."); }
-
-    function startRadar() {
-        navigator.geolocation.watchPosition(pos => {
-            // Logika pro vibraci při přiblížení k bodu v Neonu
-            if(Math.random() > 0.98) navigator.vibrate([100, 50, 100]); 
-        });
+        alert(`Nyní zaplaťte ${price} Kč na Revolut. Vzkaz se objeví po schválení M.D.`);
+        // Zde volání tvého Neonu s příznakem "active: false"
     }
 
     function loadStops() {
-        // DEMO - Načtení z Neonu
+        // Simulace firemní zlaté stopy s pulzováním
         addHologram("RESTAURACE", "Dnes: Svíčková 185,-", 40, 20, "FIREMNÍ", "Rezervovat");
-        addHologram("M.D. RADAR", "Síť je aktivní.", 10, 45, "OSOBNÍ", "");
     }
 
     function addHologram(title, text, x, y, tier, action) {
@@ -162,16 +138,23 @@
         h.innerHTML = `
             <h3>${title}</h3>
             <p>${text}</p>
-            ${action ? `<button class="biz-btn" onclick="alert('Otevírám web firmy...')">${action}</button>` : ''}
-            <div style="display:flex; justify-content:space-between; margin-top:10px; font-size:0.7rem; opacity:0.5;">
-                <span onclick="this.innerText='❤️ 13'">❤️ 12</span>
-                <span>⏳ ${tier === 'FIREMNÍ' ? '7 dní' : '24h'}</span>
+            ${action ? `<button style="background:var(--gold); width:100%; border:none; padding:10px; border-radius:10px; font-weight:900;">${action}</button>` : ''}
+            <div style="font-size:0.7rem; margin-top:10px; opacity:0.6;">
+                <span onclick="this.innerText='❤️ 13'">❤️ 12</span> | ⏳ ${tier === 'FIREMNÍ' ? '7 dní' : '24h'}
+                ${isAdmin ? '<br><button style="color:red" onclick="this.parentElement.parentElement.remove()">SMAZAT</button>' : ''}
             </div>
         `;
         document.getElementById('ar-overlay').appendChild(h);
     }
 
-    function adminAccess() { if(prompt("ADMIN PASS:") === "2025") document.body.style.filter = "sepia(0.5)"; }
+    function adminAccess() {
+        if(prompt("ADMIN PASS:") === "2025") {
+            isAdmin = true;
+            document.body.style.border = "2px solid gold";
+            alert("Mód M.D. aktivován. Nyní můžeš spravovat stopy přímo v AR.");
+            loadStops(); // Refresh pro zobrazení smazacích tlačítek
+        }
+    }
 
     window.onload = initAR;
 </script>
