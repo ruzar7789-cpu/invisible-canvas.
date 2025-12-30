@@ -5,129 +5,155 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>TADY | Digital World M.D.</title>
     
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <link rel="manifest" href="data:application/manifest+json;base64,ewogICJuYW1lIjogIlRBRFkiLAogICJzaG9ydF9uYW1lIjogIlRBRFkiLAogICJzdGFydF91cmwiOiAiLiIsCiAgImRpc3BsYXkiOiAic3RhbmRhbG9uZSIsCiAgImJhY2tncm91bmRfY29sb3IiOiAiIzAwMDAwMCIsCiAgInRoZW1lX2NvbG9yIjogIiMwMGYyZmYiLAogICJpY29ucyI6IFsKICAgIHsKICAgICAgInNyYyI6ICJodHRwczovL2Nkbi1pY29ucy1wbmcuZmxhdGljb24uY29tLzUxMi8yNTMxLzI1MzE2NjkucG5nIiwKICAgICAgInNpemVzIjogIjUxMng1MTIiLAogICAgICAidHlwZSI6ICJpbWFnZS9wbmciCiAgICB9CiAgXQp9">
 
     <style>
-        :root { --glow: #00f2ff; --gold: #ffd700; --glass: rgba(15, 30, 45, 0.6); }
-        body, html { margin: 0; padding: 0; width: 100%; height: 100%; font-family: 'Inter', sans-serif; background: #000; overflow: hidden; color: #fff; }
+        :root { --glow: #00f2ff; --gold: #ffd700; --glass: rgba(15, 30, 45, 0.7); }
+        body, html { margin: 0; padding: 0; width: 100%; height: 100%; font-family: 'Inter', sans-serif; background: #000; color: #fff; overflow: hidden; }
         
-        #ar-engine { position: fixed; top: 0; left: 0; width: 100%; height: 100%; object-fit: cover; z-index: 1; }
-        #ar-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 10; pointer-events: none; }
+        /* Vrstvy */
+        #ar-view, #map-view { position: fixed; top: 0; left: 0; width: 100%; height: 100%; transition: 0.5s cubic-bezier(0.4, 0, 0.2, 1); }
+        #ar-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 10; pointer-events: none; }
+        #ar-engine { width: 100%; height: 100%; object-fit: cover; }
+        
+        .view-hidden { transform: translateY(100%); opacity: 0; pointer-events: none; }
 
-        /* VZDUŠNÉ STOPY (Dle tvé vize) */
+        /* Hologramy - styl dle tvé vize */
         .hologram {
-            position: absolute; background: var(--glass); backdrop-filter: blur(15px);
-            border: 1px solid rgba(0, 242, 255, 0.3); border-radius: 25px; padding: 15px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.5); animation: float 6s infinite ease-in-out;
-            min-width: 180px; pointer-events: auto; transition: 0.3s;
+            position: absolute; background: var(--glass); backdrop-filter: blur(12px);
+            border: 1px solid var(--glow); border-radius: 20px; padding: 15px;
+            animation: float 4s infinite ease-in-out; pointer-events: auto; min-width: 150px;
+            box-shadow: 0 0 20px rgba(0, 242, 255, 0.2);
         }
-        .hologram.premium { border: 1px solid var(--gold); box-shadow: 0 0 20px rgba(255, 215, 0, 0.2); }
-        
-        .hologram h3 { margin: 0; font-size: 0.9rem; letter-spacing: 1px; color: var(--glow); text-transform: uppercase; opacity: 0.8; }
+        .hologram.premium { border-color: var(--gold); box-shadow: 0 0 20px rgba(255, 215, 0, 0.3); }
+        .hologram h3 { margin: 0 0 5px 0; font-size: 0.9rem; color: var(--glow); text-transform: uppercase; border-bottom: 1px solid rgba(0,242,255,0.2); }
         .hologram.premium h3 { color: var(--gold); }
-        .hologram p { margin: 10px 0; font-size: 1rem; font-weight: 500; line-height: 1.3; }
+        .hologram p { margin: 8px 0; font-size: 1rem; line-height: 1.3; }
 
-        /* INTERAKTIVITA (Lajky a Akce) */
-        .hologram-footer { display: flex; justify-content: space-between; align-items: center; margin-top: 10px; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 8px; }
-        .like-btn { cursor: pointer; font-size: 0.9rem; filter: grayscale(1); transition: 0.3s; }
-        .like-btn:active { transform: scale(1.4); filter: grayscale(0); }
-        .action-link { color: var(--glow); font-size: 0.8rem; text-decoration: none; font-weight: bold; }
+        /* UI */
+        .footer-ui { position: fixed; bottom: 0; width: 100%; z-index: 1000; padding: 25px 0; background: linear-gradient(to top, #000 80%, transparent); text-align: center; }
+        .brand { font-size: 2rem; font-weight: 900; letter-spacing: 6px; margin-bottom: 15px; text-shadow: 0 0 10px var(--glow); }
+        nav { display: flex; justify-content: center; gap: 50px; }
+        .nav-btn { font-size: 2.2rem; cursor: pointer; filter: drop-shadow(0 0 5px var(--glow)); transition: 0.2s; }
+        .nav-btn:active { transform: scale(1.2); }
 
-        /* PLATEBNÍ MODAL */
-        #pay-modal {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
-            background: rgba(0,0,0,0.95); z-index: 2000; display: none;
-            align-items: center; justify-content: center;
-        }
-        .pay-box { background: #111; padding: 30px; border-radius: 40px; text-align: center; border: 1px solid var(--gold); width: 85%; max-width: 360px; }
-        .pay-box img { background: white; padding: 10px; border-radius: 15px; width: 220px; margin: 20px 0; }
-
-        .footer-ui { position: fixed; bottom: 0; width: 100%; z-index: 100; padding-bottom: 40px; text-align: center; background: linear-gradient(to top, #000, transparent); }
-        .footer-ui h2 { margin: 0; font-size: 2.2rem; font-weight: 900; letter-spacing: 8px; text-shadow: 0 0 15px var(--glow); }
+        /* Modal */
+        .modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); z-index: 2000; display: none; align-items: center; justify-content: center; }
+        .modal-content { background: #111; padding: 35px; border-radius: 40px; border: 1px solid var(--gold); text-align: center; width: 85%; max-width: 400px; }
+        .modal-content img { background: white; padding: 15px; border-radius: 20px; width: 220px; margin: 20px 0; }
         
-        nav { display: flex; justify-content: center; gap: 60px; margin-top: 20px; }
-        .nav-btn { font-size: 2.2rem; cursor: pointer; transition: 0.3s; }
-
-        @keyframes float { 0%, 100% { transform: translateY(0) scale(1); } 50% { transform: translateY(-20px) scale(1.02); } }
+        @keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-15px); } }
     </style>
 </head>
 <body>
 
-<video id="ar-engine" autoplay playsinline></video>
-<div id="ar-overlay"></div>
+<div id="ar-view">
+    <video id="ar-engine" autoplay playsinline></video>
+    <div id="ar-overlay"></div>
+</div>
 
-<div id="pay-modal">
-    <div class="pay-box">
+<div id="map-view" class="view-hidden">
+    <div id="map" style="width: 100%; height: 100%; background: #000;"></div>
+</div>
+
+<div id="pay-modal" class="modal">
+    <div class="modal-content">
         <h2 style="color:var(--gold); margin:0;">M.D. PLATBA</h2>
-        <img src="https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=SPD*1.0*ACC:LT533250082844018353*AM:29.00*CC:CZK*MSG:TADY-MD" alt="QR Platba">
-        <div style="font-size: 1.8rem; font-weight: 900; margin-bottom: 10px;">29,- Kč</div>
-        <p style="font-size: 0.7rem; color: gray;">Příjemce: M.D.</p>
-        <button onclick="document.getElementById('pay-modal').style.display='none'" style="width:100%; padding:15px; border-radius:15px; border:none; background:var(--gold); font-weight:900; cursor:pointer;">HOTOVO</button>
+        <p style="font-size: 0.8rem; opacity: 0.6;">Zlatá stopa TADY</p>
+        <img id="qr-target" src="" alt="QR Platba">
+        <div style="font-size: 1.8rem; font-weight: 900; margin-bottom: 5px;">29,- Kč</div>
+        <p style="font-size: 0.7rem; color: gray; margin-bottom: 20px;">Příjemce: M.D.</p>
+        <button onclick="closeModal()" style="width: 100%; padding: 15px; border-radius: 15px; background: var(--gold); border: none; font-weight: 900; cursor: pointer;">MÁM ZAPLACENO</button>
     </div>
 </div>
 
 <div class="footer-ui">
-    <h2>DOHROMADY</h2>
+    <div class="brand">DOHROMADY</div>
     <nav>
-        <div class="nav-btn" onclick="shareApp()">🔍</div>
-        <div class="nav-btn" onclick="addNote()">💬</div>
+        <div class="nav-btn" onclick="toggleMap()">🗺️</div>
+        <div class="nav-btn" onclick="startPlacement()">💬</div>
         <div class="nav-btn" onclick="location.reload()">👤</div>
     </nav>
 </div>
 
 <script>
-    if ('serviceWorker' in navigator) {
-        navigator.serviceWorker.register('data:application/javascript;base64,c2VsZi5hZGRFdmVudExpc3RlbmVyKCdmZXRjaCcsIGV2ZW50ID0+IHsgfSk7');
-    }
+    let mapMode = false;
+    let map, arOverlay = document.getElementById('ar-overlay');
+    const IBAN = "LT533250082844018353"; // Údaj z tvého Revolutu
 
-    async function initAR() {
+    // 1. AR Start
+    async function initApp() {
         try {
             const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } });
             document.getElementById('ar-engine').srcObject = stream;
-            
-            const spots = [
-                { title: "RESTAURACE U NÁS", text: "Dnešní menu: Svíčková 195,-", x: 40, y: 15, type: 'premium', link: 'https://wa.me/420123456789', linkText: 'REZERVACE' },
-                { title: "M.D. VZKAZ", text: "Tady tvoříme budoucnost.", x: 10, y: 40, type: 'basic', likes: 12 },
-                { title: "EMOCE", text: "Miluji tě, tati!", x: 60, y: 55, type: 'basic', likes: 5 }
-            ];
+            fetchStopsFromNeon();
+        } catch (e) { alert("Povolte kameru pro AR mód."); }
+    }
 
-            spots.forEach(s => {
-                const el = document.createElement('div');
-                el.className = `hologram ${s.type === 'premium' ? 'premium' : ''}`;
-                el.style.left = s.x + '%'; el.style.top = s.y + '%';
-                
-                let footerContent = s.type === 'premium' 
-                    ? `<a href="${s.link}" class="action-link">${s.linkText} ➔</a>`
-                    : `<span class="like-btn" onclick="this.innerHTML='❤️ ' + (parseInt('${s.likes}')+1)">🤍 ${s.likes}</span>`;
+    // 2. Přepínání Mapa/AR
+    function toggleMap() {
+        mapMode = !mapMode;
+        document.getElementById('map-view').classList.toggle('view-hidden', !mapMode);
+        document.getElementById('ar-view').classList.toggle('view-hidden', mapMode);
+        if (mapMode && !map) initLeaflet();
+    }
 
-                el.innerHTML = `
-                    <h3>${s.title}</h3>
-                    <p>${s.text}</p>
-                    <div class="hologram-footer">${footerContent}</div>
-                `;
+    // 3. Mapa & Neon DB
+    function initLeaflet() {
+        map = L.map('map').setView([50.91, 14.62], 14);
+        L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png').addTo(map);
+        
+        map.on('click', async (e) => {
+            const msg = prompt("Co chceš nechat TADY? (29 Kč)");
+            if (msg) {
+                const { lat, lng } = e.latlng;
+                await saveToNeon(lat, lng, msg);
+                showQR(msg);
+            }
+        });
+    }
 
-                el.onclick = (e) => {
-                    if(e.target.tagName !== 'A' && e.target.className !== 'like-btn' && s.type === 'premium') {
-                        document.getElementById('pay-modal').style.display = 'flex';
-                    }
-                };
-                document.getElementById('ar-overlay').appendChild(el);
+    // 4. Komunikace s Neonem přes tvůj Vercel
+    async function saveToNeon(lat, lng, text) {
+        try {
+            await fetch('/api/save-stop', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ lat, lng, text, user: 'M.D.' })
             });
-        } catch(e) { alert("Povolte kameru pro plný AR zážitek."); }
+        } catch (err) { console.error("Neon Error:", err); }
     }
 
-    function shareApp() {
-        if (navigator.share) {
-            navigator.share({ title: 'TADY | DOHROMADY', text: 'Podívej se na svět mýma očima!', url: window.location.href });
-        }
+    async function fetchStopsFromNeon() {
+        // Zde se načtou body z tvé DB a vykreslí se do AR
+        renderHologram("Vítejte", "Tady začíná svět M.D.", 50, 30, true);
     }
 
-    function addNote() {
-        const v = prompt("Zanechte svou stopu (29 Kč):");
-        if(v) document.getElementById('pay-modal').style.display = 'flex';
+    // 5. Platební brána M.D.
+    function showQR(msg) {
+        const qrData = `SPD*1.0*ACC:${IBAN}*AM:29.00*CC:CZK*MSG:TADY-${encodeURIComponent(msg)}`;
+        document.getElementById('qr-target').src = `https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=${qrData}`;
+        document.getElementById('pay-modal').style.display = 'flex';
     }
 
-    window.onload = initAR;
+    function closeModal() { document.getElementById('pay-modal').style.display = 'none'; }
+
+    function startPlacement() {
+        alert("Klikni na mapu pro umístění vzkazu.");
+        if (!mapMode) toggleMap();
+    }
+
+    function renderHologram(title, text, x, y, premium) {
+        const h = document.createElement('div');
+        h.className = `hologram ${premium ? 'premium' : ''}`;
+        h.style.left = x + '%'; h.style.top = y + '%';
+        h.innerHTML = `<h3>${title}</h3><p>${text}</p>`;
+        arOverlay.appendChild(h);
+    }
+
+    window.onload = initApp;
 </script>
 </body>
 </html>
