@@ -3,209 +3,172 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>TADY | Everything is Here</title>
+    <title>TADY | Global OS</title>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;900&display=swap" rel="stylesheet">
     <style>
-        :root { --gold: #ffd700; --cyan: #00f2ff; --bg: #000000; --glass: rgba(255,255,255,0.1); --neon-p: #bc13fe; }
-        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-        body, html { margin: 0; padding: 0; width: 100%; height: 100%; font-family: 'Inter', sans-serif; background: var(--bg); color: #fff; overflow: hidden; }
+        :root { --gold: #ffd700; --cyan: #00f2ff; --bg: #000; --glass: rgba(255,255,255,0.1); }
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; font-family: 'Inter', sans-serif; }
+        body, html { margin: 0; padding: 0; width: 100%; height: 100%; background: var(--bg); color: #fff; overflow: hidden; }
         
-        /* AR ENGINE LAYER */
-        #ar-engine { position: fixed; top: 0; left: 0; width: 100%; height: 100%; object-fit: cover; z-index: 1; display: none; filter: brightness(1.1) contrast(1.1); }
+        /* AR & MAP LAYERS */
+        #ar-engine { position: fixed; top: 0; left: 0; width: 100%; height: 100%; object-fit: cover; z-index: 1; display: none; }
         #ar-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 2; pointer-events: none; }
+        #map { height: 100vh; width: 100vw; position: absolute; z-index: 5; }
 
-        /* BRANDING */
-        header { position: relative; z-index: 100; padding: 50px 20px 20px; text-align: center; transition: 0.5s; }
-        .logo { font-size: 3.5rem; font-weight: 900; letter-spacing: 15px; margin: 0; background: linear-gradient(to right, #fff, var(--cyan)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; filter: drop-shadow(0 0 20px rgba(0,242,255,0.5)); }
-        .creator { position: fixed; top: env(safe-area-inset-top); right: 20px; font-weight: 900; color: var(--cyan); z-index: 1000; letter-spacing: 3px; font-size: 0.8rem; }
+        /* HUD & HEADER */
+        header { position: fixed; top: 0; width: 100%; z-index: 100; padding: 40px 20px; text-align: center; pointer-events: none; }
+        .logo { font-size: 3rem; font-weight: 900; letter-spacing: 12px; text-shadow: 0 0 20px var(--cyan); pointer-events: auto; }
+        .m-d-tag { position: fixed; top: 20px; right: 20px; z-index: 1000; color: var(--cyan); font-weight: 900; cursor: pointer; }
 
-        /* DYNAMIC AR BUBBLES */
+        /* AR BUBBLES */
         .bubble { 
-            position: absolute; min-width: 160px; padding: 20px; border-radius: 30px; 
-            backdrop-filter: blur(25px); background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1);
-            animation: floating 6s ease-in-out infinite; pointer-events: auto; text-align: center; box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            position: absolute; min-width: 150px; padding: 20px; border-radius: 25px; 
+            backdrop-filter: blur(20px); background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1);
+            animation: float 5s ease-in-out infinite; pointer-events: auto; text-align: center;
         }
-        .bubble.gold { border: 2px solid var(--gold); box-shadow: 0 0 40px rgba(255,215,0,0.3); color: var(--gold); }
-        .bubble .meta { font-size: 0.6rem; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 5px; opacity: 0.7; }
-        
-        @keyframes floating { 0%, 100% { transform: translate(0, 0) scale(1); } 50% { transform: translate(5px, -30px) scale(1.05); } }
+        .bubble.gold { border: 2px solid var(--gold); box-shadow: 0 0 30px rgba(255,215,0,0.3); color: var(--gold); }
 
-        /* MAIN UI CONTAINER */
-        .app-container { position: relative; z-index: 50; padding: 0 20px; height: 100%; display: flex; flex-direction: column; transition: 0.5s; }
-        #map { flex-grow: 1; width: 100%; border-radius: 40px; border: 1px solid var(--glass); margin: 20px 0; box-shadow: 0 0 50px rgba(0,0,0,1); }
-        
-        /* INTERFACE CARDS */
-        .panel { background: var(--glass); backdrop-filter: blur(30px); border-radius: 40px; padding: 30px; border: 1px solid rgba(255,255,255,0.1); margin-bottom: 120px; }
-        textarea { width: 100%; background: transparent; border: none; color: white; font-size: 1.3rem; outline: none; resize: none; font-weight: 400; }
-        
-        .btn-row { display: flex; gap: 15px; margin-top: 20px; }
-        .btn { flex: 1; padding: 20px; border-radius: 25px; font-weight: 900; cursor: pointer; border: none; transition: 0.2s; font-size: 0.9rem; letter-spacing: 1px; }
-        .btn:active { transform: scale(0.95); }
+        /* INTERFACE PANELS */
+        .ui-panel { position: fixed; bottom: 120px; left: 50%; transform: translateX(-50%); width: 90%; max-width: 450px; z-index: 100; background: rgba(0,0,0,0.8); backdrop-filter: blur(30px); border-radius: 35px; padding: 25px; border: 1px solid var(--glass); }
+        textarea { width: 100%; background: transparent; border: none; color: white; font-size: 1.1rem; outline: none; resize: none; }
+        .btn-row { display: flex; gap: 10px; margin-top: 15px; }
+        .btn { flex: 1; padding: 15px; border-radius: 18px; border: none; font-weight: 900; cursor: pointer; }
         .btn-s { background: #fff; color: #000; }
-        .btn-g { background: var(--gold); color: #000; box-shadow: 0 0 20px rgba(255,215,0,0.4); }
+        .btn-g { background: var(--gold); color: #000; }
 
-        /* NEON NAVIGATION */
-        .navbar { 
-            position: fixed; bottom: 40px; left: 50%; transform: translateX(-50%); 
-            background: rgba(0,0,0,0.9); padding: 15px 45px; border-radius: 100px; 
-            display: flex; gap: 50px; border: 1px solid var(--glass); z-index: 1000;
-        }
-        .nav-link { font-size: 2.2rem; cursor: pointer; opacity: 0.3; transition: 0.4s; filter: grayscale(1); }
-        .nav-link.active { opacity: 1; filter: grayscale(0); transform: scale(1.3) translateY(-10px); }
+        /* EXECUTIVE DASHBOARD (HIDDEN) */
+        #admin-panel { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #000; z-index: 2000; display: none; padding: 40px 20px; overflow-y: auto; }
+        .stat-card { background: #111; padding: 20px; border-radius: 20px; margin-bottom: 15px; border-left: 4px solid var(--cyan); }
+        
+        /* NAVIGATION */
+        nav { position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%); z-index: 1000; background: rgba(0,0,0,0.9); padding: 15px 40px; border-radius: 100px; display: flex; gap: 40px; border: 1px solid var(--glass); }
+        .nav-item { font-size: 2rem; opacity: 0.3; cursor: pointer; transition: 0.3s; }
+        .nav-item.active { opacity: 1; transform: scale(1.2); }
 
-        .hidden { display: none !important; opacity: 0; }
+        @keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-20px); } }
+        .hidden { display: none !important; }
     </style>
 </head>
 <body>
 
 <video id="ar-engine" autoplay playsinline></video>
 <div id="ar-overlay"></div>
-<div class="creator">M.D.</div>
+<div id="map"></div>
 
-<header id="app-header">
-    <h1 class="logo">TADY</h1>
-    <div style="font-size: 0.6rem; letter-spacing: 5px; color: var(--cyan); margin-top: 10px; font-weight: 900;">WORLD OPERATING SYSTEM</div>
+<div class="m-d-tag" onclick="openAdmin()">M.D.</div>
+
+<header id="h-ui">
+    <div class="logo">TADY</div>
+    <div style="font-size: 0.6rem; letter-spacing: 5px; color: var(--cyan); margin-top: 5px;">GLOBAL OPERATING SYSTEM</div>
 </header>
 
-<div class="app-container" id="ui-main">
-    <div id="map"></div>
-    
-    <div class="panel">
-        <textarea id="input-field" placeholder="Co chcete světu říct právě TADY?" rows="2"></textarea>
-        <div class="btn-row">
-            <button class="btn btn-s" onclick="create('social')">SOCIÁLNÍ</button>
-            <button class="btn btn-g" onclick="create('gold')">BYZNYS 29,-</button>
-        </div>
+<div id="admin-panel">
+    <div style="display:flex; justify-content: space-between; align-items: center; margin-bottom: 30px;">
+        <h2>EXECUTIVE DASHBOARD</h2>
+        <button onclick="closeAdmin()" style="background:none; border:none; color:white; font-size:2rem;">✕</button>
+    </div>
+    <div class="stat-card">
+        <div style="font-size: 0.8rem; opacity: 0.6;">CELKOVÝ OBRAT SÍTĚ</div>
+        <div id="stat-revenue" style="font-size: 2.5rem; font-weight: 900; color: var(--gold);">0 Kč</div>
+    </div>
+    <div class="stat-card">
+        <div style="font-size: 0.8rem; opacity: 0.6;">AKTIVNÍ STOPY</div>
+        <div id="stat-count" style="font-size: 2.5rem; font-weight: 900; color: var(--cyan);">0</div>
+    </div>
+    <h3>LOGY AKTIVITY</h3>
+    <div id="admin-logs" style="font-size: 0.8rem; font-family: monospace; opacity: 0.7;"></div>
+</div>
+
+<div class="ui-panel" id="main-ui">
+    <textarea id="inp" placeholder="Co chcete nechat TADY?" rows="2"></textarea>
+    <div class="btn-row">
+        <button class="btn btn-s" onclick="place('social')">SOCIÁLNÍ</button>
+        <button class="btn btn-g" onclick="place('gold')">BYZNYS 29,-</button>
     </div>
 </div>
 
-<nav class="navbar">
-    <div class="nav-link active" id="m-map" onclick="go('map')">🌍</div>
-    <div class="nav-link" id="m-ar" onclick="go('ar')">✨</div>
-    <div class="nav-link" id="m-ai" onclick="go('ai')">🧠</div>
+<nav>
+    <div class="nav-item active" id="n-map" onclick="sw('map')">🌍</div>
+    <div class="nav-item" id="n-ar" onclick="sw('ar')">✨</div>
+    <div class="nav-item" id="n-ai" onclick="sw('ai')">🧠</div>
 </nav>
 
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script>
     const G_KEY = "AIzaSyDOLpRJ9EOJvjPEWayPnWztnVdj8btUDA4";
-    let map, userPos;
+    let map, points = JSON.parse(localStorage.getItem('TADY_DATABASE')) || [];
 
     function init() {
         map = L.map('map', {zoomControl: false, attributionControl: false}).setView([50.91, 14.62], 16);
         L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}.png').addTo(map);
-        
-        // Sledování polohy v reálném čase
-        navigator.geolocation.watchPosition(p => {
-            userPos = [p.coords.latitude, p.coords.longitude];
-            map.panTo(userPos);
-        });
-        
-        refreshData();
+        updateMap();
     }
 
-    async function go(mode) {
-        document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
-        document.getElementById('m-' + mode).classList.add('active');
-
-        const cam = document.getElementById('ar-engine');
-        const ui = document.getElementById('ui-main');
-        const head = document.getElementById('app-header');
+    async function sw(mode) {
+        document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
+        document.getElementById('n-' + mode).classList.add('active');
+        const ar = document.getElementById('ar-engine');
+        const mapE = document.getElementById('map');
         const overlay = document.getElementById('ar-overlay');
+        const ui = document.getElementById('main-ui');
 
         if(mode === 'ar') {
-            try {
-                const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } });
-                cam.srcObject = stream;
-                cam.style.display = 'block';
-                ui.classList.add('hidden');
-                head.style.opacity = '0';
-                startAR();
-            } catch(e) { alert("AR Engine potřebuje kameru."); }
-        } else if(mode === 'map') {
-            cam.style.display = 'none';
-            ui.classList.remove('hidden');
-            head.style.opacity = '1';
-            overlay.innerHTML = '';
-            if(cam.srcObject) cam.srcObject.getTracks().forEach(t => t.stop());
+            const s = await navigator.mediaDevices.getUserMedia({video: {facingMode: "environment"}});
+            ar.srcObject = s; ar.style.display = 'block'; mapE.style.display = 'none'; ui.classList.add('hidden');
+            renderAR();
         } else {
-            analyzeWithAI();
+            ar.style.display = 'none'; mapE.style.display = 'block'; ui.classList.remove('hidden'); overlay.innerHTML = '';
+            if(ar.srcObject) ar.srcObject.getTracks().forEach(t => t.stop());
+            if(mode === 'ai') runAI();
         }
     }
 
-    function create(type) {
-        const val = document.getElementById('input-field').value;
-        if(!val) return;
-
+    function place(type) {
+        const text = document.getElementById('inp').value;
+        if(!text) return;
         navigator.geolocation.getCurrentPosition(p => {
-            const db = JSON.parse(localStorage.getItem('TADY_CORE')) || [];
-            db.push({
-                msg: val, type: type, 
-                lat: p.coords.latitude, lng: p.coords.longitude,
-                date: new Date().toLocaleTimeString()
-            });
-            localStorage.setItem('TADY_CORE', JSON.stringify(db));
-            document.getElementById('input-field').value = '';
+            points.push({text, type, lat: p.coords.latitude, lng: p.coords.longitude, time: new Date().toLocaleString()});
+            localStorage.setItem('TADY_DATABASE', JSON.stringify(points));
             location.reload();
         });
     }
 
-    function refreshData() {
-        const db = JSON.parse(localStorage.getItem('TADY_CORE')) || [];
-        db.forEach(s => {
-            const color = s.type === 'gold' ? '#ffd700' : '#00f2ff';
-            L.circle([s.lat, s.lng], {radius: 25, color: color, fillOpacity: 0.7, weight: 2}).addTo(map);
+    function updateMap() {
+        points.forEach(p => {
+            L.circle([p.lat, p.lng], {radius: 20, color: p.type==='gold'?'#ffd700':'#00f2ff', fillOpacity: 0.8}).addTo(map);
         });
     }
 
-    function startAR() {
-        const overlay = document.getElementById('ar-overlay');
-        const db = JSON.parse(localStorage.getItem('TADY_CORE')) || [];
-        overlay.innerHTML = '';
-
-        db.slice(-10).reverse().forEach((s, i) => {
-            const b = document.createElement('div');
-            b.className = `bubble ${s.type === 'gold' ? 'gold' : ''}`;
-            // Algoritmus pro rozprostření v AR prostoru
-            b.style.left = (Math.random() * 50 + 10) + '%';
-            b.style.top = (20 + (i * 10)) + '%';
-            b.style.animationDelay = (i * 0.3) + 's';
-            
-            b.innerHTML = `
-                <div class="meta">${s.type === 'gold' ? '⭐ Premium Business' : '📍 Social Pin'}</div>
-                <div>${s.msg}</div>
-                <div style="font-size:0.5rem; margin-top:10px; opacity:0.5;">${s.date}</div>
-            `;
-            
-            // Kliknutím na byznys stopu se může otevřít kontakt
-            if(s.type === 'gold') {
-                b.onclick = () => alert("Propojuji s partnerem...");
-            }
-            
-            overlay.appendChild(b);
+    function renderAR() {
+        const ov = document.getElementById('ar-overlay');
+        points.slice(-10).forEach((p, i) => {
+            const d = document.createElement('div');
+            d.className = `bubble ${p.type === 'gold' ? 'gold' : ''}`;
+            d.style.left = (Math.random() * 60 + 10) + '%';
+            d.style.top = (20 + (i * 10)) + '%';
+            d.innerHTML = p.text;
+            ov.appendChild(d);
         });
     }
 
-    async function analyzeWithAI() {
-        const db = JSON.parse(localStorage.getItem('TADY_CORE')) || [];
-        const context = db.length > 0 ? db.map(d => d.msg).join(". ") : "Žádná data.";
-        
-        alert("Globální AI TADY analyzuje kontext: " + context.substring(0, 50) + "...");
-        
-        const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${G_KEY}`;
-        try {
-            const res = await fetch(url, {
-                method: 'POST',
-                headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({ contents: [{ parts: [{ text: `Jsi mozek globální sítě TADY. Projekt vede M.D. Na základě těchto stop: "${context}" napiš 1 krátkou vizionářskou větu o budoucnosti tohoto místa.` }] }] })
-            });
-            const data = await res.json();
-            alert("AI VIZE: " + data.candidates[0].content.parts[0].text);
-        } catch(e) { alert("AI se probouzí, zkuste to za vteřinu."); }
+    // ADMIN LOGIKA
+    function openAdmin() {
+        const pass = prompt("Zadejte přístupový kód M.D.:");
+        if(pass === "tady") {
+            document.getElementById('admin-panel').style.display = 'block';
+            const goldCount = points.filter(p => p.type === 'gold').length;
+            document.getElementById('stat-revenue').innerText = (goldCount * 29) + " Kč";
+            document.getElementById('stat-count').innerText = points.length;
+            document.getElementById('admin-logs').innerHTML = points.map(p => `[${p.time}] ${p.type.toUpperCase()}: ${p.text}`).join('<br>');
+        }
+    }
+    function closeAdmin() { document.getElementById('admin-panel').style.display = 'none'; }
+
+    async function runAI() {
+        alert("AI Analyzuje světovou síť TADY...");
     }
 
     window.onload = init;
 </script>
 </body>
 </html>
-
