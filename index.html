@@ -3,169 +3,154 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>TADY | Global OS</title>
+    <title>TADY | M.D. Global Solution</title>
+    <script src="https://unpkg.com/html5-qrcode"></script>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <style>
         :root { --gold: #ffd700; --cyan: #00f2ff; --bg: #000; --glass: rgba(255,255,255,0.1); }
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; font-family: 'Inter', sans-serif; }
         body, html { margin: 0; padding: 0; width: 100%; height: 100%; background: var(--bg); color: #fff; overflow: hidden; }
         
-        /* AR & MAP LAYERS */
-        #ar-engine { position: fixed; top: 0; left: 0; width: 100%; height: 100%; object-fit: cover; z-index: 1; display: none; }
-        #ar-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 2; pointer-events: none; }
+        /* LAYERS */
         #map { height: 100vh; width: 100vw; position: absolute; z-index: 5; }
+        #ar-view { position: fixed; top: 0; left: 0; width: 100%; height: 100%; object-fit: cover; z-index: 10; display: none; }
+        #ar-bubbles { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 11; pointer-events: none; }
+        #qr-reader { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 2000; background: #000; display: none; }
 
-        /* HUD & HEADER */
+        /* BRANDING M.D. */
         header { position: fixed; top: 0; width: 100%; z-index: 100; padding: 40px 20px; text-align: center; pointer-events: none; }
-        .logo { font-size: 3rem; font-weight: 900; letter-spacing: 12px; text-shadow: 0 0 20px var(--cyan); pointer-events: auto; }
-        .m-d-tag { position: fixed; top: 20px; right: 20px; z-index: 1000; color: var(--cyan); font-weight: 900; cursor: pointer; }
+        .logo { font-size: 3.5rem; font-weight: 900; letter-spacing: 15px; text-shadow: 0 0 30px var(--cyan); pointer-events: auto; }
+        .tag-md { position: fixed; top: 20px; right: 20px; z-index: 1000; color: var(--cyan); font-weight: 900; cursor: pointer; letter-spacing: 2px; }
 
-        /* AR BUBBLES */
-        .bubble { 
-            position: absolute; min-width: 150px; padding: 20px; border-radius: 25px; 
-            backdrop-filter: blur(20px); background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1);
-            animation: float 5s ease-in-out infinite; pointer-events: auto; text-align: center;
-        }
-        .bubble.gold { border: 2px solid var(--gold); box-shadow: 0 0 30px rgba(255,215,0,0.3); color: var(--gold); }
+        /* UI & PAYMENT MODAL */
+        .panel { position: fixed; bottom: 120px; left: 50%; transform: translateX(-50%); width: 90%; max-width: 450px; z-index: 100; background: rgba(0,0,0,0.85); backdrop-filter: blur(30px); border-radius: 40px; padding: 30px; border: 1px solid var(--glass); }
+        .modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); z-index: 3000; display: none; align-items: center; justify-content: center; flex-direction: column; }
+        .modal-box { background: #111; padding: 40px; border-radius: 40px; text-align: center; border: 1px solid var(--gold); width: 85%; }
 
-        /* INTERFACE PANELS */
-        .ui-panel { position: fixed; bottom: 120px; left: 50%; transform: translateX(-50%); width: 90%; max-width: 450px; z-index: 100; background: rgba(0,0,0,0.8); backdrop-filter: blur(30px); border-radius: 35px; padding: 25px; border: 1px solid var(--glass); }
-        textarea { width: 100%; background: transparent; border: none; color: white; font-size: 1.1rem; outline: none; resize: none; }
-        .btn-row { display: flex; gap: 10px; margin-top: 15px; }
-        .btn { flex: 1; padding: 15px; border-radius: 18px; border: none; font-weight: 900; cursor: pointer; }
-        .btn-s { background: #fff; color: #000; }
-        .btn-g { background: var(--gold); color: #000; }
+        /* BUTTONS */
+        .btn { width: 100%; padding: 18px; border-radius: 20px; border: none; font-weight: 900; cursor: pointer; margin-top: 10px; text-transform: uppercase; }
+        .btn-gold { background: var(--gold); color: #000; box-shadow: 0 0 20px rgba(255,215,0,0.3); }
+        .btn-cyan { background: var(--cyan); color: #000; }
 
-        /* EXECUTIVE DASHBOARD (HIDDEN) */
-        #admin-panel { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #000; z-index: 2000; display: none; padding: 40px 20px; overflow-y: auto; }
-        .stat-card { background: #111; padding: 20px; border-radius: 20px; margin-bottom: 15px; border-left: 4px solid var(--cyan); }
-        
-        /* NAVIGATION */
-        nav { position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%); z-index: 1000; background: rgba(0,0,0,0.9); padding: 15px 40px; border-radius: 100px; display: flex; gap: 40px; border: 1px solid var(--glass); }
-        .nav-item { font-size: 2rem; opacity: 0.3; cursor: pointer; transition: 0.3s; }
-        .nav-item.active { opacity: 1; transform: scale(1.2); }
-
+        /* AR BUBBLE ANIMATION */
+        .bubble { position: absolute; padding: 20px; border-radius: 25px; background: var(--glass); backdrop-filter: blur(15px); border: 1px solid rgba(255,255,255,0.2); animation: float 4s infinite ease-in-out; }
         @keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-20px); } }
-        .hidden { display: none !important; }
+
+        nav { position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%); z-index: 1000; background: rgba(0,0,0,0.9); padding: 15px 45px; border-radius: 100px; display: flex; gap: 40px; border: 1px solid var(--glass); }
+        .nav-i { font-size: 2.2rem; opacity: 0.3; cursor: pointer; }
+        .nav-i.active { opacity: 1; transform: scale(1.2); }
     </style>
 </head>
 <body>
 
-<video id="ar-engine" autoplay playsinline></video>
-<div id="ar-overlay"></div>
+<div id="qr-reader"></div>
+<video id="ar-view" autoplay playsinline></video>
+<div id="ar-bubbles"></div>
 <div id="map"></div>
 
-<div class="m-d-tag" onclick="openAdmin()">M.D.</div>
-
-<header id="h-ui">
-    <div class="logo">TADY</div>
-    <div style="font-size: 0.6rem; letter-spacing: 5px; color: var(--cyan); margin-top: 5px;">GLOBAL OPERATING SYSTEM</div>
-</header>
-
-<div id="admin-panel">
-    <div style="display:flex; justify-content: space-between; align-items: center; margin-bottom: 30px;">
-        <h2>EXECUTIVE DASHBOARD</h2>
-        <button onclick="closeAdmin()" style="background:none; border:none; color:white; font-size:2rem;">✕</button>
+<div id="pay-modal" class="modal">
+    <div class="modal-box">
+        <h2 style="color:var(--gold); letter-spacing: 2px;">PLATEBNÍ BRÁNA TADY</h2>
+        <p style="font-size: 0.8rem; opacity: 0.7;">Příjemce: M.D.</p>
+        <div id="my-qr-code" style="background: white; padding: 15px; border-radius: 20px; margin: 20px 0;">
+            <img src="https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=https://your-payment-account-details" style="width:100%;" alt="M.D. QR Platební kód">
+        </div>
+        <p style="font-size: 1.2rem; font-weight: 900;">29,- Kč</p>
+        <button class="btn btn-gold" onclick="finishPayment()">POTVRDIT ZAPLACENÍ</button>
+        <button class="btn" style="background:transparent; color:gray;" onclick="document.getElementById('pay-modal').style.display='none'">ZRUŠIT</button>
     </div>
-    <div class="stat-card">
-        <div style="font-size: 0.8rem; opacity: 0.6;">CELKOVÝ OBRAT SÍTĚ</div>
-        <div id="stat-revenue" style="font-size: 2.5rem; font-weight: 900; color: var(--gold);">0 Kč</div>
-    </div>
-    <div class="stat-card">
-        <div style="font-size: 0.8rem; opacity: 0.6;">AKTIVNÍ STOPY</div>
-        <div id="stat-count" style="font-size: 2.5rem; font-weight: 900; color: var(--cyan);">0</div>
-    </div>
-    <h3>LOGY AKTIVITY</h3>
-    <div id="admin-logs" style="font-size: 0.8rem; font-family: monospace; opacity: 0.7;"></div>
 </div>
 
-<div class="ui-panel" id="main-ui">
-    <textarea id="inp" placeholder="Co chcete nechat TADY?" rows="2"></textarea>
-    <div class="btn-row">
-        <button class="btn btn-s" onclick="place('social')">SOCIÁLNÍ</button>
-        <button class="btn btn-g" onclick="place('gold')">BYZNYS 29,-</button>
+<div class="tag-md" onclick="admin()">M.D.</div>
+
+<header>
+    <div class="logo">TADY</div>
+    <div style="font-size: 0.6rem; letter-spacing: 5px; color: var(--cyan); font-weight: bold;">VŠE DŮLEŽITÉ JE TADY</div>
+</header>
+
+<div class="panel" id="ui">
+    <textarea id="msg" placeholder="Napište vzkaz světu..." rows="2" style="width:100%; background:transparent; border:none; color:white; font-size:1.2rem; outline:none;"></textarea>
+    <div style="display:flex; gap:10px; margin-top:15px;">
+        <button class="btn" style="background:#fff; color:#000;" onclick="place('social')">SOCIÁLNÍ</button>
+        <button class="btn btn-gold" onclick="pay()">BYZNYS 29,-</button>
     </div>
+    <button class="btn btn-cyan" onclick="scan()">📷 SKENOVAT QR KÓD</button>
 </div>
 
 <nav>
-    <div class="nav-item active" id="n-map" onclick="sw('map')">🌍</div>
-    <div class="nav-item" id="n-ar" onclick="sw('ar')">✨</div>
-    <div class="nav-item" id="n-ai" onclick="sw('ai')">🧠</div>
+    <div class="nav-i active" id="m1" onclick="sw('map')">🌍</div>
+    <div class="nav-i" id="m2" onclick="sw('ar')">✨</div>
+    <div class="nav-i" id="m3" onclick="sw('ai')">🧠</div>
 </nav>
 
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script>
-    const G_KEY = "AIzaSyDOLpRJ9EOJvjPEWayPnWztnVdj8btUDA4";
-    let map, points = JSON.parse(localStorage.getItem('TADY_DATABASE')) || [];
+    let map, points = JSON.parse(localStorage.getItem('TADY_DB')) || [];
+    let qr;
 
     function init() {
         map = L.map('map', {zoomControl: false, attributionControl: false}).setView([50.91, 14.62], 16);
         L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}.png').addTo(map);
-        updateMap();
-    }
-
-    async function sw(mode) {
-        document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
-        document.getElementById('n-' + mode).classList.add('active');
-        const ar = document.getElementById('ar-engine');
-        const mapE = document.getElementById('map');
-        const overlay = document.getElementById('ar-overlay');
-        const ui = document.getElementById('main-ui');
-
-        if(mode === 'ar') {
-            const s = await navigator.mediaDevices.getUserMedia({video: {facingMode: "environment"}});
-            ar.srcObject = s; ar.style.display = 'block'; mapE.style.display = 'none'; ui.classList.add('hidden');
-            renderAR();
-        } else {
-            ar.style.display = 'none'; mapE.style.display = 'block'; ui.classList.remove('hidden'); overlay.innerHTML = '';
-            if(ar.srcObject) ar.srcObject.getTracks().forEach(t => t.stop());
-            if(mode === 'ai') runAI();
-        }
-    }
-
-    function place(type) {
-        const text = document.getElementById('inp').value;
-        if(!text) return;
-        navigator.geolocation.getCurrentPosition(p => {
-            points.push({text, type, lat: p.coords.latitude, lng: p.coords.longitude, time: new Date().toLocaleString()});
-            localStorage.setItem('TADY_DATABASE', JSON.stringify(points));
-            location.reload();
-        });
-    }
-
-    function updateMap() {
         points.forEach(p => {
             L.circle([p.lat, p.lng], {radius: 20, color: p.type==='gold'?'#ffd700':'#00f2ff', fillOpacity: 0.8}).addTo(map);
         });
     }
 
-    function renderAR() {
-        const ov = document.getElementById('ar-overlay');
-        points.slice(-10).forEach((p, i) => {
-            const d = document.createElement('div');
-            d.className = `bubble ${p.type === 'gold' ? 'gold' : ''}`;
-            d.style.left = (Math.random() * 60 + 10) + '%';
-            d.style.top = (20 + (i * 10)) + '%';
-            d.innerHTML = p.text;
-            ov.appendChild(d);
+    function scan() {
+        const r = document.getElementById('qr-reader');
+        r.style.display = 'block';
+        qr = new Html5Qrcode("qr-reader");
+        qr.start({ facingMode: "environment" }, { fps: 10, qrbox: 250 }, (txt) => {
+            if(txt.includes('TADY-PAY')) { pay(); } 
+            else { document.getElementById('msg').value = txt; }
+            qr.stop(); r.style.display = 'none';
         });
     }
 
-    // ADMIN LOGIKA
-    function openAdmin() {
-        const pass = prompt("Zadejte přístupový kód M.D.:");
-        if(pass === "tady") {
-            document.getElementById('admin-panel').style.display = 'block';
-            const goldCount = points.filter(p => p.type === 'gold').length;
-            document.getElementById('stat-revenue').innerText = (goldCount * 29) + " Kč";
-            document.getElementById('stat-count').innerText = points.length;
-            document.getElementById('admin-logs').innerHTML = points.map(p => `[${p.time}] ${p.type.toUpperCase()}: ${p.text}`).join('<br>');
+    function pay() { document.getElementById('pay-modal').style.display = 'flex'; }
+
+    function finishPayment() {
+        alert("M.D. potvrzuje přijetí platby. Stopa se generuje...");
+        document.getElementById('pay-modal').style.display = 'none';
+        place('gold');
+    }
+
+    async function sw(mode) {
+        document.querySelectorAll('.nav-i').forEach(n => n.classList.remove('active'));
+        const ar = document.getElementById('ar-view');
+        const mapE = document.getElementById('map');
+        const ui = document.getElementById('ui');
+
+        if(mode === 'ar') {
+            const s = await navigator.mediaDevices.getUserMedia({video: {facingMode: "environment"}});
+            ar.srcObject = s; ar.style.display = 'block'; mapE.style.display = 'none'; ui.style.display = 'none';
+            renderAR();
+        } else {
+            ar.style.display = 'none'; mapE.style.display = 'block'; ui.style.display = 'block';
+            if(ar.srcObject) ar.srcObject.getTracks().forEach(t => t.stop());
         }
     }
-    function closeAdmin() { document.getElementById('admin-panel').style.display = 'none'; }
 
-    async function runAI() {
-        alert("AI Analyzuje světovou síť TADY...");
+    function place(type) {
+        const t = document.getElementById('msg').value;
+        navigator.geolocation.getCurrentPosition(p => {
+            points.push({text: t, type, lat: p.coords.latitude, lng: p.coords.longitude});
+            localStorage.setItem('TADY_DB', JSON.stringify(points));
+            location.reload();
+        });
+    }
+
+    function renderAR() {
+        const b = document.getElementById('ar-bubbles');
+        b.innerHTML = '';
+        points.slice(-8).forEach((p, i) => {
+            const d = document.createElement('div');
+            d.className = `bubble ${p.type === 'gold' ? 'gold' : ''}`;
+            d.style.left = (Math.random() * 50 + 10) + '%';
+            d.style.top = (15 + (i * 12)) + '%';
+            d.innerHTML = p.text || "Zlatá stopa TADY";
+            b.appendChild(d);
+        });
     }
 
     window.onload = init;
