@@ -3,48 +3,45 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>TADY | Digital World M.D.</title>
+    <title>TADY | M.D. OS</title>
     
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <link rel="manifest" href="data:application/manifest+json;base64,ewogICJuYW1lIjogIlRBRFkiLAogICJzaG9ydF9uYW1lIjogIlRBRFkiLAogICJzdGFydF91cmwiOiAiLiIsCiAgImRpc3BsYXkiOiAic3RhbmRhbG9uZSIsCiAgImJhY2tncm91bmRfY29sb3IiOiAiIzAwMDAwMCIsCiAgInRoZW1lX2NvbG9yIjogIiMwMGYyZmYiLAogICJpY29ucyI6IFsKICAgIHsKICAgICAgInNyYyI6ICJodHRwczovL2Nkbi1pY29ucy1wbmcuZmxhdGljb24uY29tLzUxMi8yNTMxLzI1MzE2NjkucG5nIiwKICAgICAgInNpemVzIjogIjUxMng1MTIiLAogICAgICAidHlwZSI6ICJpbWFnZS9wbmciCiAgICB9CiAgXQp9">
 
     <style>
-        :root { --glow: #00f2ff; --gold: #ffd700; --glass: rgba(15, 30, 45, 0.7); }
+        :root { --glow: #00f2ff; --gold: #ffd700; --glass: rgba(10, 20, 30, 0.8); }
         body, html { margin: 0; padding: 0; width: 100%; height: 100%; font-family: 'Inter', sans-serif; background: #000; color: #fff; overflow: hidden; }
         
         /* Vrstvy */
-        #ar-view, #map-view { position: fixed; top: 0; left: 0; width: 100%; height: 100%; transition: 0.5s cubic-bezier(0.4, 0, 0.2, 1); }
+        #ar-view, #map-view { position: fixed; top: 0; left: 0; width: 100%; height: 100%; transition: 0.6s ease; }
         #ar-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 10; pointer-events: none; }
-        #ar-engine { width: 100%; height: 100%; object-fit: cover; }
-        
-        .view-hidden { transform: translateY(100%); opacity: 0; pointer-events: none; }
+        #ar-engine { width: 100%; height: 100%; object-fit: cover; filter: contrast(1.1); }
+        .view-hidden { transform: scale(1.1); opacity: 0; pointer-events: none; }
 
-        /* Hologramy - styl dle tvé vize */
+        /* Hologramy 110% */
         .hologram {
-            position: absolute; background: var(--glass); backdrop-filter: blur(12px);
-            border: 1px solid var(--glow); border-radius: 20px; padding: 15px;
-            animation: float 4s infinite ease-in-out; pointer-events: auto; min-width: 150px;
-            box-shadow: 0 0 20px rgba(0, 242, 255, 0.2);
+            position: absolute; background: var(--glass); backdrop-filter: blur(15px);
+            border-left: 4px solid var(--glow); border-radius: 12px; padding: 15px;
+            animation: float 5s infinite ease-in-out; pointer-events: auto; min-width: 160px;
+            box-shadow: 10px 10px 20px rgba(0,0,0,0.5);
         }
-        .hologram.premium { border-color: var(--gold); box-shadow: 0 0 20px rgba(255, 215, 0, 0.3); }
-        .hologram h3 { margin: 0 0 5px 0; font-size: 0.9rem; color: var(--glow); text-transform: uppercase; border-bottom: 1px solid rgba(0,242,255,0.2); }
-        .hologram.premium h3 { color: var(--gold); }
-        .hologram p { margin: 8px 0; font-size: 1rem; line-height: 1.3; }
-
-        /* UI */
-        .footer-ui { position: fixed; bottom: 0; width: 100%; z-index: 1000; padding: 25px 0; background: linear-gradient(to top, #000 80%, transparent); text-align: center; }
-        .brand { font-size: 2rem; font-weight: 900; letter-spacing: 6px; margin-bottom: 15px; text-shadow: 0 0 10px var(--glow); }
-        nav { display: flex; justify-content: center; gap: 50px; }
-        .nav-btn { font-size: 2.2rem; cursor: pointer; filter: drop-shadow(0 0 5px var(--glow)); transition: 0.2s; }
-        .nav-btn:active { transform: scale(1.2); }
-
-        /* Modal */
-        .modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); z-index: 2000; display: none; align-items: center; justify-content: center; }
-        .modal-content { background: #111; padding: 35px; border-radius: 40px; border: 1px solid var(--gold); text-align: center; width: 85%; max-width: 400px; }
-        .modal-content img { background: white; padding: 15px; border-radius: 20px; width: 220px; margin: 20px 0; }
+        .hologram.premium { border-left-color: var(--gold); border-right: 1px solid rgba(255,215,0,0.3); }
+        .hologram h3 { margin: 0; font-size: 0.8rem; color: var(--glow); letter-spacing: 2px; text-transform: uppercase; }
+        .hologram p { margin: 10px 0; font-size: 1.1rem; font-weight: 600; }
         
-        @keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-15px); } }
+        .meta { display: flex; justify-content: space-between; font-size: 0.7rem; opacity: 0.5; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 8px; }
+
+        /* Admin / UI */
+        .footer-ui { position: fixed; bottom: 0; width: 100%; z-index: 1000; padding: 30px 0; background: linear-gradient(to top, #000 80%, transparent); text-align: center; }
+        .brand { font-size: 2.2rem; font-weight: 900; letter-spacing: 10px; margin-bottom: 15px; background: linear-gradient(to right, #fff, var(--glow)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        nav { display: flex; justify-content: center; gap: 50px; }
+        .nav-btn { font-size: 2.2rem; cursor: pointer; transition: 0.3s; }
+
+        .modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.98); z-index: 2000; display: none; align-items: center; justify-content: center; }
+        .modal-content { background: #0a0a0a; padding: 40px; border-radius: 40px; border: 1px solid var(--gold); text-align: center; width: 85%; }
+        
+        @keyframes float { 0%, 100% { transform: translateY(0) rotate(0deg); } 50% { transform: translateY(-20px) rotate(1deg); } }
     </style>
 </head>
 <body>
@@ -55,17 +52,16 @@
 </div>
 
 <div id="map-view" class="view-hidden">
-    <div id="map" style="width: 100%; height: 100%; background: #000;"></div>
+    <div id="map" style="width: 100%; height: 100%;"></div>
 </div>
 
 <div id="pay-modal" class="modal">
     <div class="modal-content">
-        <h2 style="color:var(--gold); margin:0;">M.D. PLATBA</h2>
-        <p style="font-size: 0.8rem; opacity: 0.6;">Zlatá stopa TADY</p>
-        <img id="qr-target" src="" alt="QR Platba">
-        <div style="font-size: 1.8rem; font-weight: 900; margin-bottom: 5px;">29,- Kč</div>
-        <p style="font-size: 0.7rem; color: gray; margin-bottom: 20px;">Příjemce: M.D.</p>
-        <button onclick="closeModal()" style="width: 100%; padding: 15px; border-radius: 15px; background: var(--gold); border: none; font-weight: 900; cursor: pointer;">MÁM ZAPLACENO</button>
+        <h2 id="pay-title" style="color:var(--gold)">M.D. PLATBA</h2>
+        <img id="qr-img" src="" style="width: 240px; background: white; padding: 15px; border-radius: 20px; margin: 20px 0;">
+        <div style="font-size: 2rem; font-weight: 900;">29,- Kč</div>
+        <p style="opacity: 0.5; font-size: 0.8rem;">Variabilní symbol: TADY-MD</p>
+        <button onclick="closePay()" style="width:100%; padding:18px; border-radius:20px; background:var(--gold); border:none; font-weight:900; margin-top:20px;">POTVRDIT PLATBU</button>
     </div>
 </div>
 
@@ -73,87 +69,91 @@
     <div class="brand">DOHROMADY</div>
     <nav>
         <div class="nav-btn" onclick="toggleMap()">🗺️</div>
-        <div class="nav-btn" onclick="startPlacement()">💬</div>
-        <div class="nav-btn" onclick="location.reload()">👤</div>
+        <div class="nav-btn" onclick="openCreator()">💬</div>
+        <div class="nav-btn" onclick="adminMode()">👤</div>
     </nav>
 </div>
 
 <script>
-    let mapMode = false;
-    let map, arOverlay = document.getElementById('ar-overlay');
-    const IBAN = "LT533250082844018353"; // Údaj z tvého Revolutu
+    let isMap = false;
+    let map;
+    const REVOLUT_IBAN = "LT533250082844018353";
 
-    // 1. AR Start
-    async function initApp() {
-        try {
-            const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } });
-            document.getElementById('ar-engine').srcObject = stream;
-            fetchStopsFromNeon();
-        } catch (e) { alert("Povolte kameru pro AR mód."); }
+    async function init() {
+        const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } });
+        document.getElementById('ar-engine').srcObject = stream;
+        loadWorld();
     }
 
-    // 2. Přepínání Mapa/AR
     function toggleMap() {
-        mapMode = !mapMode;
-        document.getElementById('map-view').classList.toggle('view-hidden', !mapMode);
-        document.getElementById('ar-view').classList.toggle('view-hidden', mapMode);
-        if (mapMode && !map) initLeaflet();
+        isMap = !isMap;
+        document.getElementById('map-view').classList.toggle('view-hidden', !isMap);
+        document.getElementById('ar-view').classList.toggle('view-hidden', isMap);
+        if(isMap && !map) initMap();
     }
 
-    // 3. Mapa & Neon DB
-    function initLeaflet() {
-        map = L.map('map').setView([50.91, 14.62], 14);
+    function initMap() {
+        map = L.map('map', { zoomControl: false }).setView([50.91, 14.62], 15);
         L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png').addTo(map);
+        map.on('click', e => createStop(e.latlng.lat, e.latlng.lng));
+    }
+
+    async function createStop(lat, lng) {
+        const text = prompt("Vzkaz pro svět (TADY):");
+        if(!text) return;
         
-        map.on('click', async (e) => {
-            const msg = prompt("Co chceš nechat TADY? (29 Kč)");
-            if (msg) {
-                const { lat, lng } = e.latlng;
-                await saveToNeon(lat, lng, msg);
-                showQR(msg);
-            }
+        // Odeslání do NEON DB (přes tvůj endpoint)
+        await fetch('/api/save', {
+            method: 'POST',
+            body: JSON.stringify({ lat, lng, text, type: 'premium', owner: 'M.D.' })
         });
+
+        showPay(text);
     }
 
-    // 4. Komunikace s Neonem přes tvůj Vercel
-    async function saveToNeon(lat, lng, text) {
-        try {
-            await fetch('/api/save-stop', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ lat, lng, text, user: 'M.D.' })
-            });
-        } catch (err) { console.error("Neon Error:", err); }
-    }
-
-    async function fetchStopsFromNeon() {
-        // Zde se načtou body z tvé DB a vykreslí se do AR
-        renderHologram("Vítejte", "Tady začíná svět M.D.", 50, 30, true);
-    }
-
-    // 5. Platební brána M.D.
-    function showQR(msg) {
-        const qrData = `SPD*1.0*ACC:${IBAN}*AM:29.00*CC:CZK*MSG:TADY-${encodeURIComponent(msg)}`;
-        document.getElementById('qr-target').src = `https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=${qrData}`;
+    function showPay(msg) {
+        const qrData = `SPD*1.0*ACC:${REVOLUT_IBAN}*AM:29.00*CC:CZK*MSG:TADY-${encodeURIComponent(msg.substring(0,10))}`;
+        document.getElementById('qr-img').src = `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${qrData}`;
         document.getElementById('pay-modal').style.display = 'flex';
     }
 
-    function closeModal() { document.getElementById('pay-modal').style.display = 'none'; }
+    function closePay() { document.getElementById('pay-modal').style.display = 'none'; }
 
-    function startPlacement() {
-        alert("Klikni na mapu pro umístění vzkazu.");
-        if (!mapMode) toggleMap();
+    function loadWorld() {
+        // Simulace načtení z Neonu pro ukázku
+        renderAR("Denní menu", "Guláš s pěti: 180,-", 40, 20, true, "14:00");
+        renderAR("M.D. Vision", "Všechno důležité je tady.", 15, 45, false, "24h");
     }
 
-    function renderHologram(title, text, x, y, premium) {
-        const h = document.createElement('div');
-        h.className = `hologram ${premium ? 'premium' : ''}`;
-        h.style.left = x + '%'; h.style.top = y + '%';
-        h.innerHTML = `<h3>${title}</h3><p>${text}</p>`;
-        arOverlay.appendChild(h);
+    function renderAR(title, text, x, y, premium, expiry) {
+        const el = document.createElement('div');
+        el.className = `hologram ${premium ? 'premium' : ''}`;
+        el.style.left = x + '%'; el.style.top = y + '%';
+        el.innerHTML = `
+            <h3>${title}</h3>
+            <p>${text}</p>
+            <div class="meta">
+                <span>❤️ 0</span>
+                <span>⏳ ${expiry}</span>
+            </div>
+        `;
+        document.getElementById('ar-overlay').appendChild(el);
     }
 
-    window.onload = initApp;
+    function openCreator() {
+        alert("Vyber na mapě místo pro svou stopu.");
+        if(!isMap) toggleMap();
+    }
+
+    function adminMode() {
+        const pass = prompt("Admin heslo (M.D.):");
+        if(pass === "1234") { // Příklad tvého hesla
+            document.body.style.border = "2px solid gold";
+            alert("Administrátorský režim aktivní. Kliknutím na stopu ji smažeš.");
+        }
+    }
+
+    window.onload = init;
 </script>
 </body>
 </html>
