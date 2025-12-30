@@ -3,21 +3,38 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>TADY - Všechno důležité je tady</title>
+    <title>TADY - všechno důležité je tady</title>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <style>
         :root { --p: #764ba2; --s: #667eea; --gold: #ffc107; --sos: #ff4b2b; --bg: #0b1118; --cyan: #00f2ff; }
         body, html { margin: 0; padding: 0; width: 100%; height: 100%; font-family: 'Segoe UI', sans-serif; background: var(--bg); color: #fff; overflow-x: hidden; }
-        header { background: linear-gradient(135deg, var(--s), var(--p)); color: white; padding: 30px 15px; text-align: center; border-bottom-left-radius: 40px; border-bottom-right-radius: 40px; box-shadow: 0 10px 40px rgba(0,0,0,0.6); position: sticky; top: 0; z-index: 1000; }
+
+        header { 
+            background: linear-gradient(135deg, var(--s), var(--p)); color: white; padding: 30px 15px; 
+            text-align: center; border-bottom-left-radius: 40px; border-bottom-right-radius: 40px; 
+            box-shadow: 0 10px 40px rgba(0,0,0,0.6); position: sticky; top: 0; z-index: 1000;
+        }
         .logo { font-size: 2.5rem; font-weight: 900; letter-spacing: 8px; margin: 0; }
-        .slogan { font-size: 0.9rem; color: #adffd2; margin-top: 8px; font-weight: 600; }
+        .slogan { font-size: 0.9rem; color: #adffd2; margin-top: 8px; font-weight: 600; text-transform: lowercase; }
+        .lead { font-size: 0.7rem; opacity: 0.9; margin-top: 5px; letter-spacing: 2px; color: #fff; font-weight: bold; }
+
         .container { padding: 20px; max-width: 600px; margin: 0 auto; padding-bottom: 120px; }
-        .card { background: white; border-radius: 30px; padding: 25px; margin-bottom: 30px; box-shadow: 0 20px 50px rgba(0,0,0,0.3); color: #333; }
-        textarea { width: 100%; padding: 18px; border: 2px solid #f0f0f0; border-radius: 20px; box-sizing: border-box; margin-bottom: 15px; background: #f9f9f9; font-size: 1rem; }
-        .btn { background: var(--p); color: white; border: none; padding: 20px; width: 100%; border-radius: 20px; font-weight: 800; cursor: pointer; font-size: 1.1rem; }
-        .btn-ai { background: linear-gradient(90deg, #00f2ff, #667eea); border: none; }
-        #map { height: 350px; border-radius: 30px; width: 100%; border: 5px solid white; margin-top: 10px; }
-        nav { position: fixed; bottom: 25px; left: 50%; transform: translateX(-50%); width: 85%; background: rgba(255,255,255,0.95); backdrop-filter: blur(20px); display: flex; justify-content: space-around; padding: 18px 0; border-radius: 40px; z-index: 1000; }
+        .card { background: white; border-radius: 30px; padding: 25px; margin-bottom: 25px; box-shadow: 0 20px 50px rgba(0,0,0,0.3); color: #333; }
+        
+        textarea { width: 100%; padding: 18px; border: 2px solid #f0f0f0; border-radius: 20px; box-sizing: border-box; margin-bottom: 15px; background: #f9f9f9; font-size: 1rem; font-family: inherit; resize: none; }
+        
+        .btn { background: var(--p); color: white; border: none; padding: 18px; width: 100%; border-radius: 20px; font-weight: 800; cursor: pointer; font-size: 1.1rem; transition: 0.3s; }
+        .btn:active { transform: scale(0.95); }
+        .btn-ai { background: linear-gradient(90deg, #00f2ff, #667eea); border: none; margin-top: 10px; color: #000; }
+
+        #map { height: 300px; border-radius: 25px; width: 100%; border: 4px solid white; box-shadow: 0 10px 25px rgba(0,0,0,0.2); margin-top: 10px; }
+
+        nav { 
+            position: fixed; bottom: 25px; left: 50%; transform: translateX(-50%); width: 85%; 
+            background: rgba(255,255,255,0.95); backdrop-filter: blur(20px); display: flex; 
+            justify-content: space-around; padding: 18px 0; border-radius: 40px; box-shadow: 0 20px 50px rgba(0,0,0,0.4); z-index: 1000; 
+        }
+        .nav-item { font-size: 1.6rem; cursor: pointer; }
     </style>
 </head>
 <body>
@@ -25,19 +42,20 @@
 <header>
     <div class="logo">TADY</div>
     <div class="slogan">všechno důležité je tady</div>
+    <div class="lead">M.D.</div>
 </header>
 
 <div class="container">
     <div class="card">
         <h3 style="margin-top:0">Co se TADY děje?</h3>
-        <textarea id="msg" rows="3" placeholder="Sdílejte moment..."></textarea>
+        <textarea id="msg" rows="3" placeholder="Sdílejte moment, akci nebo zprávu..."></textarea>
         <button class="btn" onclick="ulozit()">PŘIŠPENDLIT</button>
     </div>
 
-    <div class="card" style="background: #0b1118; color: white;">
+    <div class="card" style="background: #0b1118; color: white; border: 1px solid var(--cyan);">
         <h3 style="margin-top:0; color: var(--cyan);">🤖 AI Inteligence sítě</h3>
-        <div id="ai-status" style="margin-bottom: 15px; font-size: 0.9rem; color: #adffd2; min-height: 20px;">
-            Připravena k analýze...
+        <div id="ai-status" style="margin-bottom: 15px; font-size: 0.95rem; color: #adffd2; line-height: 1.4; min-height: 40px;">
+            Připravena analyzovat stopy v okolí...
         </div>
         <button class="btn btn-ai" onclick="runAI()">ZEPTAT SE AI</button>
     </div>
@@ -49,69 +67,68 @@
 </div>
 
 <nav>
-    <div onclick="location.reload()">🏠</div>
-    <div onclick="alert('AR vyžaduje HTTPS')">✨</div>
-    <div onclick="alert('Profil: Marcel Drvota')">👤</div>
+    <div class="nav-item" onclick="location.reload()">🏠</div>
+    <div class="nav-item" onclick="alert('Vize TADY: Sociální síť pro lidi i byznys.')">✨</div>
+    <div class="nav-item" onclick="alert('Profil: M.D.')">👤</div>
 </nav>
 
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script>
-    const GEMINI_KEY = "AIzaSyBpLgP3XXhS6UuNfWcuY79lL_0-UDA4"; // Tvůj klíč z obrázku
+    const GEMINI_KEY = "AIzaSyDOLpRJ9EOJvjPEWayPnWztnVdj8btUDA4"; 
 
     let map;
-    function init() {
+    function initMap() {
         map = L.map('map').setView([50.91, 14.62], 14);
         L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}.png').addTo(map);
-        const data = JSON.parse(localStorage.getItem('tady_vize')) || [];
-        data.forEach(s => L.circle([s.lat, s.lng], { radius: 100, color: 'purple' }).addTo(map));
+        zobrazitBody();
     }
 
     function ulozit() {
         const text = document.getElementById('msg').value;
         if(!text) return;
         navigator.geolocation.getCurrentPosition(p => {
-            const stopa = { text, lat: p.coords.latitude, lng: p.coords.longitude };
-            let data = JSON.parse(localStorage.getItem('tady_vize')) || [];
-            data.push(stopa);
-            localStorage.setItem('tady_vize', JSON.stringify(data));
+            const novaStopa = { text, lat: p.coords.latitude, lng: p.coords.longitude, cas: new Date().toLocaleTimeString() };
+            let stopy = JSON.parse(localStorage.getItem('tady_app_data')) || [];
+            stopy.push(novaStopa);
+            localStorage.setItem('tady_app_data', JSON.stringify(stopy));
+            document.getElementById('msg').value = "";
             location.reload();
-        }, () => alert("Povolte GPS v prohlížeči."));
+        }, () => alert("Prosím povolte GPS pro funkčnost aplikace."));
+    }
+
+    function zobrazitBody() {
+        const stopy = JSON.parse(localStorage.getItem('tady_app_data')) || [];
+        stopy.forEach(s => {
+            L.circle([s.lat, s.lng], { radius: 100, color: '#764ba2', fillOpacity: 0.4 }).addTo(map)
+             .bindPopup(s.text);
+        });
     }
 
     async function runAI() {
         const box = document.getElementById('ai-status');
-        box.innerText = "Komunikuji s AI servery...";
+        box.innerText = "Analyzuji okolí...";
         
-        const stopy = JSON.parse(localStorage.getItem('tady_vize')) || [];
-        const kontext = stopy.length > 0 ? stopy.slice(-3).map(s => s.text).join("; ") : "Žádné stopy v okolí.";
+        const stopy = JSON.parse(localStorage.getItem('tady_app_data')) || [];
+        const kontext = stopy.length > 0 ? stopy.slice(-3).map(s => s.text).join("; ") : "Žádné zprávy v okolí.";
 
         try {
-            // Správná URL pro Gemini API v1beta
-            const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_KEY}`;
-            
-            const response = await fetch(url, {
+            const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_KEY}`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
-                    contents: [{ parts: [{ text: `Jsi AI aplikace TADY (slogan: všechno důležité je tady). Máme rozpočet 75tis EUR. Udělej krátký postřeh z těchto zpráv: ${kontext}` }] }]
+                    contents: [{ parts: [{ text: `Jsi AI mozek sociální aplikace TADY (slogan: všechno důležité je tady). Projekt vede M.D. s rozpočtem 75.000 EUR. Na základě těchto zpráv: "${kontext}", napiš krátký, užitečný postřeh pro komunitu.` }] }]
                 })
             });
 
-            if (!response.ok) {
-                const errorData = await response.json();
-                throw new Error(errorData.error.message || "Chyba API");
-            }
-
-            const resData = await response.json();
-            box.innerText = resData.candidates[0].content.parts[0].text;
-            
+            const data = await response.json();
+            if (data.error) throw new Error(data.error.message);
+            box.innerText = data.candidates[0].content.parts[0].text;
         } catch(e) { 
-            console.error(e);
-            box.innerText = "Chyba: " + e.message; 
+            box.innerText = "AI momentálně není k dispozici. Zkontrolujte připojení."; 
         }
     }
 
-    window.onload = init;
+    window.onload = initMap;
 </script>
 </body>
 </html>
