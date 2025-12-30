@@ -8,42 +8,29 @@
     <style>
         :root { --p: #764ba2; --s: #667eea; --gold: #ffc107; --danger: #ff5252; --bg: #f8f9fa; }
         body { font-family: sans-serif; margin: 0; background: var(--bg); padding-bottom: 110px; }
-        
-        /* HEADER & XP BAR */
         header { background: linear-gradient(135deg, var(--s), var(--p)); color: white; padding: 15px; position: sticky; top: 0; z-index: 1000; text-align: center; }
         .xp-bar { height: 5px; background: rgba(255,255,255,0.3); width: 100%; position: absolute; bottom: 0; left: 0; }
         #xp-fill { height: 100%; background: var(--gold); width: 45%; transition: 0.5s; }
-
         .container { padding: 15px; max-width: 600px; margin: 0 auto; }
         .section { display: none; }
         .section.active { display: block; }
-
-        /* KARTY A DESIGN */
         .card { background: white; border-radius: 20px; padding: 15px; margin-bottom: 15px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); border: 1px solid #eee; position: relative; }
-        .sos-card { border: 2px solid var(--danger); background: #fff5f5; }
         .btn { background: var(--p); color: white; border: none; padding: 15px; width: 100%; border-radius: 15px; font-weight: bold; cursor: pointer; margin-top: 10px; }
-        
-        /* FILTRY */
-        .filters { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 10px; }
-        .chip { padding: 8px 15px; background: #ddd; border-radius: 20px; font-size: 0.8rem; white-space: nowrap; font-weight: bold; }
-        .chip.active { background: var(--p); color: white; }
-
-        /* NAVIGACE */
         .nav-bar { position: fixed; bottom: 0; width: 100%; background: white; display: flex; justify-content: space-around; padding: 12px 0; border-top: 1px solid #eee; z-index: 1000; }
         .nav-item { text-align: center; font-size: 0.7rem; color: #888; flex: 1; text-decoration: none; }
         .nav-item.active { color: var(--p); font-weight: bold; }
         .nav-icon { font-size: 1.5rem; display: block; }
-
         #map { height: 300px; border-radius: 20px; width: 100%; margin-top: 10px; }
-        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 2000; justify-content: center; align-items: center; }
-        .modal-body { background: white; width: 85%; padding: 25px; border-radius: 25px; }
-        input, textarea { width: 100%; padding: 12px; margin: 8px 0; border: 1px solid #eee; border-radius: 10px; box-sizing: border-box; }
+        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 2000; justify-content: center; align-items: center; backdrop-filter: blur(5px); }
+        .modal-body { background: white; width: 85%; padding: 25px; border-radius: 25px; text-align: center; }
+        input { width: 100%; padding: 12px; margin: 8px 0; border: 1px solid #eee; border-radius: 10px; box-sizing: border-box; }
+        #qr-area img { margin-top: 15px; border: 5px solid white; border-radius: 10px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
     </style>
 </head>
 <body>
 
 <header>
-    <div style="font-size: 0.7rem; font-weight: bold; letter-spacing: 1px;">LVL <span id="lvl">1</span> • <span id="xp-text">45</span> XP</div>
+    <div style="font-size: 0.7rem; font-weight: bold;">LVL <span id="lvl">1</span> • <span id="xp-text">45</span> XP</div>
     <h1 style="margin:5px 0 0 0; font-size: 1.4rem;">TADY</h1>
     <div style="font-size: 0.7rem; opacity: 0.9;">tady se děje všechno</div>
     <div style="margin-top:8px; font-weight: 800; background: rgba(0,0,0,0.1); display: inline-block; padding: 4px 12px; border-radius: 15px;">💰 <span id="balance">120</span> TC</div>
@@ -52,54 +39,34 @@
 
 <div class="container">
     <div id="feeds" class="section active">
-        <div class="filters">
-            <div class="chip active">Všechno</div>
-            <div class="chip">🆘 SOS</div>
-            <div class="chip">💎 Akce</div>
-        </div>
-        <div id="post-list">
-            <div class="card">
-                <b>M.D.</b> <small style="color:#888">• nyní</small>
-                <p>Vítejte v plné verzi aplikace! Všechny funkce jsou nyní aktivní.</p>
-                <div style="margin-top:10px; font-size: 0.9rem;">❤️ 12 • 💬 2</div>
-            </div>
+        <div class="card">
+            <b>M.D.</b> <small style="color:#888">• nyní</small>
+            <p>Vítejte! Aplikace je nyní plně propojena s tvým platebním účtem.</p>
         </div>
     </div>
 
     <div id="map-section" class="section">
-        <div class="card">
-            <h3>Mapa Varnsdorfu</h3>
-            <div id="map"></div>
-        </div>
+        <div class="card"><h3>Mapa Varnsdorfu</h3><div id="map"></div></div>
     </div>
 
     <div id="business" class="section">
         <h2 style="text-align:center">Růst s TADY</h2>
         <div class="card" style="border: 2px solid var(--p);">
-            <div style="position:absolute; top:-12px; right:15px; background:var(--p); color:white; padding:2px 10px; border-radius:10px; font-size:0.7rem;">TOP</div>
-            <h3 style="margin:0">Tarif PATRIOT</h3>
-            <div style="font-size: 1.8rem; font-weight: 800; color: var(--p); margin: 10px 0;">490 Kč <small style="font-size: 0.8rem; color:#888;">/měsíc</small></div>
-            <ul style="padding-left: 20px; font-size: 0.85rem;">
-                <li>Zápis na mapu</li>
-                <li>Vlastní akce a slevy</li>
-                <li>Přednostní SOS podpora</li>
-            </ul>
-            <button class="btn" onclick="openOrder('Patriot')">Objednat a zaplatit</button>
+            <h3>Tarif PATRIOT</h3>
+            <div style="font-size: 1.8rem; font-weight: 800; color: var(--p);">490 Kč <small style="font-size:0.8rem">/měsíc</small></div>
+            <button class="btn" onclick="openOrder('Patriot', 490)">Objednat a zaplatit</button>
         </div>
         <div class="card">
             <h3>Tarif PARTNER</h3>
-            <div style="font-size: 1.5rem; font-weight: 800; margin: 10px 0;">1 990 Kč</div>
-            <p style="font-size: 0.85rem;">Individuální spolupráce a maximální dosah v regionu.</p>
-            <button class="btn" style="background:#888" onclick="openOrder('Partner')">Kontaktovat M.D.</button>
+            <div style="font-size: 1.5rem; font-weight: 800;">1 990 Kč</div>
+            <button class="btn" style="background:#888" onclick="openOrder('Partner', 1990)">Kontaktovat M.D.</button>
         </div>
     </div>
 
     <div id="profile" class="section">
         <div class="card" style="text-align: center;">
-            <div style="width: 80px; height: 80px; background: var(--p); border-radius: 50%; margin: 0 auto 15px; color: white; display: flex; align-items: center; justify-content: center; font-size: 2rem; font-weight: bold;">MD</div>
-            <h2>M.D.</h2>
-            <p style="color:#888">Hlavní Ambasador Varnsdorfu</p>
-            <hr style="border:0; border-top: 1px solid #eee; margin: 20px 0;">
+            <div style="width: 80px; height: 80px; background: var(--p); border-radius: 50%; margin: 0 auto 15px; color: white; display: flex; align-items: center; justify-content: center; font-size: 1.8rem; font-weight: bold;">M</div>
+            <h2>Marcel DRVOTA</h2>
             <button class="btn" style="background:var(--gold); color:black;" onclick="openAdmin()">👑 SPRÁVA OBJEDNÁVEK</button>
         </div>
     </div>
@@ -108,11 +75,10 @@
 <div id="order-modal" class="modal">
     <div class="modal-body">
         <h3 id="order-title">Objednávka</h3>
-        <input type="text" id="biz-name" placeholder="Název firmy">
-        <input type="text" id="biz-ico" placeholder="IČO">
-        <input type="email" id="biz-email" placeholder="E-mail">
-        <button class="btn" onclick="submitOrder()">Odeslat požadavek</button>
-        <button onclick="closeModal()" style="background:none; border:none; color:#888; width:100%; margin-top:10px;">Zrušit</button>
+        <div id="qr-area"></div>
+        <input type="text" id="biz-name" placeholder="Název vaší firmy">
+        <button class="btn" onclick="submitOrder()">MÁM ZAPLACENO</button>
+        <button onclick="closeModal()" style="background:none; border:none; color:#888; width:100%; margin-top:15px;">Zrušit</button>
     </div>
 </div>
 
@@ -126,7 +92,8 @@
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script>
     let orders = JSON.parse(localStorage.getItem('t_orders')) || [];
-    let curTarif = "";
+    let activeCena = 0;
+    let activeTarif = "";
 
     function nav(id, el) {
         document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
@@ -134,32 +101,38 @@
         document.getElementById(id).classList.add('active');
         el.classList.add('active');
         if(id === 'map-section') {
-            setTimeout(() => {
-                if(!window.m) {
-                    window.m = L.map('map', {zoomControl: false}).setView([50.911, 14.622], 14);
-                    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(window.m);
-                }
-            }, 300);
+            setTimeout(() => { if(!window.m) { window.m = L.map('map').setView([50.911, 14.622], 14); L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(window.m); } }, 300);
         }
     }
 
-    function openOrder(t) { curTarif = t; document.getElementById('order-title').innerText = "Objednat " + t; document.getElementById('order-modal').style.display='flex'; }
+    function openOrder(t, cena) {
+        activeTarif = t;
+        activeCena = cena;
+        document.getElementById('order-title').innerText = "Aktivace: " + t;
+        // Dynamické generování QR kódu s tvou novou cenou (490 nebo 1990)
+        document.getElementById('qr-area').innerHTML = `
+            <p style="font-weight:bold; color:var(--p)">Částka: ${cena} Kč</p>
+            <img src="https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=SPD*1.0*ACC:TVUJ-UCET*AM:${cena}*CC:CZK*MSG:TADY-${t}" alt="QR Platba">
+            <p style="font-size:0.7rem; color:#888; margin-top:10px;">Naskenujte QR kód ve své bankovní aplikaci</p>
+        `;
+        document.getElementById('order-modal').style.display='flex';
+    }
+
     function closeModal() { document.getElementById('order-modal').style.display='none'; }
-    
+
     function submitOrder() {
-        const o = { tarif: curTarif, biz: document.getElementById('biz-name').value, email: document.getElementById('biz-email').value, date: new Date().toLocaleString() };
-        if(!o.biz || !o.email) return alert("Doplňte údaje.");
-        orders.push(o);
+        const biz = document.getElementById('biz-name').value;
+        if(!biz) return alert("Zadejte název firmy pro spárování platby.");
+        orders.push({ tarif: activeTarif, cena: activeCena, biz: biz, date: new Date().toLocaleString() });
         localStorage.setItem('t_orders', JSON.stringify(orders));
-        alert("Odesláno! M.D. vás bude kontaktovat.");
+        alert("Úspěšně uloženo TADY! Marcel prověří platbu a aktivuje váš profil.");
         closeModal();
     }
 
     function openAdmin() {
-        let msg = orders.length ? orders.map(o => `${o.tarif}: ${o.biz} (${o.email})`).join('\n\n') : "Žádné objednávky.";
-        alert("PŘEHLED OBJEDNÁVEK:\n\n" + msg);
+        let list = orders.length ? orders.map(o => `${o.date} - ${o.biz}: ${o.tarif} (${o.cena} Kč)`).join('\n\n') : "Žádné nové platby.";
+        alert("PŘEHLED PLATEB KE KONTROLE:\n\n" + list);
     }
 </script>
-
 </body>
 </html>
