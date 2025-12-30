@@ -1,26 +1,210 @@
-// --- Tuto část JavaScriptu jsem v kódu v2.1 zásadně rozšířil ---
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TADY - Všechno důležité je tady</title>
+    
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;800&display=swap" rel="stylesheet">
 
-// 1. NAČÍTÁNÍ DAT PŘI STARTU
-let xp = parseInt(localStorage.getItem('tady_xp')) || 45;
-let level = parseInt(localStorage.getItem('tady_lvl')) || 1;
-let coins = parseInt(localStorage.getItem('tady_coins')) || 120;
-let savedPosts = JSON.parse(localStorage.getItem('tady_posts')) || [];
+    <style>
+        :root {
+            --p: #764ba2; --s: #667eea; --acc: #00d2ff; --gold: #ffc107;
+            --danger: #ff5252; --bg: #f4f7f6; --card: #ffffff;
+        }
 
-// 2. FUNKCE PRO UKLÁDÁNÍ
-function saveData() {
-    localStorage.setItem('tady_xp', xp);
-    localStorage.setItem('tady_lvl', level);
-    localStorage.setItem('tady_coins', coins);
-    localStorage.setItem('tady_posts', JSON.stringify(savedPosts));
-}
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            margin: 0; padding: 0; background-color: var(--bg);
+            color: #2d3436; padding-bottom: 80px;
+        }
 
-// 3. AUTOMATICKÉ ZOBRAZENÍ ULOŽENÝCH PŘÍSPĚVKŮ
-function loadFeed() {
-    const list = document.getElementById('feed-list');
-    savedPosts.forEach(post => {
-        const card = document.createElement('div');
-        card.className = post.type === 'sos' ? "card sos-card" : "card";
-        card.innerHTML = `<b>${post.user}</b> ${post.type === 'sos' ? '<span class="badge badge-sos">SOS</span>' : ''}<br><small>${post.time}</small><p>${post.text}</p>`;
-        list.insertBefore(card, list.firstChild);
-    });
-}
+        header {
+            background: linear-gradient(135deg, var(--s) 0%, var(--p) 100%);
+            color: white; padding: 15px 20px;
+            display: flex; justify-content: space-between; align-items: center;
+            position: sticky; top: 0; z-index: 1000;
+        }
+
+        .status-bar {
+            background: white; padding: 8px 20px; display: flex; align-items: center;
+            gap: 15px; font-size: 0.75rem; border-bottom: 1px solid #eee;
+        }
+        .xp-bg { flex-grow: 1; height: 6px; background: #eee; border-radius: 3px; overflow: hidden; }
+        #xp-fill { height: 100%; width: 0%; background: var(--acc); transition: 0.5s; }
+
+        .nav-bar {
+            position: fixed; bottom: 0; width: 100%; background: white;
+            display: flex; justify-content: space-around; padding: 12px 0;
+            box-shadow: 0 -4px 10px rgba(0,0,0,0.05); z-index: 1000;
+        }
+        .nav-item { color: #b2bec3; text-align: center; font-size: 0.7rem; cursor: pointer; flex: 1; }
+        .nav-item.active { color: var(--p); }
+        .nav-item i { font-size: 1.3rem; display: block; margin-bottom: 4px; }
+
+        .container { max-width: 600px; margin: 0 auto; padding: 15px; }
+        .section { display: none; }
+        .section.active { display: block; }
+
+        .card {
+            background: var(--card); border-radius: 18px; padding: 16px;
+            margin-bottom: 15px; box-shadow: 0 4px 12px rgba(0,0,0,0.03);
+            border: 1px solid rgba(0,0,0,0.02);
+        }
+        .sos-card { border: 2px solid var(--danger); }
+        .badge { padding: 4px 8px; border-radius: 6px; font-size: 0.65rem; font-weight: 800; margin-left: 8px; }
+        
+        #map { height: 400px; width: 100%; border-radius: 20px; }
+
+        .fab {
+            position: fixed; bottom: 85px; right: 20px;
+            width: 60px; height: 60px; background: var(--p);
+            color: white; border-radius: 50%; border: none;
+            font-size: 24px; box-shadow: 0 8px 20px rgba(0,0,0,0.2); z-index: 999;
+        }
+
+        .modal {
+            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.6); backdrop-filter: blur(5px);
+            z-index: 2000; justify-content: center; align-items: center;
+        }
+        .modal-body { background: white; width: 90%; max-width: 400px; padding: 25px; border-radius: 25px; }
+        input, textarea, select { width: 100%; padding: 12px; margin: 10px 0; border: 1px solid #eee; border-radius: 12px; font-family: inherit; box-sizing: border-box; }
+        .btn { background: var(--p); color: white; border: none; padding: 14px; width: 100%; border-radius: 12px; font-weight: 700; cursor: pointer; }
+    </style>
+</head>
+<body>
+
+    <div class="status-bar">
+        <div style="font-weight: 800;">LVL <span id="lvl">1</span></div>
+        <div class="xp-bg"><div id="xp-fill"></div></div>
+        <div id="xp-text" style="color: var(--p); font-weight: 700;">0 / 100 XP</div>
+    </div>
+
+    <header>
+        <h1>TADY</h1>
+        <div style="background: rgba(255,255,255,0.2); padding: 5px 12px; border-radius: 20px; font-weight: 800; font-size: 0.85rem;">
+            <span id="balance">120</span> TC
+        </div>
+    </header>
+
+    <div class="container">
+        <div id="feeds" class="section active">
+            <div id="feed-list">
+                </div>
+        </div>
+
+        <div id="map-section" class="section">
+            <div id="map"></div>
+        </div>
+
+        <div id="events" class="section">
+            <h3>Akce v okolí</h3>
+            <div class="card">Přípravy na novou sezónu ve Varnsdorfu...</div>
+        </div>
+
+        <div id="messages" class="section">
+            <h3>Zprávy</h3>
+            <div class="card">Tým TADY: Vítejte zpět, Marceli!</div>
+        </div>
+    </div>
+
+    <div class="nav-bar">
+        <div class="nav-item active" onclick="nav('feeds', this)"><i class="fas fa-home"></i>Dění</div>
+        <div class="nav-item" onclick="nav('map-section', this)"><i class="fas fa-map-marked-alt"></i>Mapa</div>
+        <div class="nav-item" onclick="nav('events', this)"><i class="fas fa-calendar-alt"></i>Akce</div>
+        <div class="nav-item" onclick="nav('messages', this)"><i class="fas fa-comment-dots"></i>Zprávy</div>
+    </div>
+
+    <button class="fab" onclick="openModal()"><i class="fas fa-plus"></i></button>
+
+    <div id="modal" class="modal">
+        <div class="modal-body">
+            <h3 id="modal-title">Sdílet moment</h3>
+            <select id="post-type">
+                <option value="post">Příspěvek (+10 XP)</option>
+                <option value="sos">SOS Pomoc (+50 XP)</option>
+            </select>
+            <textarea id="post-input" rows="4" placeholder="Napište podrobnosti..."></textarea>
+            <button class="btn" onclick="submitPost()">Publikovat</button>
+            <button onclick="closeModal()" style="border:none; background:none; color:#b2bec3; width:100%; margin-top:15px; cursor:pointer;">Zavřít</button>
+        </div>
+    </div>
+
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script>
+        let map;
+        // Načtení dat z paměti prohlížeče
+        let xp = parseInt(localStorage.getItem('tady_xp')) || 0;
+        let level = parseInt(localStorage.getItem('tady_lvl')) || 1;
+        let coins = parseInt(localStorage.getItem('tady_coins')) || 120;
+        let savedPosts = JSON.parse(localStorage.getItem('tady_posts')) || [];
+
+        function updateUI() {
+            document.getElementById('lvl').innerText = level;
+            document.getElementById('balance').innerText = coins;
+            document.getElementById('xp-fill').style.width = xp + "%";
+            document.getElementById('xp-text').innerText = xp + " / 100 XP";
+            
+            const list = document.getElementById('feed-list');
+            list.innerHTML = ""; // Vyčistit a znovu načíst
+            savedPosts.forEach(post => {
+                const card = document.createElement('div');
+                card.className = post.type === 'sos' ? "card sos-card" : "card";
+                card.innerHTML = `<b>${post.user}</b> ${post.type === 'sos' ? '<span class="badge" style="background:red;color:white">SOS</span>' : ''}<br><small>${post.time}</small><p>${post.text}</p>`;
+                list.insertBefore(card, list.firstChild);
+            });
+        }
+
+        function nav(id, el) {
+            document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+            document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+            document.getElementById(id).classList.add('active');
+            el.classList.add('active');
+            if(id === 'map-section') setTimeout(initMap, 100);
+        }
+
+        function initMap() {
+            if (map) return;
+            map = L.map('map').setView([50.911, 14.622], 14);
+            L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png').addTo(map);
+        }
+
+        function openModal() { document.getElementById('modal').style.display = 'flex'; }
+        function closeModal() { document.getElementById('modal').style.display = 'none'; }
+
+        function submitPost() {
+            const text = document.getElementById('post-input').value;
+            const type = document.getElementById('post-type').value;
+            if(!text) return;
+
+            // Přidání XP a uložení
+            xp += (type === 'sos' ? 50 : 10);
+            if(xp >= 100) { xp -= 100; level++; }
+
+            const newPost = {
+                user: "Marcel Drvota", // cite: 2025-12-25
+                text: text,
+                type: type,
+                time: "právě teď"
+            };
+
+            savedPosts.push(newPost);
+            
+            // Uložení do paměti prohlížeče
+            localStorage.setItem('tady_xp', xp);
+            localStorage.setItem('tady_lvl', level);
+            localStorage.setItem('tady_posts', JSON.stringify(savedPosts));
+
+            updateUI();
+            closeModal();
+            document.getElementById('post-input').value = "";
+        }
+
+        // Start aplikace
+        updateUI();
+    </script>
+</body>
+</html>
