@@ -7,7 +7,7 @@
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <style>
         :root { --p: #764ba2; --s: #667eea; --cyan: #00f2ff; --bg: #0b1118; }
-        body, html { margin: 0; padding: 0; width: 100%; height: 100%; font-family: 'Segoe UI', sans-serif; background: var(--bg); color: #fff; overflow: hidden; }
+        body, html { margin: 0; padding: 0; width: 100%; height: 100%; font-family: 'Segoe UI', sans-serif; background: var(--bg); color: #fff; overflow-x: hidden; }
         header { 
             background: linear-gradient(135deg, var(--s), var(--p)); color: white; padding: 25px 15px; 
             text-align: center; border-bottom-left-radius: 35px; border-bottom-right-radius: 35px; 
@@ -16,13 +16,13 @@
         .logo { font-size: 2.2rem; font-weight: 900; letter-spacing: 6px; margin: 0; }
         .slogan { font-size: 0.8rem; color: #adffd2; margin-top: 5px; font-weight: 600; text-transform: uppercase; }
         .lead { font-size: 0.7rem; opacity: 0.9; margin-top: 3px; font-weight: bold; letter-spacing: 3px; }
-        .container { padding: 15px; max-width: 500px; margin: 0 auto; height: calc(100vh - 120px); overflow-y: auto; }
+        .container { padding: 15px; max-width: 500px; margin: 0 auto; }
         .card { background: white; border-radius: 25px; padding: 20px; margin-bottom: 20px; box-shadow: 0 15px 35px rgba(0,0,0,0.4); color: #333; }
         textarea { width: 100%; padding: 15px; border-radius: 15px; box-sizing: border-box; margin-bottom: 12px; background: #f0f2f5; font-size: 1rem; border: none; outline: none; resize: none; }
         .btn { background: var(--p); color: white; border: none; padding: 16px; width: 100%; border-radius: 18px; font-weight: 800; cursor: pointer; font-size: 1rem; }
         .btn-ai { background: linear-gradient(90deg, #00f2ff, #667eea); color: #000; margin-top: 10px; }
         #map { height: 250px; border-radius: 20px; width: 100%; border: 3px solid white; margin-top: 5px; }
-        #ai-status { margin-bottom: 10px; font-size: 0.9rem; line-height: 1.4; color: #adffd2; font-weight: 500; min-height: 30px; }
+        #ai-status { margin-bottom: 10px; font-size: 0.9rem; line-height: 1.4; color: #adffd2; font-weight: 500; min-height: 40px; }
     </style>
 </head>
 <body>
@@ -35,12 +35,12 @@
 
 <div class="container">
     <div class="card">
-        <textarea id="msg" rows="2" placeholder="Co se TADY děje?"></textarea>
+        <textarea id="msg" rows="2" placeholder="Napište něco, co se TADY děje..."></textarea>
         <button class="btn" onclick="ulozit()">PŘIŠPENDLIT</button>
     </div>
 
     <div class="card" style="background: #16212e; color: white; border: 1px solid var(--cyan);">
-        <div id="ai-status">Systém připraven...</div>
+        <div id="ai-status">Zeptejte se na analýzu okolí...</div>
         <button class="btn btn-ai" onclick="runAI()">ZEPTAT SE AI</button>
     </div>
 
@@ -75,38 +75,31 @@
 
     async function runAI() {
         const box = document.getElementById('ai-status');
-        box.innerText = "⚡ Generuji odpověď...";
+        box.innerText = "⚡ Mozek sítě TADY přemýšlí...";
         
         const stopy = JSON.parse(localStorage.getItem('tady_stopy')) || [];
-        const kontext = stopy.length > 0 ? stopy.slice(-3).map(s => s.text).join(". ") : "Klidná lokalita.";
+        // Pokud nejsou stopy, použijeme obecný kontext pro Varnsdorf
+        const kontext = stopy.length > 0 ? stopy.map(s => s.text).join(". ") : "Varnsdorf se probouzí do nového dne.";
 
         const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${API_KEY}`;
-
-        const payload = {
-            contents: [{ parts: [{ text: `Jsi AI sítě TADY. Projekt M.D. (Varnsdorf). Kontext: ${kontext}. Napiš 1 větu o tom, co se děje.` }] }],
-            safetySettings: [
-                { category: "HARM_CATEGORY_HARASSMENT", threshold: "BLOCK_NONE" },
-                { category: "HARM_CATEGORY_HATE_SPEECH", threshold: "BLOCK_NONE" },
-                { category: "HARM_CATEGORY_SEXUALLY_EXPLICIT", threshold: "BLOCK_NONE" },
-                { category: "HARM_CATEGORY_DANGEROUS_CONTENT", threshold: "BLOCK_NONE" }
-            ]
-        };
 
         try {
             const response = await fetch(url, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(payload)
+                body: JSON.stringify({
+                    contents: [{ parts: [{ text: `Jsi kreativní AI průvodce sítí TADY. Projekt vede M.D. s rozpočtem 75.000 EUR. Na základě těchto zpráv: "${kontext}" napiš krátkou, 1 větu o tom, co je ve Varnsdorfu zajímavého.` }] }]
+                })
             });
 
             const data = await response.json();
             if (data.candidates && data.candidates[0].content) {
                 box.innerText = data.candidates[0].content.parts[0].text;
             } else {
-                box.innerText = "AI nenašla vhodná slova. Zkuste jinou zprávu.";
+                box.innerText = "AI zrovna hledá inspiraci, zkuste to za chvilku.";
             }
         } catch(e) { 
-            box.innerText = "Chyba sítě. Zkuste to znovu.";
+            box.innerText = "Zkontrolujte připojení k internetu.";
         }
     }
     window.onload = initMap;
