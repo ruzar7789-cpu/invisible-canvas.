@@ -3,155 +3,139 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>TADY | M.D. Business OS FIX</title>
+    <title>TADY | M.D. Business OS</title>
     
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@900&family=Inter:wght@400;700&display=swap" rel="stylesheet">
 
     <style>
-        :root { --glow: #00f2ff; --gold: #ffd700; --glass: rgba(10, 20, 30, 0.9); }
-        body, html { margin: 0; padding: 0; width: 100%; height: 100%; font-family: 'Inter', sans-serif; background: #000; color: #fff; overflow: hidden; }
+        :root { --glow: #00f2ff; --gold: #ffd700; --glass: rgba(5, 10, 15, 0.95); }
+        body, html { margin: 0; padding: 0; width: 100%; height: 100%; font-family: 'Inter', sans-serif; background: #000; color: #fff; overflow: hidden; touch-action: manipulation; }
         
-        /* FIX: Zajištění správného vrstvení */
-        #ar-view, #map-view { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 1; transition: 0.5s; }
-        #ar-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 100; pointer-events: none; }
-        #ar-engine { width: 100%; height: 100%; object-fit: cover; z-index: 50; }
+        /* VRSTVA 1: Kamera (Zcela vespod) */
+        #ar-engine { position: fixed; top: 0; left: 0; width: 100%; height: 100%; object-fit: cover; z-index: 1; }
         
-        /* Mapa musí být nad AR, když je aktivní */
-        #map-view.active { z-index: 200; opacity: 1; transform: scale(1); }
-        .view-hidden { opacity: 0; transform: scale(1.1); pointer-events: none; z-index: 0; }
+        /* VRSTVA 2: AR Hologramy (Uprostřed) */
+        #ar-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 10; pointer-events: none; }
+        
+        /* VRSTVA 3: Mapa (Navrchu jen při aktivaci) */
+        #map-view { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 100; transform: translateY(100%); transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1); background: #000; }
+        #map-view.active { transform: translateY(0); }
 
-        /* Hologramy s povoleným klikáním */
+        /* Design Hologramů */
         .hologram {
-            position: absolute; background: var(--glass); backdrop-filter: blur(15px);
-            border-radius: 15px; padding: 15px; border-left: 4px solid var(--glow);
-            animation: float 4s infinite ease-in-out; pointer-events: auto; min-width: 170px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.5); z-index: 110;
+            position: absolute; background: var(--glass); backdrop-filter: blur(10px);
+            border-radius: 20px; padding: 18px; border: 1px solid rgba(255,255,255,0.1);
+            border-left: 5px solid var(--glow); pointer-events: auto; min-width: 180px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.8);
         }
-        .hologram.business { border-left-color: var(--gold); animation: float 4s infinite ease-in-out, pulseGold 2s infinite; }
+        .hologram.business { border-left-color: var(--gold); animation: pulseGold 2s infinite; }
         
-        .biz-btn { background: var(--gold); color: #000; border: none; padding: 10px; border-radius: 10px; font-weight: 900; width: 100%; cursor: pointer; margin-top: 5px; }
+        /* UI Spodní menu (Vždy navrchu) */
+        .footer-ui { position: fixed; bottom: 0; width: 100%; z-index: 1000; padding: 30px 0; background: linear-gradient(to top, #000 80%, transparent); text-align: center; }
+        .nav-icon { cursor: pointer; display: inline-block; margin: 0 25px; font-size: 2.5rem; transition: 0.3s; filter: drop-shadow(0 0 10px rgba(0,242,255,0.3)); }
+        .nav-icon:active { transform: scale(0.8); }
 
-        .footer-ui { position: fixed; bottom: 0; width: 100%; z-index: 1000; padding: 25px 0; background: linear-gradient(to top, #000 85%, transparent); text-align: center; }
-        .brand { font-family: 'Orbitron'; font-size: 1.8rem; letter-spacing: 8px; margin-bottom: 10px; }
-        nav { display: flex; justify-content: center; gap: 40px; }
-        .nav-btn { font-size: 2.2rem; cursor: pointer; }
-
-        .modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); z-index: 3000; display: none; align-items: center; justify-content: center; }
-        .offer-box { width: 85%; max-width: 380px; background: #0a0a0a; border-radius: 30px; padding: 25px; text-align: center; border: 1px solid #333; }
+        .modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 2000; background: rgba(0,0,0,0.95); display: none; align-items: center; justify-content: center; }
+        .offer-box { background: #050505; padding: 35px; border-radius: 40px; border: 1px solid #222; width: 85%; max-width: 400px; text-align: center; }
         
         @keyframes pulseGold {
             0% { box-shadow: 0 0 0 0 rgba(255, 215, 0, 0.4); }
-            70% { box-shadow: 0 0 0 15px rgba(255, 215, 0, 0); }
+            70% { box-shadow: 0 0 0 20px rgba(255, 215, 0, 0); }
             100% { box-shadow: 0 0 0 0 rgba(255, 215, 0, 0); }
         }
-        @keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-15px); } }
     </style>
 </head>
 <body>
 
-<div id="ar-view">
-    <video id="ar-engine" autoplay playsinline></video>
-    <div id="ar-overlay"></div>
-</div>
+<video id="ar-engine" autoplay playsinline muted></video>
+<div id="ar-overlay"></div>
 
-<div id="map-view" class="view-hidden">
+<div id="map-view">
     <div id="map" style="width: 100%; height: 100%;"></div>
 </div>
 
 <div id="tier-modal" class="modal">
     <div class="offer-box">
-        <h2 style="font-family:'Orbitron'">VOLBA TARIFU</h2>
-        <div onclick="startOrder('OSOBNÍ', 29)" style="padding:15px; border:1px solid var(--glow); border-radius:15px; margin:10px 0; cursor:pointer;">OSOBNÍ (29 Kč)</div>
-        <div onclick="startOrder('FIREMNÍ', 149)" style="padding:15px; border:1px solid var(--gold); border-radius:15px; margin:10px 0; cursor:pointer;">ZLATÁ STOPA (149 Kč)</div>
-        <button onclick="document.getElementById('tier-modal').style.display='none'" style="background:none; border:none; color:gray; cursor:pointer;">Zrušit</button>
+        <h2 style="font-family:'Orbitron'; color:var(--gold)">M.D. SYSTÉM</h2>
+        <div onclick="startOrder('OSOBNÍ', 29)" style="padding:20px; border:1px solid var(--glow); border-radius:20px; margin:15px 0; cursor:pointer;">OSOBNÍ STOPA (29 Kč)</div>
+        <div onclick="startOrder('FIREMNÍ', 149)" style="padding:20px; border:1px solid var(--gold); border-radius:20px; margin:15px 0; cursor:pointer; background:rgba(255,215,0,0.05)">ZLATÁ STOPA (149 Kč)</div>
+        <button onclick="document.getElementById('tier-modal').style.display='none'" style="background:none; border:none; color:gray; cursor:pointer; margin-top:15px; font-size:1rem;">Zrušit</button>
     </div>
 </div>
 
 <div class="footer-ui">
-    <div class="brand">DOHROMADY</div>
+    <div style="font-family:'Orbitron'; font-size:1.4rem; letter-spacing:10px; margin-bottom:15px; opacity:0.8;">DOHROMADY</div>
     <nav>
-        <div class="nav-icon" onclick="toggleView()" style="cursor:pointer">🗺️</div>
-        <div class="nav-icon" onclick="openTiers()" style="cursor:pointer; font-size:3rem; margin:0 20px;">💬</div>
-        <div class="nav-icon" onclick="adminAccess()" style="cursor:pointer">👤</div>
+        <span class="nav-icon" onclick="toggleMap()">🗺️</span>
+        <span class="nav-icon" onclick="openCreator()" style="font-size:3.5rem; filter:drop-shadow(0 0 15px var(--glow))">💬</span>
+        <span class="nav-icon" onclick="adminAccess()">👤</span>
     </nav>
 </div>
 
 <script>
-    let isMap = false, map, selectedLat, selectedLng, isAdmin = false;
+    let map, isMapOpen = false, selectedLat, selectedLng;
 
-    async function initAR() {
+    async function initCamera() {
         try {
             const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } });
             document.getElementById('ar-engine').srcObject = stream;
-        } catch(e) { console.error("Kamera nebyla povolena."); }
-        loadStops();
+        } catch(err) { console.error("Kamera neaktivní."); }
+        loadWorld();
     }
 
-    function toggleView() {
-        isMap = !isMap;
+    function toggleMap() {
+        isMapOpen = !isMapOpen;
         const mapView = document.getElementById('map-view');
-        const arView = document.getElementById('ar-view');
+        mapView.classList.toggle('active', isMapOpen);
         
-        if (isMap) {
-            mapView.classList.remove('view-hidden');
-            mapView.classList.add('active');
-            if (!map) initMap();
-        } else {
-            mapView.classList.add('view-hidden');
-            mapView.classList.remove('active');
+        if (isMapOpen && !map) {
+            map = L.map('map', { zoomControl: false }).setView([50.911, 14.622], 15);
+            L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png').addTo(map);
+            map.on('click', (e) => {
+                selectedLat = e.latlng.lat;
+                selectedLng = e.latlng.lng;
+                document.getElementById('tier-modal').style.display = 'flex';
+            });
         }
     }
 
-    function initMap() {
-        map = L.map('map', { zoomControl: false }).setView([50.91, 14.62], 15);
-        L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png').addTo(map);
-        map.on('click', e => { 
-            selectedLat = e.latlng.lat; 
-            selectedLng = e.latlng.lng; 
-            openTiers(); 
-        });
+    function openCreator() {
+        if (!isMapOpen) {
+            alert("Krok 1: Vyberte místo na mapě.");
+            toggleMap();
+        }
     }
-
-    function openTiers() { document.getElementById('tier-modal').style.display = 'flex'; }
 
     function startOrder(type, price) {
-        const msg = prompt(`Napište váš ${type} vzkaz:`);
-        if(!msg) return;
-        document.getElementById('tier-modal').style.display = 'none';
-        alert(`Objednávka vytvořena. Počkejte na schválení M.D.`);
+        const text = prompt(`Zadejte vzkaz pro ${type} stopu:`);
+        if (text) {
+            alert(`STOPA ULOŽENA.\n\nNyní odešlete ${price} Kč na Revolut M.D.\n\nVáš vzkaz: ${text}`);
+            document.getElementById('tier-modal').style.display = 'none';
+            toggleMap(); // Zavře mapu po objednávce
+        }
     }
 
-    function loadStops() {
-        addHologram("RESTAURACE", "Dnes: Svíčková 185,-", 40, 20, "FIREMNÍ", "Rezervovat");
-        addHologram("M.D. RADAR", "Síť je aktivní.", 10, 45, "OSOBNÍ", "");
-    }
-
-    function addHologram(title, text, x, y, tier, action) {
+    function loadWorld() {
+        const overlay = document.getElementById('ar-overlay');
+        // Ukázková firemní stopa
         const h = document.createElement('div');
-        h.className = `hologram ${tier === 'FIREMNÍ' ? 'business' : ''}`;
-        h.style.left = x + '%'; h.style.top = y + '%';
+        h.className = "hologram business";
+        h.style.left = "15%"; h.style.top = "25%";
         h.innerHTML = `
-            <h3>${title}</h3>
-            <p>${text}</p>
-            ${action ? `<button class="biz-btn" onclick="alert('Otevírám rezervaci...')">${action}</button>` : ''}
-            <div style="font-size:0.7rem; margin-top:10px; opacity:0.6; pointer-events:auto;">
-                <span onclick="this.innerText='❤️ 13'" style="cursor:pointer">❤️ 12</span> | ⏳ ${tier === 'FIREMNÍ' ? '7 dní' : '24h'}
-            </div>
+            <h3 style="color:var(--gold); margin:0; font-size:0.75rem; letter-spacing:2px;">RESTAURACE</h3>
+            <p style="margin:12px 0; font-size:1.1rem; font-weight:700;">Dnes: Svíčková 185,-</p>
+            <button onclick="alert('Rezervace odeslána!')" style="background:var(--gold); border:none; width:100%; padding:12px; border-radius:12px; font-weight:900; cursor:pointer;">REZERVOVAT</button>
         `;
-        document.getElementById('ar-overlay').appendChild(h);
+        overlay.appendChild(h);
     }
 
     function adminAccess() {
-        if(prompt("ADMIN PASS:") === "2025") {
-            isAdmin = true;
-            document.body.style.border = "3px solid gold";
-            alert("ADMIN MÓD AKTIVNÍ");
-        }
+        if (prompt("ADMIN HESLO:") === "2025") alert("Mód správce aktivován. Vítejte, M.D.");
     }
 
-    window.onload = initAR;
+    window.onload = initCamera;
 </script>
 </body>
 </html>
