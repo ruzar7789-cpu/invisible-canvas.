@@ -56,7 +56,6 @@
 <script>
     let savedStopy = [];
 
-    // Tato funkce nyní stahuje data z Neonu místo localStorage
     async function loadStopy() {
         try {
             const res = await fetch('/api/vzkaz');
@@ -69,7 +68,6 @@
 
     function renderFeed() {
         const list = document.getElementById('feed-list');
-        // Opraveno na s.txt pro vaši databázi
         list.innerHTML = savedStopy.map(s => `
             <div class="card">
                 <b>${s.autor || 'M.D.'}</b>
@@ -84,7 +82,6 @@
         loadStopy();
     }
 
-    // Tato funkce nyní odesílá data do Neonu
     async function placeMarker() {
         const text = document.getElementById('new-vzkaz').value;
         if(!text) return;
