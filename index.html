@@ -3,83 +3,93 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TADY - Vše se děje tady</title>
+    <title>TADY - Dashboard</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&display=swap');
-        body { font-family: 'Inter', sans-serif; background: #050505; color: white; }
+        body { font-family: 'Inter', sans-serif; background: #050505; color: white; margin: 0; }
+        .glass-panel { background: rgba(255, 255, 255, 0.03); backdrop-filter: blur(20px); border: 1px solid rgba(255, 255, 255, 0.1); }
+        .sidebar-item:hover { background: rgba(59, 130, 246, 0.1); color: #60a5fa; }
+        .active-tab { border-left: 4px solid #3b82f6; background: rgba(59, 130, 246, 0.1); color: #60a5fa; }
         .gradient-text { background: linear-gradient(45deg, #00f2fe 0%, #4facfe 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
-        .glass-card { background: rgba(255, 255, 255, 0.03); backdrop-filter: blur(15px); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 24px; }
-        .modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.8); z-index: 100; align-items: center; justify-content: center; }
     </style>
 </head>
-<body class="min-h-screen">
+<body class="flex h-screen overflow-hidden">
 
-    <div id="regModal" class="modal">
-        <div class="glass-card p-8 w-full max-w-md mx-4">
-            <h2 class="text-2xl font-bold mb-4 gradient-text">Vytvořit účet TADY</h2>
-            <input type="text" placeholder="Uživatelské jméno" class="w-full bg-white/5 border border-white/10 p-3 rounded-xl mb-4 text-white outline-none focus:border-blue-500">
-            <input type="email" placeholder="E-mail" class="w-full bg-white/5 border border-white/10 p-3 rounded-xl mb-6 text-white outline-none focus:border-blue-500">
-            <button onclick="confirmRegistration()" class="w-full bg-blue-600 p-3 rounded-xl font-bold hover:bg-blue-500 transition">Registrovat se</button>
-            <button onclick="closeModal()" class="w-full mt-2 text-gray-500 text-sm">Zavřít</button>
+    <aside class="w-64 glass-panel h-full flex flex-col p-6 hidden md:flex">
+        <div class="text-3xl font-black mb-12 gradient-text">TADY</div>
+        
+        <nav class="flex-1 space-y-2">
+            <div class="sidebar-item active-tab p-3 rounded-r-xl cursor-pointer transition">
+                <span class="font-semibold">Nástěnka</span>
+            </div>
+            <div class="sidebar-item p-3 rounded-xl cursor-pointer transition">
+                <span>Moje Projekty</span>
+            </div>
+            <div class="sidebar-item p-3 rounded-xl cursor-pointer transition">
+                <span>Komunita</span>
+            </div>
+            <div class="sidebar-item p-3 rounded-xl cursor-pointer transition text-gray-400">
+                <span>Tržiště (Beta)</span>
+            </div>
+        </nav>
+
+        <div class="mt-auto pt-6 border-t border-white/10 flex items-center space-x-3">
+            <div class="w-10 h-10 bg-gradient-to-br from-blue-500 to-cyan-400 rounded-full flex items-center justify-center font-bold">MD</div>
+            <div>
+                <p class="text-sm font-bold">M.D.</p>
+                <p class="text-xs text-green-500 font-medium italic">zakladatel</p>
+            </div>
         </div>
-    </div>
+    </aside>
 
-    <nav class="fixed w-full z-50 px-6 py-4 flex justify-between items-center glass-card mt-4 mx-auto max-w-7xl left-0 right-0">
-        <div class="text-3xl font-extrabold tracking-tighter gradient-text cursor-pointer">TADY</div>
-        <button onclick="openModal()" class="bg-blue-600 hover:bg-blue-500 px-6 py-2 rounded-full font-bold transition">Spustit aplikaci</button>
-    </nav>
+    <main class="flex-1 overflow-y-auto p-4 md:p-10">
+        <header class="flex justify-between items-center mb-10">
+            <h1 class="text-2xl font-bold">Dobrý den, M.D.</h1>
+            <div class="flex space-x-4">
+                <button class="glass-panel px-4 py-2 rounded-lg text-sm hover:bg-white/5 transition">🔔 Notifikace</button>
+                <button class="bg-blue-600 hover:bg-blue-500 px-4 py-2 rounded-lg text-sm font-bold transition">+ Nový Projekt</button>
+            </div>
+        </header>
 
-    <main class="pt-32 pb-20 px-6 max-w-7xl mx-auto">
-        <div class="text-center space-y-8">
-            <h1 class="text-6xl md:text-8xl font-black leading-tight tracking-tighter">
-                TADY SE DĚJE <br>
-                <span class="gradient-text uppercase">Všechno</span>
-            </h1>
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
             
-            <div class="mt-20 glass-card p-4 md:p-8">
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                    <div class="h-32 bg-white/5 rounded-xl border border-white/10 p-4">
-                        <div class="text-gray-400 mb-2">Aktivní uživatelé</div>
-                        <div id="userCount" class="text-3xl font-bold">14,209</div>
+            <div class="lg:col-span-2 glass-panel p-8 rounded-3xl">
+                <h2 class="text-xl font-bold mb-6">Průběh projektu</h2>
+                <div class="h-64 flex items-end justify-between space-x-2">
+                    <div class="w-full bg-blue-500/20 rounded-t-lg" style="height: 40%"></div>
+                    <div class="w-full bg-blue-500/40 rounded-t-lg" style="height: 60%"></div>
+                    <div class="w-full bg-blue-500/30 rounded-t-lg" style="height: 45%"></div>
+                    <div class="w-full bg-blue-500/60 rounded-t-lg" style="height: 85%"></div>
+                    <div class="w-full bg-blue-600 rounded-t-lg" style="height: 100%"></div>
+                </div>
+                <p class="mt-6 text-gray-400">Vaše aktivita v aplikaci TADY vzrostla o 24 % od minulého týdne.</p>
+            </div>
+
+            <div class="glass-panel p-8 rounded-3xl">
+                <h2 class="text-xl font-bold mb-6">Tady se děje...</h2>
+                <div class="space-y-4">
+                    <div class="p-4 bg-white/5 rounded-2xl border border-white/5 hover:border-blue-500/50 transition cursor-pointer">
+                        <p class="font-bold">Nová zpráva</p>
+                        <p class="text-sm text-gray-400">Investor má zájem o váš projekt.</p>
                     </div>
-                    <div class="h-32 bg-white/5 rounded-xl border border-white/10 p-4">
-                        <div class="text-gray-400 mb-2">Nové příležitosti</div>
-                        <div id="oppCount" class="text-3xl font-bold">842</div>
-                    </div>
-                    <div class="h-32 bg-white/5 rounded-xl border border-white/10 p-4">
-                        <div class="text-gray-400 mb-2">Transakce (24h)</div>
-                        <div class="text-3xl font-bold text-green-400">€ <span id="moneyCount">124,500</span></div>
+                    <div class="p-4 bg-white/5 rounded-2xl border border-white/5 hover:border-blue-500/50 transition cursor-pointer">
+                        <p class="font-bold">Patent CZ</p>
+                        <p class="text-sm text-gray-400">Prioritní přihláška uložena.</p>
                     </div>
                 </div>
             </div>
 
-            <div class="flex flex-col md:flex-row justify-center gap-4 pt-10">
-                <button onclick="openModal()" class="bg-white text-black text-lg font-bold px-10 py-4 rounded-2xl hover:bg-blue-400 transition hover:text-white">Začít TEĎ</button>
+            <div class="lg:col-span-3 glass-panel p-8 rounded-3xl">
+                <h2 class="text-xl font-bold mb-4">Globální Feed</h2>
+                <div class="border-t border-white/5 py-4">
+                    <p class="text-blue-400 font-medium mb-1">#technologie</p>
+                    <p class="text-gray-200">Testujeme nové propojení s Neon databází pro rychlejší odezvu sítě.</p>
+                </div>
             </div>
+
         </div>
     </main>
 
-    <script>
-        // Logika pro modal
-        function openModal() { document.getElementById('regModal').style.display = 'flex'; }
-        function closeModal() { document.getElementById('regModal').style.display = 'none'; }
-        function confirmRegistration() {
-            alert('Děkujeme za zájem! Projekt TADY je v testovací fázi. Vaše iniciály M.D. byly zaznamenány jako zakladatelské.');
-            closeModal();
-        }
-
-        // Simulace živých dat
-        setInterval(() => {
-            const users = document.getElementById('userCount');
-            const money = document.getElementById('moneyCount');
-            users.innerText = (parseInt(users.innerText.replace(',', '')) + Math.floor(Math.random() * 5)).toLocaleString();
-            money.innerText = (parseInt(money.innerText.replace(',', '')) + Math.floor(Math.random() * 100)).toLocaleString();
-        }, 3000);
-    </script>
-
-    <footer class="py-10 text-center text-gray-600 border-t border-white/5">
-        &copy; 2025 TADY. Founder: M.D. | Verze 1.0.1 PRO
-    </footer>
 </body>
 </html>
