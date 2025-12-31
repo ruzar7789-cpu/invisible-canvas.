@@ -3,32 +3,28 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>TADY - PROJEKT M.D.</title>
+    <title>TADY - M.D.</title>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <style>
         :root { --p: #764ba2; --s: #667eea; --cyan: #00f2ff; --bg: #0b1118; }
         body, html { margin: 0; padding: 0; width: 100%; height: 100%; font-family: sans-serif; background: var(--bg); color: #fff; overflow: hidden; }
         
-        /* Úvodní obrazovka */
         #landing-page { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: radial-gradient(circle at center, #162a35 0%, #0b1118 100%); display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 5000; transition: 0.5s; }
         .landing-logo { font-size: 3.5rem; color: var(--cyan); font-weight: 900; letter-spacing: 5px; margin-bottom: 10px; text-shadow: 0 0 20px rgba(0,242,255,0.5); }
         .btn-vstoupit { background: var(--cyan); color: #0b1118; padding: 15px 45px; border-radius: 30px; font-weight: bold; border: none; cursor: pointer; font-size: 1.1rem; }
 
-        /* Hlavní rozhraní */
         #app-interface { display: none; width: 100%; height: 100%; position: relative; }
         #ar-view { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: #000; z-index: 1; }
         video { width: 100%; height: 100%; object-fit: cover; opacity: 0.5; }
 
-        /* QR Kód a Informace */
-        .qr-card { position: absolute; top: 80px; left: 50%; transform: translateX(-50%); background: rgba(255,255,255,0.95); padding: 15px; border-radius: 20px; text-align: center; z-index: 100; color: #333; width: 200px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
-        .qr-card img { width: 150px; height: 150px; border-radius: 10px; }
-        .qr-card p { margin: 10px 0 0; font-weight: bold; font-size: 0.8rem; color: var(--p); }
+        /* QR KÓD SEKCE */
+        #qr-section { position: absolute; top: 80px; left: 50%; transform: translateX(-50%); background: white; padding: 15px; border-radius: 20px; text-align: center; z-index: 100; color: #333; width: 220px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
+        #qr-section img { width: 180px; height: 180px; border-radius: 10px; }
+        .qr-text { margin-top: 10px; font-weight: bold; color: var(--p); font-size: 0.9rem; }
 
-        /* Floating vzkazy z databáze */
-        .vzkaz-float { position: absolute; background: rgba(0,242,255,0.2); backdrop-filter: blur(8px); padding: 12px; border-radius: 15px; border: 1px solid var(--cyan); color: white; font-size: 0.85rem; animation: float 5s infinite ease-in-out; pointer-events: auto; z-index: 10; }
-        @keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-15px); } }
+        .vzkaz-float { position: absolute; background: rgba(255,255,255,0.15); backdrop-filter: blur(10px); padding: 12px; border-radius: 15px; border: 1px solid rgba(255,255,255,0.3); color: white; font-size: 0.85rem; animation: float 6s infinite ease-in-out; pointer-events: auto; z-index: 10; }
+        @keyframes float { 0%, 100% { transform: translateY(0) rotate(-1deg); } 50% { transform: translateY(-15px) rotate(1deg); } }
 
-        /* Ovládání */
         .ui-bottom { position: absolute; bottom: 30px; left: 0; width: 100%; z-index: 200; display: flex; flex-direction: column; align-items: center; }
         .input-box { background: #fff; width: 85%; padding: 10px 15px; border-radius: 30px; display: flex; gap: 10px; box-shadow: 0 5px 20px rgba(0,0,0,0.4); }
         input { flex: 1; border: none; outline: none; font-size: 1rem; color: #333; }
@@ -45,19 +41,19 @@
 
 <div id="landing-page">
     <div class="landing-logo">TADY</div>
-    <div style="color:white; margin-bottom:30px; opacity:0.8; letter-spacing: 2px;">VŠE DŮLEŽITÉ JE TADY • M.D.</div>
+    <div style="color:white; margin-bottom:30px; opacity:0.8; letter-spacing: 2px;">AUTORIZOVÁNO M.D.</div>
     <button class="btn-vstoupit" onclick="startApp()">VSTOUPIT</button>
 </div>
 
 <div id="app-interface">
     <div class="nav-tabs">
-        <div class="tab active" onclick="switchTab('ar')">AR SÍŤ</div>
-        <div class="tab" onclick="switchTab('map')">MAPA</div>
+        <div class="tab active" onclick="switchTab('ar', this)">KONTINUUM</div>
+        <div class="tab" onclick="switchTab('map', this)">MAPA</div>
     </div>
 
-    <div id="qr-section" class="qr-card">
-        <img src="https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=spayd%3A%2F%2Facc%3A2501981297%2F0800%26am%3A100%26cc%3ACZK%26msg%3ATADY_PROJEKT" alt="QR Platba">
-        <p>PODPOŘIT PROJEKT TADY</p>
+    <div id="qr-section">
+        <img src="https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=spayd%3A%2F%2Facc%3A2501981297%2F0800%26am%3A100%26cc%3ACZK%26msg%3ATADY_PROJEKT" alt="QR">
+        <div class="qr-text">PODPOŘIT PROJEKT M.D.</div>
     </div>
 
     <div id="ar-view">
@@ -69,73 +65,55 @@
 
     <div class="ui-bottom">
         <div class="input-box">
-            <input type="text" id="vzkaz-input" placeholder="Zanechte stopu M.D....">
-            <button class="btn-add" onclick="odeslatDoNeonu()">+</button>
+            <input type="text" id="vzkaz-input" placeholder="Zanechte stopu...">
+            <button class="btn-add" onclick="pridatVzkaz()">+</button>
         </div>
     </div>
 </div>
 
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script>
-    let savedStopy = [];
+    let vzkazy = JSON.parse(localStorage.getItem('stopy_md')) || [];
     let map;
 
     async function startApp() {
         document.getElementById('landing-page').style.display = 'none';
         document.getElementById('app-interface').style.display = 'block';
-        
         try {
             const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
             document.getElementById('video').srcObject = stream;
-        } catch (e) { console.log("Kamera aktivována bez obrazu."); }
-        
-        nactiZNeonu();
+        } catch (e) { console.log("Kamera OK"); }
+        renderAR();
     }
 
-    async function nactiZNeonu() {
-        const res = await fetch('/api/vzkaz');
-        if(res.ok) {
-            savedStopy = await res.json();
+    function pridatVzkaz() {
+        const txt = document.getElementById('vzkaz-input').value;
+        if(!txt) return;
+        navigator.geolocation.getCurrentPosition(pos => {
+            const novy = {
+                text: txt, autor: 'M.D.',
+                lat: pos.coords.latitude, lng: pos.coords.longitude,
+                x: Math.random() * 60 + 20, y: Math.random() * 40 + 20
+            };
+            vzkazy.push(novy);
+            localStorage.setItem('stopy_md', JSON.stringify(vzkazy));
+            document.getElementById('vzkaz-input').value = '';
             renderAR();
-        }
+        });
     }
 
     function renderAR() {
         const container = document.getElementById('ar-overlay');
-        // Zobrazíme poslední 4 stopy jako plovoucí vzkazy
-        container.innerHTML = savedStopy.slice(0, 4).map((s, i) => `
-            <div class="vzkaz-float" style="left: ${10 + (i*20)}%; top: ${30 + (i*10)}%;">
-                <b>${s.autor || 'M.D.'}:</b><br>${s.txt}
+        container.innerHTML = vzkazy.slice(-4).map(v => `
+            <div class="vzkaz-float" style="left: ${v.x}%; top: ${v.y}%;">
+                <b>${v.autor}:</b><br>${v.text}
             </div>
         `).join('');
     }
 
-    async function odeslatDoNeonu() {
-        const txt = document.getElementById('vzkaz-input').value;
-        if(!txt) return;
-
-        navigator.geolocation.getCurrentPosition(async pos => {
-            const data = {
-                txt: txt, type: 'ar_stopa',
-                lat: pos.coords.latitude, lng: pos.coords.longitude,
-                autor: 'M.D.'
-            };
-
-            const res = await fetch('/api/vzkaz', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(data)
-            });
-
-            if(res.ok) {
-                document.getElementById('vzkaz-input').value = '';
-                nactiZNeonu();
-            }
-        });
-    }
-
-    function switchTab(type) {
+    function switchTab(type, el) {
         document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+        el.classList.add('active');
         if(type === 'map') {
             document.getElementById('map-view').style.display = 'block';
             document.getElementById('qr-section').style.display = 'none';
@@ -143,7 +121,7 @@
                 map = L.map('map-view').setView([50.9, 14.6], 13);
                 L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
             }
-            savedStopy.forEach(s => L.marker([s.lat, s.lng]).addTo(map).bindPopup(s.txt));
+            vzkazy.forEach(v => L.marker([v.lat, v.lng]).addTo(map).bindPopup(v.text));
         } else {
             document.getElementById('map-view').style.display = 'none';
             document.getElementById('qr-section').style.display = 'block';
