@@ -9,30 +9,34 @@
         :root { --p: #764ba2; --s: #667eea; --cyan: #00f2ff; --bg: #0b1118; }
         body, html { margin: 0; padding: 0; width: 100%; height: 100%; font-family: sans-serif; background: var(--bg); color: #fff; overflow: hidden; }
         
-        #landing-page { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: radial-gradient(circle at center, #162a35 0%, #0b1118 100%); display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 5000; transition: 0.5s; }
-        .landing-logo { font-size: 3.5rem; color: var(--cyan); font-weight: 900; letter-spacing: 5px; margin-bottom: 10px; text-shadow: 0 0 20px rgba(0,242,255,0.5); }
-        .btn-vstoupit { background: var(--cyan); color: #0b1118; padding: 15px 45px; border-radius: 30px; font-weight: bold; border: none; cursor: pointer; font-size: 1.1rem; }
+        /* Animované hvězdné pozadí */
+        #landing-page { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: radial-gradient(circle at center, #162a35 0%, #0b1118 100%); display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 5000; }
+        .stars { position: absolute; width: 100%; height: 100%; pointer-events: none; background: transparent url('https://www.transparenttextures.com/patterns/stardust.png') repeat; animation: moveStars 100s linear infinite; opacity: 0.3; }
+        @keyframes moveStars { from { background-position: 0 0; } to { background-position: 1000px 1000px; } }
+
+        .landing-logo { font-size: 4rem; color: var(--cyan); font-weight: 900; letter-spacing: 8px; margin-bottom: 10px; text-shadow: 0 0 30px rgba(0,242,255,0.6); z-index: 10; }
+        .btn-vstoupit { background: var(--cyan); color: #0b1118; padding: 18px 55px; border-radius: 40px; font-weight: bold; border: none; cursor: pointer; font-size: 1.2rem; z-index: 10; box-shadow: 0 0 20px rgba(0,242,255,0.4); }
 
         #app-interface { display: none; width: 100%; height: 100%; position: relative; }
         #ar-view { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: #000; z-index: 1; }
         video { width: 100%; height: 100%; object-fit: cover; opacity: 0.5; }
 
-        /* QR KÓD SEKCE */
-        #qr-section { position: absolute; top: 80px; left: 50%; transform: translateX(-50%); background: white; padding: 15px; border-radius: 20px; text-align: center; z-index: 100; color: #333; width: 220px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
-        #qr-section img { width: 180px; height: 180px; border-radius: 10px; }
-        .qr-text { margin-top: 10px; font-weight: bold; color: var(--p); font-size: 0.9rem; }
+        /* QR KÓD SEKCE - PŘESNĚ DLE VČEREJŠKA */
+        #qr-section { position: absolute; top: 85px; left: 50%; transform: translateX(-50%); background: white; padding: 15px; border-radius: 25px; text-align: center; z-index: 100; color: #333; width: 220px; box-shadow: 0 15px 40px rgba(0,0,0,0.6); }
+        #qr-section img { width: 180px; height: 180px; border-radius: 15px; }
+        .qr-text { margin-top: 10px; font-weight: 800; color: var(--p); font-size: 0.9rem; letter-spacing: 0.5px; }
 
-        .vzkaz-float { position: absolute; background: rgba(255,255,255,0.15); backdrop-filter: blur(10px); padding: 12px; border-radius: 15px; border: 1px solid rgba(255,255,255,0.3); color: white; font-size: 0.85rem; animation: float 6s infinite ease-in-out; pointer-events: auto; z-index: 10; }
-        @keyframes float { 0%, 100% { transform: translateY(0) rotate(-1deg); } 50% { transform: translateY(-15px) rotate(1deg); } }
+        .vzkaz-float { position: absolute; background: rgba(255,255,255,0.1); backdrop-filter: blur(12px); padding: 14px; border-radius: 20px; border: 1px solid rgba(255,255,255,0.2); color: white; font-size: 0.9rem; animation: float 7s infinite ease-in-out; pointer-events: auto; z-index: 10; box-shadow: 0 5px 15px rgba(0,0,0,0.2); }
+        @keyframes float { 0%, 100% { transform: translateY(0) rotate(-1.5deg); } 50% { transform: translateY(-25px) rotate(1.5deg); } }
 
-        .ui-bottom { position: absolute; bottom: 30px; left: 0; width: 100%; z-index: 200; display: flex; flex-direction: column; align-items: center; }
-        .input-box { background: #fff; width: 85%; padding: 10px 15px; border-radius: 30px; display: flex; gap: 10px; box-shadow: 0 5px 20px rgba(0,0,0,0.4); }
-        input { flex: 1; border: none; outline: none; font-size: 1rem; color: #333; }
-        .btn-add { background: var(--p); color: white; border: none; width: 45px; height: 45px; border-radius: 50%; font-size: 1.5rem; cursor: pointer; }
+        .ui-bottom { position: absolute; bottom: 35px; left: 0; width: 100%; z-index: 200; display: flex; flex-direction: column; align-items: center; }
+        .input-box { background: rgba(255,255,255,0.95); width: 85%; padding: 12px 18px; border-radius: 35px; display: flex; gap: 12px; box-shadow: 0 8px 25px rgba(0,0,0,0.5); }
+        input { flex: 1; border: none; outline: none; font-size: 1rem; color: #222; font-weight: 500; background: transparent; }
+        .btn-add { background: var(--p); color: white; border: none; width: 48px; height: 48px; border-radius: 50%; font-size: 1.8rem; cursor: pointer; transition: 0.3s; }
 
-        .nav-tabs { position: absolute; top: 20px; width: 100%; display: flex; justify-content: center; gap: 10px; z-index: 300; }
-        .tab { background: rgba(0,0,0,0.6); padding: 8px 20px; border-radius: 20px; font-size: 0.8rem; cursor: pointer; border: 1px solid var(--cyan); }
-        .tab.active { background: var(--cyan); color: #000; }
+        .nav-tabs { position: absolute; top: 25px; width: 100%; display: flex; justify-content: center; gap: 15px; z-index: 300; }
+        .tab { background: rgba(0,0,0,0.7); padding: 10px 25px; border-radius: 25px; font-size: 0.85rem; font-weight: bold; cursor: pointer; border: 1px solid var(--cyan); letter-spacing: 1px; }
+        .tab.active { background: var(--cyan); color: #000; box-shadow: 0 0 15px var(--cyan); }
 
         #map-view { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 150; display: none; }
     </style>
@@ -40,19 +44,20 @@
 <body>
 
 <div id="landing-page">
+    <div class="stars"></div>
     <div class="landing-logo">TADY</div>
-    <div style="color:white; margin-bottom:30px; opacity:0.8; letter-spacing: 2px;">AUTORIZOVÁNO M.D.</div>
+    <div style="color:white; margin-bottom:35px; opacity:0.9; letter-spacing: 3px; font-weight: 300;">PROJEKT M.D. • KONTINUUM</div>
     <button class="btn-vstoupit" onclick="startApp()">VSTOUPIT</button>
 </div>
 
 <div id="app-interface">
     <div class="nav-tabs">
-        <div class="tab active" onclick="switchTab('ar', this)">KONTINUUM</div>
-        <div class="tab" onclick="switchTab('map', this)">MAPA</div>
+        <div class="tab active" id="tab-ar" onclick="switchTab('ar')">SÍŤ TADY</div>
+        <div class="tab" id="tab-map" onclick="switchTab('map')">MAPA</div>
     </div>
 
     <div id="qr-section">
-        <img src="https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=spayd%3A%2F%2Facc%3A2501981297%2F0800%26am%3A100%26cc%3ACZK%26msg%3ATADY_PROJEKT" alt="QR">
+        <img src="https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=spayd%3A%2F%2Facc%3A2501981297%2F0800%26am%3A100%26cc%3ACZK%26msg%3ATADY_PROJEKT" alt="QR Platba">
         <div class="qr-text">PODPOŘIT PROJEKT M.D.</div>
     </div>
 
@@ -65,7 +70,7 @@
 
     <div class="ui-bottom">
         <div class="input-box">
-            <input type="text" id="vzkaz-input" placeholder="Zanechte stopu...">
+            <input type="text" id="vzkaz-input" placeholder="Zanechte stopu v cloudu...">
             <button class="btn-add" onclick="pridatVzkaz()">+</button>
         </div>
     </div>
@@ -73,7 +78,7 @@
 
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script>
-    let vzkazy = JSON.parse(localStorage.getItem('stopy_md')) || [];
+    let vzkazy = [];
     let map;
 
     async function startApp() {
@@ -83,45 +88,62 @@
             const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
             document.getElementById('video').srcObject = stream;
         } catch (e) { console.log("Kamera OK"); }
-        renderAR();
+        nactiData();
     }
 
-    function pridatVzkaz() {
-        const txt = document.getElementById('vzkaz-input').value;
-        if(!txt) return;
-        navigator.geolocation.getCurrentPosition(pos => {
-            const novy = {
-                text: txt, autor: 'M.D.',
-                lat: pos.coords.latitude, lng: pos.coords.longitude,
-                x: Math.random() * 60 + 20, y: Math.random() * 40 + 20
-            };
-            vzkazy.push(novy);
-            localStorage.setItem('stopy_md', JSON.stringify(vzkazy));
-            document.getElementById('vzkaz-input').value = '';
-            renderAR();
-        });
+    async function nactiData() {
+        try {
+            const res = await fetch('/api/vzkaz');
+            if(res.ok) {
+                vzkazy = await res.json();
+                renderAR();
+            }
+        } catch (e) { console.error("Neon Error"); }
     }
 
     function renderAR() {
         const container = document.getElementById('ar-overlay');
-        container.innerHTML = vzkazy.slice(-4).map(v => `
-            <div class="vzkaz-float" style="left: ${v.x}%; top: ${v.y}%;">
-                <b>${v.autor}:</b><br>${v.text}
+        // Zobrazujeme poslední 3 stopy, aby to bylo přehledné
+        container.innerHTML = vzkazy.slice(0, 3).map((v, i) => `
+            <div class="vzkaz-float" style="left: ${15 + (i*20)}%; top: ${30 + (i*15)}%;">
+                <b style="color: var(--cyan); font-size: 0.7rem;">M.D.</b><br>${v.txt}
             </div>
         `).join('');
     }
 
-    function switchTab(type, el) {
-        document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-        el.classList.add('active');
+    async function pridatVzkaz() {
+        const txt = document.getElementById('vzkaz-input').value;
+        if(!txt) return;
+        navigator.geolocation.getCurrentPosition(async pos => {
+            const data = {
+                txt: txt, type: 'ar_stopa',
+                lat: pos.coords.latitude, lng: pos.coords.longitude,
+                autor: 'M.D.'
+            };
+            const res = await fetch('/api/vzkaz', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data)
+            });
+            if(res.ok) {
+                document.getElementById('vzkaz-input').value = '';
+                nactiData();
+            }
+        });
+    }
+
+    function switchTab(type) {
+        document.getElementById('tab-ar').classList.toggle('active', type === 'ar');
+        document.getElementById('tab-map').classList.toggle('active', type === 'map');
+        
         if(type === 'map') {
             document.getElementById('map-view').style.display = 'block';
             document.getElementById('qr-section').style.display = 'none';
             if(!map) {
-                map = L.map('map-view').setView([50.9, 14.6], 13);
+                map = L.map('map-view').setView([50.91, 14.62], 13);
                 L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
             }
-            vzkazy.forEach(v => L.marker([v.lat, v.lng]).addTo(map).bindPopup(v.text));
+            vzkazy.forEach(v => L.marker([v.lat, v.lng]).addTo(map).bindPopup(v.txt));
         } else {
             document.getElementById('map-view').style.display = 'none';
             document.getElementById('qr-section').style.display = 'block';
