@@ -3,121 +3,135 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TADY - Tady se děje všechno</title>
+    <title>TADY - Všechno důležité je tady</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&display=swap');
-        body { font-family: 'Inter', sans-serif; background: #050505; color: white; margin: 0; overflow-x: hidden; }
+        body { font-family: 'Inter', sans-serif; background: #020202; color: white; margin: 0; overflow-x: hidden; }
         .gradient-text { background: linear-gradient(45deg, #00f2fe 0%, #4facfe 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
-        .glass-card { background: rgba(255, 255, 255, 0.03); backdrop-filter: blur(15px); border: 1px solid rgba(255, 255, 255, 0.1); }
+        .glass-card { background: rgba(255, 255, 255, 0.03); backdrop-filter: blur(20px); border: 1px solid rgba(255, 255, 255, 0.1); }
+        .gold-glow { box-shadow: 0 0 15px rgba(255, 215, 0, 0.3); border: 1px solid rgba(255, 215, 0, 0.5) !important; }
+        .neon-glow { box-shadow: 0 0 15px rgba(0, 242, 254, 0.3); border: 1px solid rgba(0, 242, 254, 0.5) !important; }
         .hidden { display: none; }
-        
-        /* Animace pro hladký přechod */
-        .fade-in { animation: fadeIn 0.8s ease-in-out; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        .ar-bubble { animation: float 3s ease-in-out infinite; }
+        @keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
     </style>
 </head>
 <body>
 
-    <div id="landing-page" class="min-h-screen">
-        <nav class="fixed w-full z-50 px-6 py-4 flex justify-between items-center glass-card mt-4 mx-auto max-w-7xl left-0 right-0 rounded-2xl">
-            <div class="text-3xl font-extrabold tracking-tighter gradient-text">TADY</div>
-            <button onclick="showApp()" class="bg-blue-600 hover:bg-blue-500 px-6 py-2 rounded-full font-bold transition">Vstoupit</button>
-        </nav>
-
-        <main class="pt-48 pb-20 px-6 max-w-7xl mx-auto text-center">
-            <h1 class="text-6xl md:text-8xl font-black leading-tight tracking-tighter mb-8">
-                TADY SE DĚJE <br>
-                <span class="gradient-text uppercase italic">VŠECHNOn</span>
-            </h1>
-            <p class="text-xl text-gray-400 max-w-2xl mx-auto mb-12">
-                Nová úroveň propojení byznysu, technologií a komunity. Vše na jednom místě, pod vaším dohledem.
-            </p>
-            <div class="glass-card p-8 rounded-3xl max-w-md mx-auto">
-                <h2 class="text-2xl font-bold mb-6">Registrace do sítě</h2>
-                <input type="text" id="reg-name" placeholder="Iniciály nebo jméno" class="w-full bg-white/5 border border-white/10 p-4 rounded-xl mb-4 outline-none focus:border-blue-500 transition">
-                <button onclick="processRegistration()" class="w-full bg-white text-black text-lg font-bold py-4 rounded-xl hover:bg-blue-400 hover:text-white transition">Vytvořit účet</button>
-                <p class="mt-4 text-xs text-gray-500 italic">První prioritní registrace pro M.D.</p>
-            </div>
-        </main>
+    <div id="landing-page" class="min-h-screen flex flex-col justify-center items-center px-6 text-center">
+        <div class="absolute top-10 text-3xl font-black gradient-text italic">TADY</div>
+        <h1 class="text-5xl md:text-7xl font-black mb-6 tracking-tighter">VŠE DŮLEŽITÉ JE <span class="gradient-text italic uppercase">TADY</span></h1>
+        <p class="text-gray-400 max-w-xl mb-10">Vstupte do světa, kde digitální stopy ožívají v reálném prostoru.</p>
+        <button onclick="enterApp()" class="bg-white text-black font-bold px-12 py-4 rounded-full hover:bg-cyan-400 hover:text-white transition-all transform hover:scale-105">
+            Otevřít AR vrstvu
+        </button>
     </div>
 
-    <div id="app-interface" class="hidden h-screen flex overflow-hidden fade-in">
-        <aside class="w-64 glass-card h-full flex flex-col p-6 border-r border-white/5">
-            <div class="text-3xl font-black mb-12 gradient-text">TADY</div>
-            <nav class="flex-1 space-y-2">
-                <div class="p-3 rounded-xl bg-blue-600/20 text-blue-400 font-bold cursor-pointer italic"># Nástěnka</div>
-                <div class="p-3 rounded-xl hover:bg-white/5 cursor-pointer transition"># Moje Projekty</div>
-                <div class="p-3 rounded-xl hover:bg-white/5 cursor-pointer transition"># Komunita</div>
-                <div class="p-3 rounded-xl hover:bg-white/5 cursor-pointer transition"># Zprávy</div>
-            </nav>
-            <div class="mt-auto pt-6 border-t border-white/10 flex items-center space-x-3">
-                <div id="avatar" class="w-10 h-10 bg-blue-600 rounded-full flex items-center justify-center font-bold text-sm">M.D.</div>
+    <div id="app-interface" class="hidden h-screen flex flex-col md:flex-row overflow-hidden">
+        
+        <aside class="w-full md:w-80 glass-card p-6 flex flex-col border-r border-white/5">
+            <div class="text-2xl font-black mb-10 gradient-text italic">TADY / AR Console</div>
+            
+            <div class="space-y-6">
                 <div>
-                    <p id="display-name" class="text-sm font-bold">M.D.</p>
-                    <p class="text-xs text-green-500 font-medium italic">zakladatel</p>
+                    <label class="text-xs font-bold uppercase text-gray-500">Typ nové stopy</label>
+                    <div class="grid grid-cols-2 gap-2 mt-2">
+                        <button onclick="setTraceType('business')" id="btn-biz" class="p-2 rounded-lg bg-yellow-500/20 border border-yellow-500/50 text-xs font-bold text-yellow-500">BYZNYS (Zlatá)</button>
+                        <button onclick="setTraceType('personal')" id="btn-pers" class="p-2 rounded-lg bg-white/5 border border-white/10 text-xs font-bold">OSOBNÍ (Čirá)</button>
+                    </div>
+                </div>
+
+                <div>
+                    <label class="text-xs font-bold uppercase text-gray-500">Obsah stopy</label>
+                    <textarea id="trace-text" class="w-full mt-2 bg-white/5 border border-white/10 rounded-xl p-3 text-sm h-24 outline-none focus:border-cyan-500" placeholder="Co chcete v prostoru zanechat?"></textarea>
+                </div>
+
+                <button onclick="placeTrace()" class="w-full bg-cyan-600 hover:bg-cyan-500 p-4 rounded-2xl font-bold transition">UMÍSTIT STOPU</button>
+            </div>
+
+            <div class="mt-auto pt-6 border-t border-white/10 flex items-center space-x-3">
+                <div class="w-10 h-10 bg-gradient-to-tr from-cyan-500 to-blue-600 rounded-full flex items-center justify-center font-bold">MD</div>
+                <div class="text-sm">
+                    <p class="font-bold">M.D.</p>
+                    <p class="text-xs text-cyan-400">Admin Režim</p>
                 </div>
             </div>
         </aside>
 
-        <main class="flex-1 overflow-y-auto p-8">
-            <header class="flex justify-between items-center mb-10">
-                <h1 class="text-3xl font-bold">Vítejte v TADY</h1>
-                <div class="flex space-x-4 text-sm font-bold">
-                    <span class="text-gray-400">Status: <span class="text-green-500">Live</span></span>
-                    <span class="text-gray-400">Verze: 1.0.1 PRO</span>
+        <main class="flex-1 relative bg-[url('https://www.transparenttextures.com/patterns/dark-matter.png')] bg-repeat">
+            <div class="absolute inset-0 bg-gradient-to-b from-transparent to-black/50"></div>
+            
+            <header class="absolute top-0 w-full p-8 flex justify-between items-center z-10">
+                <h2 class="text-xl font-bold">Živá vrstva: Praha / Moje okolí</h2>
+                <div class="flex space-x-2">
+                    <span class="bg-green-500/20 text-green-400 text-xs px-3 py-1 rounded-full border border-green-500/30">GPS Aktivní</span>
                 </div>
             </header>
 
-            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                <div class="lg:col-span-2 glass-card p-8 rounded-3xl">
-                    <h2 class="text-xl font-bold mb-4 italic">Aktivita sítě</h2>
-                    <div class="h-48 flex items-end gap-2">
-                        <div class="flex-1 bg-blue-500/20 h-1/2 rounded-t-lg"></div>
-                        <div class="flex-1 bg-blue-500/30 h-3/4 rounded-t-lg"></div>
-                        <div class="flex-1 bg-blue-500/50 h-2/3 rounded-t-lg"></div>
-                        <div class="flex-1 bg-blue-500/80 h-full rounded-t-lg"></div>
-                    </div>
-                    <p class="mt-4 text-sm text-gray-500">Data jsou aktuálně simulována pro účely vývoje (Neon.tech ready).</p>
+            <div id="trace-container" class="relative w-full h-full flex items-center justify-center">
+                <div class="ar-bubble glass-card p-4 rounded-2xl absolute top-1/4 left-1/3 neon-glow">
+                    <p class="text-xs text-cyan-400 font-bold mb-1">OSOBNÍ</p>
+                    <p class="text-sm">"Tady se děje všechno... poprvé."</p>
                 </div>
 
-                <div class="glass-card p-8 rounded-3xl">
-                    <h2 class="text-xl font-bold mb-4">Upozornění</h2>
-                    <div class="space-y-4">
-                        <div class="p-4 bg-blue-500/10 border border-blue-500/20 rounded-2xl">
-                            <p class="font-bold text-blue-400">Patent CZ</p>
-                            <p class="text-sm">Prioritní přihláška uložena k podání.</p>
-                        </div>
-                    </div>
+                <div class="ar-bubble glass-card p-4 rounded-2xl absolute bottom-1/3 right-1/4 gold-glow">
+                    <p class="text-xs text-yellow-500 font-bold mb-1">BYZNYS</p>
+                    <p class="text-sm">Restaurace U Dědka - Menu Dne</p>
+                    <button class="mt-2 text-[10px] bg-yellow-500/20 px-2 py-1 rounded border border-yellow-500/50">ZOBRAZIT NABÍDKU</button>
                 </div>
             </div>
         </main>
     </div>
 
     <script>
-        function processRegistration() {
-            const nameInput = document.getElementById('reg-name').value;
-            const displayName = nameInput || "M.D.";
-            
-            // Nastavení jména v aplikaci
-            document.getElementById('display-name').innerText = displayName;
-            document.getElementById('avatar').innerText = displayName.substring(0, 2).toUpperCase();
+        let currentType = 'personal';
 
-            // Animace a přepnutí
-            const landing = document.getElementById('landing-page');
-            landing.classList.add('fade-in');
-            
-            setTimeout(() => {
-                landing.classList.add('hidden');
-                document.getElementById('app-interface').classList.remove('hidden');
-            }, 500);
+        function enterApp() {
+            document.getElementById('landing-page').classList.add('hidden');
+            document.getElementById('app-interface').classList.remove('hidden');
         }
 
-        // Pomocná funkce pro tlačítko "Vstoupit" v navigaci
-        function showApp() {
-            processRegistration();
+        function setTraceType(type) {
+            currentType = type;
+            const bBiz = document.getElementById('btn-biz');
+            const bPers = document.getElementById('btn-pers');
+            
+            if(type === 'business') {
+                bBiz.classList.add('bg-yellow-500/20', 'border-yellow-500/50', 'text-yellow-500');
+                bPers.classList.remove('bg-white/10', 'border-white/20');
+            } else {
+                bPers.classList.add('bg-white/10', 'border-white/20');
+                bBiz.classList.remove('bg-yellow-500/20', 'border-yellow-500/50', 'text-yellow-500');
+            }
+        }
+
+        function placeTrace() {
+            const text = document.getElementById('trace-text').value;
+            if(!text) return;
+
+            const container = document.getElementById('trace-container');
+            const newTrace = document.createElement('div');
+            
+            // Náhodná pozice pro simulaci
+            const top = Math.random() * 60 + 20;
+            const left = Math.random() * 60 + 20;
+
+            newTrace.className = `ar-bubble glass-card p-4 rounded-2xl absolute ${currentType === 'business' ? 'gold-glow' : 'neon-glow'}`;
+            newTrace.style.top = top + '%';
+            newTrace.style.left = left + '%';
+
+            newTrace.innerHTML = `
+                <p class="text-[10px] ${currentType === 'business' ? 'text-yellow-500' : 'text-cyan-400'} font-bold mb-1 uppercase">${currentType === 'business' ? 'Byznys' : 'Osobní'}</p>
+                <p class="text-sm">${text}</p>
+                <div class="mt-2 flex space-x-2">
+                    <span class="text-[9px] text-gray-500">Právě teď</span>
+                </div>
+            `;
+
+            container.appendChild(newTrace);
+            document.getElementById('trace-text').value = '';
         }
     </script>
-
 </body>
 </html>
