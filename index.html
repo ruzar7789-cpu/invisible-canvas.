@@ -3,93 +3,121 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TADY - Dashboard</title>
+    <title>TADY - Tady se děje všechno</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&display=swap');
-        body { font-family: 'Inter', sans-serif; background: #050505; color: white; margin: 0; }
-        .glass-panel { background: rgba(255, 255, 255, 0.03); backdrop-filter: blur(20px); border: 1px solid rgba(255, 255, 255, 0.1); }
-        .sidebar-item:hover { background: rgba(59, 130, 246, 0.1); color: #60a5fa; }
-        .active-tab { border-left: 4px solid #3b82f6; background: rgba(59, 130, 246, 0.1); color: #60a5fa; }
+        body { font-family: 'Inter', sans-serif; background: #050505; color: white; margin: 0; overflow-x: hidden; }
         .gradient-text { background: linear-gradient(45deg, #00f2fe 0%, #4facfe 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        .glass-card { background: rgba(255, 255, 255, 0.03); backdrop-filter: blur(15px); border: 1px solid rgba(255, 255, 255, 0.1); }
+        .hidden { display: none; }
+        
+        /* Animace pro hladký přechod */
+        .fade-in { animation: fadeIn 0.8s ease-in-out; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
     </style>
 </head>
-<body class="flex h-screen overflow-hidden">
+<body>
 
-    <aside class="w-64 glass-panel h-full flex flex-col p-6 hidden md:flex">
-        <div class="text-3xl font-black mb-12 gradient-text">TADY</div>
-        
-        <nav class="flex-1 space-y-2">
-            <div class="sidebar-item active-tab p-3 rounded-r-xl cursor-pointer transition">
-                <span class="font-semibold">Nástěnka</span>
-            </div>
-            <div class="sidebar-item p-3 rounded-xl cursor-pointer transition">
-                <span>Moje Projekty</span>
-            </div>
-            <div class="sidebar-item p-3 rounded-xl cursor-pointer transition">
-                <span>Komunita</span>
-            </div>
-            <div class="sidebar-item p-3 rounded-xl cursor-pointer transition text-gray-400">
-                <span>Tržiště (Beta)</span>
-            </div>
+    <div id="landing-page" class="min-h-screen">
+        <nav class="fixed w-full z-50 px-6 py-4 flex justify-between items-center glass-card mt-4 mx-auto max-w-7xl left-0 right-0 rounded-2xl">
+            <div class="text-3xl font-extrabold tracking-tighter gradient-text">TADY</div>
+            <button onclick="showApp()" class="bg-blue-600 hover:bg-blue-500 px-6 py-2 rounded-full font-bold transition">Vstoupit</button>
         </nav>
 
-        <div class="mt-auto pt-6 border-t border-white/10 flex items-center space-x-3">
-            <div class="w-10 h-10 bg-gradient-to-br from-blue-500 to-cyan-400 rounded-full flex items-center justify-center font-bold">MD</div>
-            <div>
-                <p class="text-sm font-bold">M.D.</p>
-                <p class="text-xs text-green-500 font-medium italic">zakladatel</p>
+        <main class="pt-48 pb-20 px-6 max-w-7xl mx-auto text-center">
+            <h1 class="text-6xl md:text-8xl font-black leading-tight tracking-tighter mb-8">
+                TADY SE DĚJE <br>
+                <span class="gradient-text uppercase italic">VŠECHNOn</span>
+            </h1>
+            <p class="text-xl text-gray-400 max-w-2xl mx-auto mb-12">
+                Nová úroveň propojení byznysu, technologií a komunity. Vše na jednom místě, pod vaším dohledem.
+            </p>
+            <div class="glass-card p-8 rounded-3xl max-w-md mx-auto">
+                <h2 class="text-2xl font-bold mb-6">Registrace do sítě</h2>
+                <input type="text" id="reg-name" placeholder="Iniciály nebo jméno" class="w-full bg-white/5 border border-white/10 p-4 rounded-xl mb-4 outline-none focus:border-blue-500 transition">
+                <button onclick="processRegistration()" class="w-full bg-white text-black text-lg font-bold py-4 rounded-xl hover:bg-blue-400 hover:text-white transition">Vytvořit účet</button>
+                <p class="mt-4 text-xs text-gray-500 italic">První prioritní registrace pro M.D.</p>
             </div>
-        </div>
-    </aside>
+        </main>
+    </div>
 
-    <main class="flex-1 overflow-y-auto p-4 md:p-10">
-        <header class="flex justify-between items-center mb-10">
-            <h1 class="text-2xl font-bold">Dobrý den, M.D.</h1>
-            <div class="flex space-x-4">
-                <button class="glass-panel px-4 py-2 rounded-lg text-sm hover:bg-white/5 transition">🔔 Notifikace</button>
-                <button class="bg-blue-600 hover:bg-blue-500 px-4 py-2 rounded-lg text-sm font-bold transition">+ Nový Projekt</button>
+    <div id="app-interface" class="hidden h-screen flex overflow-hidden fade-in">
+        <aside class="w-64 glass-card h-full flex flex-col p-6 border-r border-white/5">
+            <div class="text-3xl font-black mb-12 gradient-text">TADY</div>
+            <nav class="flex-1 space-y-2">
+                <div class="p-3 rounded-xl bg-blue-600/20 text-blue-400 font-bold cursor-pointer italic"># Nástěnka</div>
+                <div class="p-3 rounded-xl hover:bg-white/5 cursor-pointer transition"># Moje Projekty</div>
+                <div class="p-3 rounded-xl hover:bg-white/5 cursor-pointer transition"># Komunita</div>
+                <div class="p-3 rounded-xl hover:bg-white/5 cursor-pointer transition"># Zprávy</div>
+            </nav>
+            <div class="mt-auto pt-6 border-t border-white/10 flex items-center space-x-3">
+                <div id="avatar" class="w-10 h-10 bg-blue-600 rounded-full flex items-center justify-center font-bold text-sm">M.D.</div>
+                <div>
+                    <p id="display-name" class="text-sm font-bold">M.D.</p>
+                    <p class="text-xs text-green-500 font-medium italic">zakladatel</p>
+                </div>
             </div>
-        </header>
+        </aside>
 
-        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <main class="flex-1 overflow-y-auto p-8">
+            <header class="flex justify-between items-center mb-10">
+                <h1 class="text-3xl font-bold">Vítejte v TADY</h1>
+                <div class="flex space-x-4 text-sm font-bold">
+                    <span class="text-gray-400">Status: <span class="text-green-500">Live</span></span>
+                    <span class="text-gray-400">Verze: 1.0.1 PRO</span>
+                </div>
+            </header>
+
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <div class="lg:col-span-2 glass-card p-8 rounded-3xl">
+                    <h2 class="text-xl font-bold mb-4 italic">Aktivita sítě</h2>
+                    <div class="h-48 flex items-end gap-2">
+                        <div class="flex-1 bg-blue-500/20 h-1/2 rounded-t-lg"></div>
+                        <div class="flex-1 bg-blue-500/30 h-3/4 rounded-t-lg"></div>
+                        <div class="flex-1 bg-blue-500/50 h-2/3 rounded-t-lg"></div>
+                        <div class="flex-1 bg-blue-500/80 h-full rounded-t-lg"></div>
+                    </div>
+                    <p class="mt-4 text-sm text-gray-500">Data jsou aktuálně simulována pro účely vývoje (Neon.tech ready).</p>
+                </div>
+
+                <div class="glass-card p-8 rounded-3xl">
+                    <h2 class="text-xl font-bold mb-4">Upozornění</h2>
+                    <div class="space-y-4">
+                        <div class="p-4 bg-blue-500/10 border border-blue-500/20 rounded-2xl">
+                            <p class="font-bold text-blue-400">Patent CZ</p>
+                            <p class="text-sm">Prioritní přihláška uložena k podání.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        function processRegistration() {
+            const nameInput = document.getElementById('reg-name').value;
+            const displayName = nameInput || "M.D.";
             
-            <div class="lg:col-span-2 glass-panel p-8 rounded-3xl">
-                <h2 class="text-xl font-bold mb-6">Průběh projektu</h2>
-                <div class="h-64 flex items-end justify-between space-x-2">
-                    <div class="w-full bg-blue-500/20 rounded-t-lg" style="height: 40%"></div>
-                    <div class="w-full bg-blue-500/40 rounded-t-lg" style="height: 60%"></div>
-                    <div class="w-full bg-blue-500/30 rounded-t-lg" style="height: 45%"></div>
-                    <div class="w-full bg-blue-500/60 rounded-t-lg" style="height: 85%"></div>
-                    <div class="w-full bg-blue-600 rounded-t-lg" style="height: 100%"></div>
-                </div>
-                <p class="mt-6 text-gray-400">Vaše aktivita v aplikaci TADY vzrostla o 24 % od minulého týdne.</p>
-            </div>
+            // Nastavení jména v aplikaci
+            document.getElementById('display-name').innerText = displayName;
+            document.getElementById('avatar').innerText = displayName.substring(0, 2).toUpperCase();
 
-            <div class="glass-panel p-8 rounded-3xl">
-                <h2 class="text-xl font-bold mb-6">Tady se děje...</h2>
-                <div class="space-y-4">
-                    <div class="p-4 bg-white/5 rounded-2xl border border-white/5 hover:border-blue-500/50 transition cursor-pointer">
-                        <p class="font-bold">Nová zpráva</p>
-                        <p class="text-sm text-gray-400">Investor má zájem o váš projekt.</p>
-                    </div>
-                    <div class="p-4 bg-white/5 rounded-2xl border border-white/5 hover:border-blue-500/50 transition cursor-pointer">
-                        <p class="font-bold">Patent CZ</p>
-                        <p class="text-sm text-gray-400">Prioritní přihláška uložena.</p>
-                    </div>
-                </div>
-            </div>
+            // Animace a přepnutí
+            const landing = document.getElementById('landing-page');
+            landing.classList.add('fade-in');
+            
+            setTimeout(() => {
+                landing.classList.add('hidden');
+                document.getElementById('app-interface').classList.remove('hidden');
+            }, 500);
+        }
 
-            <div class="lg:col-span-3 glass-panel p-8 rounded-3xl">
-                <h2 class="text-xl font-bold mb-4">Globální Feed</h2>
-                <div class="border-t border-white/5 py-4">
-                    <p class="text-blue-400 font-medium mb-1">#technologie</p>
-                    <p class="text-gray-200">Testujeme nové propojení s Neon databází pro rychlejší odezvu sítě.</p>
-                </div>
-            </div>
-
-        </div>
-    </main>
+        // Pomocná funkce pro tlačítko "Vstoupit" v navigaci
+        function showApp() {
+            processRegistration();
+        }
+    </script>
 
 </body>
 </html>
