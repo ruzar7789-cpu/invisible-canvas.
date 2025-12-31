@@ -6,16 +6,20 @@
     <title>TADY - M.D.</title>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <style>
-        :root { --p: #764ba2; --s: #667eea; --bg: #0b1118; }
+        :root { --p: #764ba2; --s: #667eea; --gold: #ffc107; --bg: #0b1118; }
         body, html { margin: 0; padding: 0; width: 100%; height: 100%; font-family: sans-serif; background: var(--bg); color: #fff; }
+        
         #landing-page { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: radial-gradient(circle at center, #162a35 0%, #0b1118 100%); display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 5000; transition: 0.5s; }
         .landing-logo { font-size: 3.5rem; color: #00f2ff; font-weight: 900; letter-spacing: 5px; margin-bottom: 10px; }
         .btn-vstoupit { background: #00f2ff; color: #0b1118; padding: 15px 45px; border-radius: 30px; font-weight: bold; border: none; cursor: pointer; }
+        
         #app-interface { display: none; background: #f8f9fa; min-height: 100vh; padding-bottom: 90px; color: #333; }
         header { background: linear-gradient(135deg, var(--s), var(--p)); color: white; padding: 15px; text-align: center; }
+        
         .container { padding: 15px; max-width: 600px; margin: 0 auto; }
         .card { background: white; border-radius: 20px; padding: 18px; margin-bottom: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
-        .btn-send { background: var(--p); color: white; border: none; padding: 15px; width: 100%; border-radius: 15px; font-weight: bold; cursor: pointer; }
+        .btn { background: var(--p); color: white; border: none; padding: 15px; width: 100%; border-radius: 15px; font-weight: bold; cursor: pointer; }
+        
         #map { height: 300px; border-radius: 20px; width: 100%; margin-top: 10px; }
         .nav-bar { position: fixed; bottom: 0; width: 100%; background: white; display: flex; justify-content: space-around; padding: 12px 0; border-top: 1px solid #eee; }
         .nav-item { text-align: center; font-size: 0.7rem; color: #888; flex: 1; }
@@ -27,23 +31,23 @@
 
 <div id="landing-page">
     <div class="landing-logo">TADY</div>
-    <div style="color:white; margin-bottom:30px; opacity:0.8;">Navrženo M.D.</div>
+    <div style="color:white; margin-bottom:30px; opacity:0.8;">Navrženo M.D. • Vše je tady.</div>
     <button class="btn-vstoupit" onclick="enterApp()">VSTOUPIT</button>
 </div>
 
 <div id="app-interface">
-    <header><h1>PROJEKT TADY</h1></header>
+    <header><h1>TADY</h1></header>
     <div class="container">
         <div id="section-home" class="section active">
             <div class="card">
-                <h3>Napsat vzkaz TADY</h3>
-                <textarea id="new-vzkaz" rows="3" style="width:100%; border-radius:10px; padding:10px; margin-bottom:10px; border:1px solid #ddd;" placeholder="Co se děje?"></textarea>
-                <button class="btn-send" onclick="placeMarker()">PŘIŠPENDLIT DO NEONU</button>
+                <h3>Vytvořit stopu v Neonu</h3>
+                <textarea id="new-vzkaz" rows="2" placeholder="Co chcete vzkázat světu?" style="width:100%; margin-bottom:10px; border-radius: 10px; padding: 5px;"></textarea>
+                <button class="btn" onclick="placeMarker()">PŘIŠPENDLIT DO DATABÁZE</button>
             </div>
             <div id="feed-list"></div>
         </div>
         <div id="section-map" class="section">
-            <div class="card"><h3>Mapa stop M.D.</h3><div id="map"></div></div>
+            <div class="card"><h3>Mapa stop</h3><div id="map"></div></div>
         </div>
     </div>
     <div class="nav-bar">
@@ -55,7 +59,6 @@
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script>
     let savedStopy = [];
-    let map;
 
     async function loadFromNeon() {
         try {
@@ -69,11 +72,11 @@
 
     function renderFeed() {
         const list = document.getElementById('feed-list');
-        // OPRAVA: Používáme s.txt místo s.text, aby to sedělo na vaši tabulku
+        // Zde je oprava: s.txt místo s.text
         list.innerHTML = savedStopy.map(s => `
             <div class="card">
-                <small>👤 ${s.autor || 'M.D.'} • ${new Date(s.vytvoreno).toLocaleString('cs-CZ')}</small>
-                <p style="font-size:1.1rem; margin:10px 0 0 0;">${s.txt || 'Bez textu'}</p>
+                <b>${s.autor || 'M.D.'}</b> • <small>${new Date(s.vytvoreno).toLocaleString('cs-CZ')}</small>
+                <p style="margin-top:10px;">${s.txt || 'Bez textu'}</p>
             </div>
         `).join('');
     }
@@ -112,15 +115,6 @@
     function showTab(id) {
         document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
         document.getElementById('section-' + id).classList.add('active');
-        if(id === 'map') {
-            setTimeout(() => {
-                if(!map) {
-                    map = L.map('map').setView([50.9, 14.6], 13);
-                    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
-                }
-                savedStopy.forEach(s => L.marker([s.lat, s.lng]).addTo(map).bindPopup(s.txt));
-            }, 200);
-        }
     }
 </script>
 </body>
