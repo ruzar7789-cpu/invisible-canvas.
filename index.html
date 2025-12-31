@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>TADY - M.D. Verified System</title>
+    <title>TADY - Augmented Reality Space</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
@@ -11,130 +11,75 @@
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;600;800&display=swap');
         
-        :root { 
-            --accent-cyan: #00f2fe; 
-            --accent-gold: #ffd700; 
-            --bg-main: #020202; 
-            --glass: rgba(15, 15, 15, 0.85);
-            --border: rgba(255, 255, 255, 0.1);
+        :root { --accent-cyan: #00f2fe; --bg-main: #020202; }
+
+        body { font-family: 'Plus Jakarta Sans', sans-serif; background: var(--bg-main); color: white; margin: 0; overflow: hidden; }
+        .gradient-text { background: linear-gradient(45deg, var(--accent-cyan) 0%, #4facfe 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        
+        /* PRŮHLEDNÉ NEONOVÉ OKNO (TRACES) */
+        .neon-trace { 
+            background: rgba(255, 255, 255, 0.05); 
+            backdrop-filter: blur(15px); 
+            -webkit-backdrop-filter: blur(15px);
+            border: 1px solid rgba(0, 242, 254, 0.3);
+            box-shadow: 0 0 25px rgba(0, 242, 254, 0.15);
+            border-radius: 30px;
+            animation: float 6s ease-in-out infinite;
         }
 
-        body { font-family: 'Plus Jakarta Sans', sans-serif; background: var(--bg-main); color: white; margin: 0; overflow: hidden; user-select: none; }
-        .gradient-text { background: linear-gradient(45deg, var(--accent-cyan) 0%, #4facfe 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
-        .glass-panel { background: var(--glass); backdrop-filter: blur(25px); border: 1px solid var(--border); }
+        .neon-trace.hot {
+            border: 2px solid var(--accent-cyan);
+            box-shadow: 0 0 40px rgba(0, 242, 254, 0.4);
+        }
+
+        @keyframes float { 0%, 100% { transform: translateY(0) rotate(0deg); } 50% { transform: translateY(-15px) rotate(1deg); } }
         
-        /* Vrstvy */
         #ar-video { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; z-index: 0; display: none; transform: scaleX(-1); }
-        #map-bg { position: absolute; inset: 0; z-index: 1; filter: brightness(0.25) contrast(1.1); transition: 0.6s ease; }
-
-        /* Energy Bar s Glow efektem */
-        #energy-fill { height: 100%; background: linear-gradient(90deg, var(--accent-cyan), #4facfe); box-shadow: 0 0 15px rgba(0, 242, 254, 0.6); transition: width 0.7s cubic-bezier(0.4, 0, 0.2, 1); }
+        #map-bg { position: absolute; inset: 0; z-index: 1; filter: brightness(0.2); }
         
-        /* Inputy - Vylepšený focus */
-        input, textarea { transition: all 0.3s ease !important; }
-        input:focus, textarea:focus { border-color: var(--accent-cyan) !important; box-shadow: 0 0 15px rgba(0, 242, 254, 0.2); background: rgba(255,255,255,0.08) !important; }
-
-        /* Tab System */
-        .tab-btn { font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: 2px; opacity: 0.4; transition: 0.3s; border-bottom: 2px solid transparent; }
-        .tab-btn.active { opacity: 1; color: var(--accent-cyan); border-bottom-color: var(--accent-cyan); }
-
-        /* AR Stopy */
-        .ar-float { animation: float 5s ease-in-out infinite; pointer-events: auto; }
-        @keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-12px); } }
-        
-        .hot-spot { border: 2px solid var(--accent-cyan) !important; animation: hot-pulse 1.5s infinite alternate !important; }
-        @keyframes hot-pulse { from { box-shadow: 0 0 10px rgba(0, 242, 254, 0.2); } to { box-shadow: 0 0 35px rgba(0, 242, 254, 0.5); } }
-
-        /* Live Indicator */
-        .live-dot { width: 6px; height: 6px; background: #10b981; border-radius: 50%; box-shadow: 0 0 8px #10b981; animation: blink 2s infinite; }
-        @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
-
-        .hidden { display: none; }
+        .energy-fill { height: 100%; background: linear-gradient(90deg, var(--accent-cyan), #4facfe); box-shadow: 0 0 20px var(--accent-cyan); transition: width 0.5s; }
         .no-scrollbar::-webkit-scrollbar { display: none; }
     </style>
 </head>
-<body>
+<body class="h-screen w-screen overflow-hidden">
 
-    <div id="landing-page" class="absolute inset-0 z-[1000] flex flex-col justify-center items-center px-10 text-center bg-[#020202]">
-        <div class="mb-2 text-3xl font-black gradient-text italic tracking-tighter">TADY</div>
-        <h1 class="text-5xl md:text-7xl font-extrabold mb-8 tracking-tight uppercase italic text-white italic">Audio<br><span class="gradient-text italic">Senzor</span></h1>
-        <button onclick="bootApp()" class="bg-white text-black font-black px-12 py-5 rounded-2xl text-[10px] tracking-[0.3em] uppercase hover:bg-cyan-400 transition transform active:scale-95 italic">Aktivovat prostor</button>
-        <p class="mt-12 text-[9px] text-gray-600 font-bold tracking-[0.3em] uppercase italic">Founders Access: M.D.</p>
-    </div>
-
-    <div id="app-interface" class="hidden h-screen w-screen flex flex-col md:flex-row overflow-hidden">
+    <div id="app-interface" class="h-full w-full flex flex-col md:flex-row">
         
-        <aside class="w-full md:w-[380px] glass-panel p-6 flex flex-col z-50 border-r border-white/5 no-scrollbar overflow-y-auto">
-            <div class="flex justify-between items-center mb-8">
-                <div class="text-xl font-black gradient-text italic">TADY / CONSOLE</div>
-                <div class="flex gap-1 items-center">
-                    <span class="text-[8px] font-bold opacity-30 uppercase tracking-widest mr-2">Signal</span>
-                    <div class="w-1 h-3 bg-cyan-500/30"></div>
-                    <div class="w-1 h-4 bg-cyan-500"></div>
+        <aside class="w-full md:w-[380px] bg-black/80 backdrop-blur-xl p-8 flex flex-col z-50 border-r border-white/10 no-scrollbar overflow-y-auto">
+            <div class="mb-10 text-2xl font-black gradient-text italic tracking-tighter">TADY / CONSOLE</div>
+
+            <div class="mb-10">
+                <div class="flex justify-between text-[10px] font-black uppercase tracking-widest mb-2">
+                    <span>System Power</span>
+                    <span id="energy-val" class="text-cyan-400">30%</span>
+                </div>
+                <div class="w-full h-1 bg-white/10 rounded-full">
+                    <div id="energy-bar" class="energy-fill" style="width: 30%"></div>
                 </div>
             </div>
 
-            <div class="mb-8 p-5 bg-white/5 rounded-[20px] border border-white/5">
-                <div class="flex justify-between items-center mb-2">
-                    <span class="text-[9px] font-black uppercase tracking-[0.2em] opacity-50">Energy Status</span>
-                    <span id="energy-val" class="text-xs font-black text-cyan-400 italic">30%</span>
-                </div>
-                <div class="w-full h-1.5 bg-black/40 rounded-full overflow-hidden">
-                    <div id="energy-fill" style="width: 30%"></div>
-                </div>
-                <p class="text-[9px] mt-4 opacity-40 font-bold italic uppercase">Všechno se děje tady</p>
+            <div class="space-y-4 flex-1">
+                <input type="text" id="t-title" class="w-full bg-white/5 border border-white/10 rounded-2xl p-4 text-sm outline-none focus:border-cyan-500" placeholder="Název stopy...">
+                <textarea id="t-desc" class="w-full bg-white/5 border border-white/10 rounded-2xl p-4 text-sm h-32 outline-none focus:border-cyan-500 resize-none" placeholder="Vzkaz pro prostor..."></textarea>
+                <button onclick="vyslatDoDatabeze()" class="w-full bg-white text-black py-5 rounded-2xl font-black text-[11px] uppercase tracking-[0.3em] hover:bg-cyan-400 transition italic">Vystřelit do prostoru</button>
             </div>
 
-            <div class="flex border-b border-white/5 mb-6">
-                <button onclick="switchTab('emit')" id="tab-emit" class="tab-btn active flex-1 pb-4">Vysílat</button>
-                <button onclick="switchTab('archive')" id="tab-archive" class="tab-btn flex-1 pb-4">Archiv</button>
-            </div>
-
-            <div id="content-emit" class="space-y-5 flex-1">
-                <div class="grid grid-cols-2 gap-3">
-                    <button onclick="setMode('personal')" id="btn-pers" class="p-4 rounded-2xl border-2 border-cyan-500 bg-cyan-500/10 text-[9px] font-black text-cyan-400 uppercase italic">Osobní (+5)</button>
-                    <button onclick="setMode('business')" id="btn-biz" class="p-4 rounded-2xl border border-white/10 text-[9px] font-black text-white/30 uppercase italic">Byznys (+10)</button>
-                </div>
-                <div class="space-y-3">
-                    <input type="text" id="t-title" class="w-full bg-white/5 border border-white/10 rounded-2xl p-4 text-sm outline-none placeholder:opacity-20" placeholder="Název stopy...">
-                    <textarea id="t-desc" class="w-full bg-white/5 border border-white/10 rounded-2xl p-4 text-sm h-28 outline-none placeholder:opacity-20 resize-none" placeholder="Co se tady děje?"></textarea>
-                </div>
-                <button onclick="vyslatStopu()" class="w-full bg-gradient-to-r from-cyan-500 to-blue-600 text-black py-5 rounded-2xl font-black text-[10px] uppercase tracking-[0.3em] hover:brightness-110 transition italic">Vystřelit do prostoru</button>
-            </div>
-
-            <div id="content-archive" class="hidden flex-1 space-y-3">
-                <div id="archive-list" class="space-y-2">
-                    <p class="text-center text-[10px] opacity-20 mt-20 uppercase tracking-widest">Archiv je prázdný</p>
-                </div>
-            </div>
-
-            <div class="mt-8 pt-6 border-t border-white/10 flex items-center justify-between">
-                <div class="flex items-center gap-3">
-                    <div class="w-10 h-10 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center font-black text-xs italic">MD</div>
-                    <div>
-                        <div class="flex items-center gap-2">
-                            <p class="text-[10px] font-black uppercase italic">M.D. Station</p>
-                            <div class="live-dot"></div>
-                        </div>
-                        <p class="text-[8px] opacity-30 uppercase font-bold tracking-tighter">Varnsdorf Sector Verified</p>
-                    </div>
-                </div>
+            <div class="mt-10 flex items-center gap-3 opacity-60">
+                <div class="w-10 h-10 rounded-lg bg-white/10 flex items-center justify-center font-black italic">MD</div>
+                <div class="text-[9px] font-bold uppercase italic tracking-widest">M.D. Station / Live</div>
             </div>
         </aside>
 
-        <main class="flex-1 relative bg-black">
+        <main class="flex-1 relative">
             <video id="ar-video" autoplay playsinline></video>
             <div id="map-bg"></div>
             
-            <div id="trace-container" class="absolute inset-0 z-30 pointer-events-none p-10 md:p-20 overflow-hidden">
+            <div id="trace-container" class="absolute inset-0 z-30 pointer-events-none p-10 flex flex-wrap gap-10 items-center justify-center">
                 </div>
 
-            <div class="absolute bottom-8 right-8 z-[100] flex flex-col gap-4">
-                <button onclick="toggleCamera()" id="cam-btn" class="w-14 h-14 rounded-2xl glass-panel flex items-center justify-center text-xl hover:border-cyan-500 transition duration-500">
+            <div class="absolute bottom-10 right-10 z-[100] flex flex-col gap-4">
+                <button onclick="toggleAR()" id="ar-btn" class="w-16 h-16 rounded-3xl bg-black/50 backdrop-blur-md border border-white/20 flex items-center justify-center text-xl hover:border-cyan-500 transition">
                     <i class="fas fa-camera"></i>
-                </button>
-                <button onclick="toggleMap()" class="w-14 h-14 rounded-2xl glass-panel flex items-center justify-center text-xl hover:border-cyan-500 transition duration-500">
-                    <i class="fas fa-map"></i>
                 </button>
             </div>
         </main>
@@ -142,164 +87,77 @@
 
     <script>
         let energy = 30;
-        let mode = 'personal';
         let traces = [];
-        let map, audioCtx;
-        let camActive = false;
+        let isAR = false;
 
-        function playSound(f, d = 0.1) {
-            if(!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-            const o = audioCtx.createOscillator(), g = audioCtx.createGain();
-            o.frequency.value = f; g.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + d);
-            o.connect(g); g.connect(audioCtx.destination); o.start(); o.stop(audioCtx.currentTime + d);
-        }
-
-        function bootApp() {
-            document.getElementById('landing-page').style.opacity = '0';
-            setTimeout(() => {
-                document.getElementById('landing-page').style.display = 'none';
-                document.getElementById('app-interface').classList.remove('hidden');
-                initMap();
-                playSound(200, 0.5);
-            }, 600);
-        }
-
-        function initMap() {
-            map = L.map('map-bg', { zoomControl: false, attributionControl: false }).setView([50.912, 14.619], 15);
-            L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png').addTo(map);
-        }
-
-        function switchTab(t) {
-            document.getElementById('content-emit').classList.toggle('hidden', t !== 'emit');
-            document.getElementById('content-archive').classList.toggle('hidden', t !== 'archive');
-            document.getElementById('tab-emit').classList.toggle('active', t === 'emit');
-            document.getElementById('tab-archive').classList.toggle('active', t === 'archive');
-            if(t === 'archive') renderArchive();
-            playSound(400, 0.05);
-        }
-
-        function setMode(m) {
-            mode = m;
-            document.getElementById('btn-pers').className = m === 'personal' ? 'p-4 rounded-2xl border-2 border-cyan-500 bg-cyan-500/10 text-[9px] font-black text-cyan-400 uppercase italic' : 'p-4 rounded-2xl border border-white/10 text-[9px] font-black text-white/20 uppercase italic';
-            document.getElementById('btn-biz').className = m === 'business' ? 'p-4 rounded-2xl border-2 border-yellow-500 bg-yellow-500/10 text-[9px] font-black text-yellow-500 uppercase italic' : 'p-4 rounded-2xl border border-white/10 text-[9px] font-black text-white/20 uppercase italic';
-            playSound(500, 0.05);
-        }
-
-        function updateEnergy(v) {
-            energy = Math.min(100, Math.max(0, energy + v));
-            document.getElementById('energy-fill').style.width = energy + '%';
-            document.getElementById('energy-val').innerText = energy + '%';
-        }
-
-        function vyslatStopu() {
+        // Funkce pro simulaci odeslání do NEONU (připraveno na API)
+        async function vyslatDoDatabeze() {
             const title = document.getElementById('t-title').value;
             const desc = document.getElementById('t-desc').value;
             if(!title) return;
 
-            const trace = {
-                id: Date.now(),
-                title: title,
-                desc: desc,
-                type: mode,
-                hot: false,
-                x: Math.random() * 60 + 10,
-                y: Math.random() * 60 + 20,
-                likes: 0
-            };
+            // Získání GPS polohy
+            navigator.geolocation.getCurrentPosition(async (pos) => {
+                const traceData = {
+                    title: title,
+                    desc: desc,
+                    lat: pos.coords.latitude,
+                    lng: pos.coords.longitude,
+                    timestamp: Date.now()
+                };
 
-            traces.push(trace);
-            updateEnergy(mode === 'business' ? 10 : 5);
-            renderTraces();
-            playSound(800, 0.2);
-            document.getElementById('t-title').value = '';
-            document.getElementById('t-desc').value = '';
+                // ZDE BUDE: fetch('/api/save-trace', { method: 'POST', body: JSON.stringify(traceData) });
+                
+                // Prozatím lokální vykreslení
+                addTraceToUI(traceData);
+                energy = Math.min(100, energy + 10);
+                document.getElementById('energy-bar').style.width = energy + '%';
+                document.getElementById('energy-val').innerText = energy + '%';
+                
+                document.getElementById('t-title').value = '';
+                document.getElementById('t-desc').value = '';
+            });
         }
 
-        function addLike(id) {
-            const t = traces.find(x => x.id === id);
-            t.likes++;
-            if(t.likes >= 5) t.hot = true;
-            updateEnergy(1);
-            renderTraces();
-            playSound(1000, 0.1);
-        }
-
-        function renderTraces() {
-            const cont = document.getElementById('trace-container');
-            cont.innerHTML = traces.map(t => `
-                <div class="ar-float absolute glass-panel p-6 rounded-[30px] w-64 pointer-events-auto transition-all ${t.hot ? 'hot-spot' : ''}" 
-                     style="left:${t.x}%; top:${t.y}%; border-color: ${t.type === 'business' ? 'rgba(255,215,0,0.3)' : 'rgba(0,242,254,0.2)'}">
-                    <div class="flex justify-between items-center mb-2">
-                        <h4 class="text-[11px] font-black uppercase italic tracking-tight">${t.title}</h4>
-                        ${t.hot ? '<i class="fas fa-fire text-orange-500 text-[10px] animate-pulse"></i>' : ''}
-                    </div>
-                    <p class="text-[10px] opacity-60 italic mb-4 leading-relaxed">"${t.desc}"</p>
-                    <div class="flex items-center gap-2">
-                        <button onclick="addLike(${t.id})" class="text-[9px] font-black bg-white/5 border border-white/10 px-4 py-2 rounded-full hover:bg-white/10 transition italic">
-                            ${t.type === 'business' ? '💎' : '🔥'} <span class="ml-1">${t.likes}</span>
-                        </button>
-                    </div>
+        function addTraceToUI(t) {
+            const container = document.getElementById('trace-container');
+            const el = document.createElement('div');
+            el.className = `neon-trace pointer-events-auto p-8 w-72 text-center`;
+            el.innerHTML = `
+                <div class="text-[10px] font-black text-cyan-400 uppercase tracking-widest mb-2 italic">Active Trace</div>
+                <h4 class="text-lg font-extrabold uppercase italic mb-2">${t.title}</h4>
+                <p class="text-xs opacity-70 italic mb-6">"${t.desc}"</p>
+                <div class="flex justify-center gap-4 text-[10px] font-bold opacity-40">
+                    <span>🔥 0 REAKCÍ</span>
+                    <span>📍 POBLÍŽ</span>
                 </div>
-            `).join('');
+            `;
+            container.appendChild(el);
         }
 
-        function renderArchive() {
-            const list = document.getElementById('archive-list');
-            list.innerHTML = traces.length ? traces.map(t => `
-                <div class="p-4 bg-white/5 border border-white/10 rounded-2xl">
-                    <div class="flex justify-between items-center mb-3">
-                        <span class="text-[9px] font-black uppercase italic ${t.type === 'business' ? 'text-yellow-500' : 'text-cyan-400'}">${t.title}</span>
-                        <span class="text-[8px] opacity-30">${new Date(t.id).toLocaleTimeString()}</span>
-                    </div>
-                    <div class="flex gap-2">
-                        <button onclick="boost(${t.id})" class="flex-1 bg-cyan-500/10 text-cyan-400 text-[8px] font-black py-2.5 rounded-xl uppercase tracking-widest italic">Boost (-20)</button>
-                        <button onclick="deleteTrace(${t.id})" class="w-10 bg-red-500/10 text-red-500 py-2.5 rounded-xl"><i class="fas fa-trash text-[8px]"></i></button>
-                    </div>
-                </div>
-            `).join('') : '<p class="text-center text-[10px] opacity-20 mt-20 uppercase tracking-widest italic">Žádné stopy</p>';
-        }
-
-        function boost(id) {
-            if(energy < 20) return;
-            const t = traces.find(x => x.id === id);
-            t.hot = true;
-            updateEnergy(-20);
-            renderTraces(); renderArchive();
-            playSound(1100, 0.3);
-        }
-
-        function deleteTrace(id) {
-            traces = traces.filter(x => x.id !== id);
-            renderTraces(); renderArchive();
-            playSound(200, 0.1);
-        }
-
-        async function toggleCamera() {
+        async function toggleAR() {
             const v = document.getElementById('ar-video');
-            const btn = document.getElementById('cam-btn');
-            if(!camActive) {
-                try {
-                    const s = await navigator.mediaDevices.getUserMedia({video: {facingMode:'environment'}});
-                    v.srcObject = s; v.style.display = 'block';
-                    document.getElementById('map-bg').style.opacity = '0';
-                    btn.style.background = '#ef4444'; btn.style.color = 'white';
-                    camActive = true;
-                    playSound(440, 0.2);
-                } catch(e) { alert("Přístup ke kameře zamítnut."); }
+            const m = document.getElementById('map-bg');
+            const btn = document.getElementById('ar-btn');
+            
+            if(!isAR) {
+                const s = await navigator.mediaDevices.getUserMedia({video: {facingMode:'environment'}});
+                v.srcObject = s; v.style.display = 'block';
+                m.style.opacity = '0';
+                btn.style.color = '#00f2fe';
+                isAR = true;
             } else {
                 v.srcObject.getTracks().forEach(t => t.stop());
                 v.style.display = 'none';
-                document.getElementById('map-bg').style.opacity = '1';
-                btn.style.background = ''; btn.style.color = '';
-                camActive = false;
+                m.style.opacity = '1';
+                btn.style.color = 'white';
+                isAR = false;
             }
         }
 
-        function toggleMap() {
-            const m = document.getElementById('map-bg');
-            m.style.filter = m.style.filter.includes('grayscale') ? 'brightness(0.5) contrast(1.2)' : 'brightness(0.25) contrast(1.1) grayscale(1)';
-            playSound(600, 0.05);
-        }
+        // Mapa
+        const map = L.map('map-bg', { zoomControl: false, attributionControl: false }).setView([50.912, 14.619], 15);
+        L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png').addTo(map);
     </script>
 </body>
 </html>
