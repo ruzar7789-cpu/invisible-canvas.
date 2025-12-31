@@ -2,206 +2,167 @@
 <html lang="cs">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>TADY | M.D. Business OS</title>
-
-    <link rel="manifest" href="/manifest.json">
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="apple-mobile-web-app-title" content="TADY">
-    
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>TADY - Oficiální verze M.D.</title>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@900&family=Inter:wght@400;700&display=swap" rel="stylesheet">
-
     <style>
-        :root { --glow: #00f2ff; --gold: #ffd700; --glass: rgba(10, 15, 25, 0.9); }
-        body, html { margin: 0; padding: 0; width: 100%; height: 100%; font-family: 'Inter', sans-serif; background: #000; overflow: hidden; color: white; }
+        :root { --p: #764ba2; --s: #667eea; --gold: #ffc107; --bg: #0b1118; }
+        body, html { margin: 0; padding: 0; width: 100%; height: 100%; font-family: sans-serif; background: var(--bg); color: #fff; }
         
-        #ar-engine { position: fixed; top: 0; width: 100%; height: 100%; object-fit: cover; z-index: 5; }
-        #ar-overlay { position: fixed; top: 0; width: 100%; height: 100%; z-index: 50; pointer-events: none; }
-        #map-view { position: fixed; top: 0; width: 100%; height: 100%; z-index: 100; display: none; }
+        /* Úvodní obrazovka */
+        #landing-page { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: radial-gradient(circle at center, #162a35 0%, #0b1118 100%); display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 5000; transition: 0.8s; }
+        .landing-logo { font-size: 3.5rem; color: #00f2ff; font-weight: 900; letter-spacing: 5px; margin-bottom: 10px; }
+        .btn-vstoupit { background: #00f2ff; color: #0b1118; padding: 18px 50px; border-radius: 40px; font-weight: bold; border: none; cursor: pointer; font-size: 1.2rem; box-shadow: 0 0 20px rgba(0,242,255,0.4); }
 
-        /* PLOVOUCÍ PULZUJÍCÍ REKLAMY */
-        .floating-ad {
-            position: absolute; background: var(--glass); border-radius: 20px; padding: 15px; width: 130px;
-            border: 2px solid var(--gold); pointer-events: auto; cursor: pointer; text-align: center;
-            animation: float 4s ease-in-out infinite, pulseGold 2s infinite; z-index: 60;
-        }
-        @keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-15px); } }
-        @keyframes pulseGold { 0%, 100% { box-shadow: 0 0 5px var(--gold); } 50% { box-shadow: 0 0 20px var(--gold); } }
+        /* Aplikace */
+        #app-interface { display: none; background: #f0f2f5; min-height: 100vh; padding-bottom: 80px; color: #333; }
+        header { background: linear-gradient(135deg, var(--s), var(--p)); color: white; padding: 20px; text-align: center; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+        .container { padding: 15px; max-width: 600px; margin: 0 auto; }
+        .card { background: white; border-radius: 20px; padding: 20px; margin-bottom: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.08); }
+        .section { display: none; animation: fadeIn 0.4s; }
+        .section.active { display: block; }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
 
-        /* ADMIN DASHBOARD */
-        #admin-dash { position: fixed; bottom: 110px; width: 90%; left: 5%; background: var(--gold); color: #000; border-radius: 25px; padding: 20px; z-index: 2000; display: none; max-height: 40vh; overflow-y: auto; }
-        .admin-item { background: rgba(0,0,0,0.1); padding: 10px; border-radius: 10px; margin-bottom: 10px; border: 1px solid rgba(0,0,0,0.2); }
+        /* Prvky */
+        textarea { width: 100%; padding: 15px; border: 1px solid #ddd; border-radius: 15px; margin-bottom: 10px; font-family: inherit; box-sizing: border-box; font-size: 1rem; }
+        .btn-send { background: var(--p); color: white; border: none; padding: 16px; width: 100%; border-radius: 15px; font-weight: bold; cursor: pointer; font-size: 1.1rem; transition: 0.3s; }
+        .btn-send:active { transform: scale(0.98); }
+        #map { height: 350px; border-radius: 20px; width: 100%; border: 2px solid white; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
 
-        /* MODAL PLATBY */
-        .modal { position: fixed; top: 0; width: 100%; height: 100%; z-index: 3000; background: rgba(0,0,0,0.95); display: none; align-items: center; justify-content: center; pointer-events: auto; }
-        .box { background: #0a0a0a; padding: 30px; border-radius: 40px; width: 85%; text-align: center; border: 1px solid #333; }
-        
-        /* NAVIGACE */
-        .footer-ui { position: fixed; bottom: 0; width: 100%; z-index: 1000; padding: 25px 0; background: linear-gradient(to top, #000 70%, transparent); text-align: center; }
-        .nav-icon { cursor: pointer; display: inline-block; margin: 0 15px; font-size: 2.2rem; filter: drop-shadow(0 0 5px rgba(255,255,255,0.3)); }
-        
-        .btn-gold { background: var(--gold); color: black; border: none; padding: 15px; border-radius: 15px; font-weight: 900; width: 100%; cursor: pointer; margin-top: 10px; font-size: 1rem; }
-        .watermark { position: fixed; top: 10px; right: 10px; z-index: 1000; font-family: 'Orbitron'; font-size: 0.8rem; color: rgba(255,255,255,0.5); }
+        /* Navigace */
+        .nav-bar { position: fixed; bottom: 0; width: 100%; background: white; display: flex; justify-content: space-around; padding: 15px 0; border-top: 1px solid #eee; z-index: 1000; }
+        .nav-item { text-align: center; font-size: 0.8rem; color: #888; flex: 1; cursor: pointer; font-weight: bold; }
+        .nav-item.active { color: var(--p); }
     </style>
 </head>
 <body>
 
-<div class="watermark">DESIGNED BY M.D.</div>
-<video id="ar-engine" autoplay playsinline muted></video>
-
-<div id="ar-overlay">
-    <div class="floating-ad" style="top: 15%; left: 10%;" onclick="fastTrack('FIREMNÍ')">
-        <h4 style="color:var(--gold); margin:0;">ZLATÁ</h4><p style="font-size:0.7rem; margin:5px 0;">Menu tvé firmy</p>
-    </div>
-    <div class="floating-ad" style="top: 40%; right: 10%; border-color:var(--glow);" onclick="fastTrack('OSOBNÍ')">
-        <h4 style="color:var(--glow); margin:0;">VZKAZ</h4><p style="font-size:0.7rem; margin:5px 0;">Zanech stopu</p>
-    </div>
+<div id="landing-page">
+    <div class="landing-logo">TADY</div>
+    <div style="color:white; margin-bottom:30px; opacity:0.8; letter-spacing: 1px;">AUTORIZOVÁNO: M.D.</div>
+    <button class="btn-vstoupit" onclick="enterApp()">VSTOUPIT</button>
 </div>
 
-<div id="map-view"><div id="map" style="width:100%; height:100%;"></div></div>
+<div id="app-interface">
+    <header>
+        <h1 style="margin:0; font-size: 1.8rem; letter-spacing: 2px;">PROJEKT TADY</h1>
+    </header>
 
-<div id="admin-dash">
-    <h3 style="margin:0; font-family:'Orbitron'">M.D. VELITELSTVÍ</h3>
-    <div id="admin-list" style="margin-top:10px;"></div>
-    <button onclick="location.reload()" class="btn-gold" style="background:#000; color:#fff;">ZAVŘÍT</button>
-</div>
-
-<div id="pay-modal" class="modal">
-    <div class="box">
-        <h2 style="font-family:'Orbitron'; color:var(--gold); margin-bottom: 5px;">PLATBA M.D.</h2>
-        <p style="font-size: 0.8rem; margin-bottom: 15px;">Pro aktivaci vzkazu zaplaťte:</p>
-        
-        <div style="background:#fff; padding:10px; border-radius:20px; display:inline-block; margin-bottom: 10px;">
-            <img id="qr-img" style="width:180px; display:block;">
+    <div class="container">
+        <div id="section-home" class="section active">
+            <div class="card" style="border-left: 5px solid var(--gold);">
+                <h3 style="margin-top:0;">✨ Nový záznam v síti</h3>
+                <textarea id="new-vzkaz" rows="3" placeholder="Co chcete vzkázat světu TADY?"></textarea>
+                <button class="btn-send" onclick="placeMarker()">PŘIŠPENDLIT DO NEONU</button>
+            </div>
+            <div id="feed-list">
+                </div>
         </div>
-        
-        <div id="price-tag" style="font-size:2rem; font-weight:900; color:var(--gold);"></div>
-        
-        <button id="pay-link-btn" class="btn-gold" style="background:#fff; color:#000;">
-            ⚡ RYCHLÁ PLATBA (BANKA)
-        </button>
 
-        <button onclick="closePay()" class="btn-gold">MÁM ZAPLACENO</button>
-        <p style="font-size:0.6rem; color:#888; margin-top:10px;">Vzkaz bude aktivován po připsání platby.</p>
+        <div id="section-map" class="section">
+            <div class="card">
+                <h3 style="margin-top:0;">Digitální mapa M.D.</h3>
+                <div id="map"></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="nav-bar">
+        <div class="nav-item active" onclick="showTab('home', this)">🏠<br>DĚNÍ</div>
+        <div class="nav-item" onclick="showTab('map', this)">📍<br>MAPA</div>
     </div>
 </div>
 
-<div class="footer-ui">
-    <nav>
-        <span class="nav-icon" onclick="toggleMap()">🗺️</span>
-        <span class="nav-icon" onclick="toggleMap()" style="font-size:3.2rem; color:var(--gold)">💬</span>
-        <span class="nav-icon" onclick="shareApp()">🔗</span>
-        <span class="nav-icon" onclick="adminLogin()">👤</span>
-    </nav>
-</div>
-
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script>
-    let map, isMap = false, isAdmin = false, vzkazy = [], pType = null;
-    const IBAN = "LT533250082844018353"; // Tvůj Revolut
+    let savedStopy = [];
+    let map;
 
-    function toggleMap() {
-        isMap = !isMap;
-        document.getElementById('map-view').style.display = isMap ? 'block' : 'none';
-        document.getElementById('ar-overlay').style.display = isMap ? 'none' : 'block';
-        if(isMap && !map) {
-            map = L.map('map', { zoomControl: false }).setView([50.91, 14.62], 15);
-            L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png').addTo(map);
-            
-            // Načtení schválených vzkazů z DB
-            loadApprovedVzkazy();
+    // Vstup do aplikace a načtení dat
+    async function enterApp() {
+        document.getElementById('landing-page').style.opacity = '0';
+        setTimeout(() => {
+            document.getElementById('landing-page').style.display = 'none';
+            document.getElementById('app-interface').style.display = 'block';
+            loadDataFromNeon();
+        }, 800);
+    }
 
-            map.on('click', e => {
-                let type = pType || (confirm("Chcete ZLATOU STOPU (149,-)? OK=Ano, Zrušit=Osobní (29,-)") ? 'FIREMNÍ' : 'OSOBNÍ');
-                let txt = prompt(`Napište text pro ${type}:`);
-                if(txt) {
-                    saveToDB(type, txt, e.latlng.lat, e.latlng.lng);
-                    showQR(type);
-                    pType = null;
+    // Načtení vzkazů z databáze Neon přes API
+    async function loadDataFromNeon() {
+        try {
+            const res = await fetch('/api/vzkaz');
+            if (res.ok) {
+                savedStopy = await res.json();
+                renderFeed();
+            }
+        } catch (err) {
+            console.error("Chyba načítání:", err);
+        }
+    }
+
+    // Zobrazení vzkazů ve feedu
+    function renderFeed() {
+        const list = document.getElementById('feed-list');
+        list.innerHTML = savedStopy.map(s => `
+            <div class="card">
+                <div style="font-size:0.8rem; color:#888; margin-bottom:5px;">👤 ${s.autor || 'M.D.'} • ${new Date(s.vytvoreno).toLocaleString('cs-CZ')}</div>
+                <div style="font-size:1.1rem; font-weight:500;">${s.txt}</div>
+            </div>
+        `).join('');
+    }
+
+    // Odeslání nové stopy do databáze Neon
+    async function placeMarker() {
+        const text = document.getElementById('new-vzkaz').value;
+        if (!text) return alert("Napište vzkaz.");
+
+        navigator.geolocation.getCurrentPosition(async (pos) => {
+            const stopa = { 
+                txt: text, type: 'vzkaz', 
+                lat: pos.coords.latitude, lng: pos.coords.longitude, 
+                autor: 'M.D.' 
+            };
+
+            try {
+                const res = await fetch('/api/vzkaz', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(stopa)
+                });
+
+                if (res.ok) {
+                    alert("Stopa úspěšně zapsána do globální sítě Neon!");
+                    document.getElementById('new-vzkaz').value = "";
+                    loadDataFromNeon();
                 }
-            });
-        }
-        if(isMap) setTimeout(() => map.invalidateSize(), 200);
+            } catch (err) {
+                alert("Chyba připojení k serveru.");
+            }
+        }, () => alert("Povolte prosím GPS pro umístění stopy."));
     }
 
-    async function saveToDB(typ, obsah, lat, lng) {
-        await fetch('/api/save', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ typ, obsah, lat, lng })
-        });
-    }
+    // Přepínání tabů a inicializace mapy
+    function showTab(id, el) {
+        document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+        document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+        document.getElementById('section-' + id).classList.add('active');
+        el.classList.add('active');
 
-    async function loadApprovedVzkazy() {
-        const res = await fetch('/api/list');
-        const data = await res.json();
-        data.forEach(v => {
-            L.marker([v.lat, v.lng]).addTo(map).bindPopup(`<b>${v.typ}</b><br>${v.obsah}`);
-        });
-    }
-
-    function showQR(type) {
-        let cena = type === 'FIREMNÍ' ? 149 : 29;
-        let msg = `TADY-${type}`;
-        let qrData = `SPD*1.0*ACC:${IBAN}*AM:${cena}.00*CC:CZK*MSG:${msg}`;
-        
-        document.getElementById('qr-img').src = `https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=${encodeURIComponent(qrData)}`;
-        document.getElementById('price-tag').innerText = cena + " Kč";
-        
-        // Funkce pro rychlou platbu
-        document.getElementById('pay-link-btn').onclick = () => {
-            window.location.href = `spays://?data=${encodeURIComponent(qrData)}`;
-            setTimeout(() => alert("Pokud se banka neotevřela, použijte QR kód."), 1000);
-        };
-
-        document.getElementById('pay-modal').style.display = 'flex';
-    }
-
-    function closePay() {
-        document.getElementById('pay-modal').style.display = 'none';
-        if(isMap) toggleMap();
-        alert("Díky! M.D. vzkaz prověří a brzy ho uvidí celý Varnsdorf.");
-    }
-
-    function adminLogin() {
-        if(prompt("HESLO M.D.:") === "2025") {
-            isAdmin = true;
-            document.getElementById('admin-dash').style.display = 'block';
-            fetchAdminList();
+        if (id === 'map') {
+            setTimeout(() => {
+                if (!map) {
+                    map = L.map('map').setView([50.911, 14.622], 13);
+                    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
+                }
+                // Přidání značek z databáze na mapu
+                savedStopy.forEach(s => {
+                    L.marker([s.lat, s.lng]).addTo(map).bindPopup(s.txt);
+                });
+            }, 200);
         }
     }
-
-    async function fetchAdminList() {
-        const res = await fetch('/api/list_all'); // Musíš mít tuhle API pro admina
-        const data = await res.json();
-        const list = document.getElementById('admin-list');
-        list.innerHTML = "";
-        data.forEach(v => {
-            list.innerHTML += `<div class="admin-item" style="background:${v.aktivni ? '#90ee90' : '#ffcccb'}">
-                <b>${v.typ}:</b> ${v.obsah}<br>
-                ${!v.aktivni ? `<button onclick="approve(${v.id})" style="background:lime; border:none; padding:5px; border-radius:5px;">SCHVÁLIT</button>` : 'AKTIVNÍ'}
-            </div>`;
-        });
-    }
-
-    function shareApp() {
-        if (navigator.share) {
-            navigator.share({ title: 'TADY AR', text: 'Koukni na digitální Varnsdorf!', url: window.location.href });
-        } else {
-            navigator.clipboard.writeText(window.location.href);
-            alert("Odkaz zkopírován!");
-        }
-    }
-
-    function fastTrack(t) { pType = t; toggleMap(); alert("Nyní klikněte na mapu, kde se má vzkaz zobrazit."); }
-
-    window.onload = () => {
-        navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } })
-        .then(s => document.getElementById('ar-engine').srcObject = s)
-        .catch(err => console.log("Kamera nedostupná"));
-    };
 </script>
 </body>
-</html>
+    </html>
+    
