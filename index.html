@@ -3,73 +3,52 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>TADY - Oficiální verze M.D.</title>
+    <title>TADY - M.D.</title>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <style>
-        :root { --p: #764ba2; --s: #667eea; --gold: #ffc107; --bg: #0b1118; }
+        :root { --p: #764ba2; --s: #667eea; --bg: #0b1118; }
         body, html { margin: 0; padding: 0; width: 100%; height: 100%; font-family: sans-serif; background: var(--bg); color: #fff; }
-        
-        /* Úvodní obrazovka */
-        #landing-page { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: radial-gradient(circle at center, #162a35 0%, #0b1118 100%); display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 5000; transition: 0.8s; }
+        #landing-page { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: radial-gradient(circle at center, #162a35 0%, #0b1118 100%); display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 5000; transition: 0.5s; }
         .landing-logo { font-size: 3.5rem; color: #00f2ff; font-weight: 900; letter-spacing: 5px; margin-bottom: 10px; }
-        .btn-vstoupit { background: #00f2ff; color: #0b1118; padding: 18px 50px; border-radius: 40px; font-weight: bold; border: none; cursor: pointer; font-size: 1.2rem; box-shadow: 0 0 20px rgba(0,242,255,0.4); }
-
-        /* Aplikace */
-        #app-interface { display: none; background: #f0f2f5; min-height: 100vh; padding-bottom: 80px; color: #333; }
-        header { background: linear-gradient(135deg, var(--s), var(--p)); color: white; padding: 20px; text-align: center; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+        .btn-vstoupit { background: #00f2ff; color: #0b1118; padding: 15px 45px; border-radius: 30px; font-weight: bold; border: none; cursor: pointer; }
+        #app-interface { display: none; background: #f8f9fa; min-height: 100vh; padding-bottom: 90px; color: #333; }
+        header { background: linear-gradient(135deg, var(--s), var(--p)); color: white; padding: 15px; text-align: center; }
         .container { padding: 15px; max-width: 600px; margin: 0 auto; }
-        .card { background: white; border-radius: 20px; padding: 20px; margin-bottom: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.08); }
-        .section { display: none; animation: fadeIn 0.4s; }
+        .card { background: white; border-radius: 20px; padding: 18px; margin-bottom: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
+        .btn-send { background: var(--p); color: white; border: none; padding: 15px; width: 100%; border-radius: 15px; font-weight: bold; cursor: pointer; }
+        #map { height: 300px; border-radius: 20px; width: 100%; margin-top: 10px; }
+        .nav-bar { position: fixed; bottom: 0; width: 100%; background: white; display: flex; justify-content: space-around; padding: 12px 0; border-top: 1px solid #eee; }
+        .nav-item { text-align: center; font-size: 0.7rem; color: #888; flex: 1; }
+        .section { display: none; }
         .section.active { display: block; }
-        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-
-        /* Prvky */
-        textarea { width: 100%; padding: 15px; border: 1px solid #ddd; border-radius: 15px; margin-bottom: 10px; font-family: inherit; box-sizing: border-box; font-size: 1rem; }
-        .btn-send { background: var(--p); color: white; border: none; padding: 16px; width: 100%; border-radius: 15px; font-weight: bold; cursor: pointer; font-size: 1.1rem; transition: 0.3s; }
-        .btn-send:active { transform: scale(0.98); }
-        #map { height: 350px; border-radius: 20px; width: 100%; border: 2px solid white; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
-
-        /* Navigace */
-        .nav-bar { position: fixed; bottom: 0; width: 100%; background: white; display: flex; justify-content: space-around; padding: 15px 0; border-top: 1px solid #eee; z-index: 1000; }
-        .nav-item { text-align: center; font-size: 0.8rem; color: #888; flex: 1; cursor: pointer; font-weight: bold; }
-        .nav-item.active { color: var(--p); }
     </style>
 </head>
 <body>
 
 <div id="landing-page">
     <div class="landing-logo">TADY</div>
-    <div style="color:white; margin-bottom:30px; opacity:0.8; letter-spacing: 1px;">AUTORIZOVÁNO: M.D.</div>
+    <div style="color:white; margin-bottom:30px; opacity:0.8;">Navrženo M.D.</div>
     <button class="btn-vstoupit" onclick="enterApp()">VSTOUPIT</button>
 </div>
 
 <div id="app-interface">
-    <header>
-        <h1 style="margin:0; font-size: 1.8rem; letter-spacing: 2px;">PROJEKT TADY</h1>
-    </header>
-
+    <header><h1>PROJEKT TADY</h1></header>
     <div class="container">
         <div id="section-home" class="section active">
-            <div class="card" style="border-left: 5px solid var(--gold);">
-                <h3 style="margin-top:0;">✨ Nový záznam v síti</h3>
-                <textarea id="new-vzkaz" rows="3" placeholder="Co chcete vzkázat světu TADY?"></textarea>
+            <div class="card">
+                <h3>Napsat vzkaz TADY</h3>
+                <textarea id="new-vzkaz" rows="3" style="width:100%; border-radius:10px; padding:10px; margin-bottom:10px; border:1px solid #ddd;" placeholder="Co se děje?"></textarea>
                 <button class="btn-send" onclick="placeMarker()">PŘIŠPENDLIT DO NEONU</button>
             </div>
-            <div id="feed-list">
-                </div>
+            <div id="feed-list"></div>
         </div>
-
         <div id="section-map" class="section">
-            <div class="card">
-                <h3 style="margin-top:0;">Digitální mapa M.D.</h3>
-                <div id="map"></div>
-            </div>
+            <div class="card"><h3>Mapa stop M.D.</h3><div id="map"></div></div>
         </div>
     </div>
-
     <div class="nav-bar">
-        <div class="nav-item active" onclick="showTab('home', this)">🏠<br>DĚNÍ</div>
-        <div class="nav-item" onclick="showTab('map', this)">📍<br>MAPA</div>
+        <div class="nav-item" onclick="showTab('home')">🏠<br>Dění</div>
+        <div class="nav-item" onclick="showTab('map')">📍<br>Mapa</div>
     </div>
 </div>
 
@@ -78,45 +57,37 @@
     let savedStopy = [];
     let map;
 
-    // Vstup do aplikace a načtení dat
-    async function enterApp() {
-        document.getElementById('landing-page').style.opacity = '0';
-        setTimeout(() => {
-            document.getElementById('landing-page').style.display = 'none';
-            document.getElementById('app-interface').style.display = 'block';
-            loadDataFromNeon();
-        }, 800);
-    }
-
-    // Načtení vzkazů z databáze Neon přes API
-    async function loadDataFromNeon() {
+    async function loadFromNeon() {
         try {
             const res = await fetch('/api/vzkaz');
-            if (res.ok) {
+            if(res.ok) {
                 savedStopy = await res.json();
                 renderFeed();
             }
-        } catch (err) {
-            console.error("Chyba načítání:", err);
-        }
+        } catch (e) { console.error("Neon error", e); }
     }
 
-    // Zobrazení vzkazů ve feedu
     function renderFeed() {
         const list = document.getElementById('feed-list');
+        // OPRAVA: Používáme s.txt místo s.text, aby to sedělo na vaši tabulku
         list.innerHTML = savedStopy.map(s => `
             <div class="card">
-                <div style="font-size:0.8rem; color:#888; margin-bottom:5px;">👤 ${s.autor || 'M.D.'} • ${new Date(s.vytvoreno).toLocaleString('cs-CZ')}</div>
-                <div style="font-size:1.1rem; font-weight:500;">${s.txt}</div>
+                <small>👤 ${s.autor || 'M.D.'} • ${new Date(s.vytvoreno).toLocaleString('cs-CZ')}</small>
+                <p style="font-size:1.1rem; margin:10px 0 0 0;">${s.txt || 'Bez textu'}</p>
             </div>
         `).join('');
     }
 
-    // Odeslání nové stopy do databáze Neon
+    function enterApp() {
+        document.getElementById('landing-page').style.display = 'none';
+        document.getElementById('app-interface').style.display = 'block';
+        loadFromNeon();
+    }
+
     async function placeMarker() {
         const text = document.getElementById('new-vzkaz').value;
-        if (!text) return alert("Napište vzkaz.");
-
+        if(!text) return alert("Napište vzkaz.");
+        
         navigator.geolocation.getCurrentPosition(async (pos) => {
             const stopa = { 
                 txt: text, type: 'vzkaz', 
@@ -124,45 +95,33 @@
                 autor: 'M.D.' 
             };
 
-            try {
-                const res = await fetch('/api/vzkaz', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(stopa)
-                });
+            const res = await fetch('/api/vzkaz', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(stopa)
+            });
 
-                if (res.ok) {
-                    alert("Stopa úspěšně zapsána do globální sítě Neon!");
-                    document.getElementById('new-vzkaz').value = "";
-                    loadDataFromNeon();
-                }
-            } catch (err) {
-                alert("Chyba připojení k serveru.");
+            if(res.ok) {
+                alert("Uloženo v Neonu!");
+                document.getElementById('new-vzkaz').value = "";
+                loadFromNeon();
             }
-        }, () => alert("Povolte prosím GPS pro umístění stopy."));
+        });
     }
 
-    // Přepínání tabů a inicializace mapy
-    function showTab(id, el) {
+    function showTab(id) {
         document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
-        document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
         document.getElementById('section-' + id).classList.add('active');
-        el.classList.add('active');
-
-        if (id === 'map') {
+        if(id === 'map') {
             setTimeout(() => {
-                if (!map) {
-                    map = L.map('map').setView([50.911, 14.622], 13);
+                if(!map) {
+                    map = L.map('map').setView([50.9, 14.6], 13);
                     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
                 }
-                // Přidání značek z databáze na mapu
-                savedStopy.forEach(s => {
-                    L.marker([s.lat, s.lng]).addTo(map).bindPopup(s.txt);
-                });
+                savedStopy.forEach(s => L.marker([s.lat, s.lng]).addTo(map).bindPopup(s.txt));
             }, 200);
         }
     }
 </script>
 </body>
-    </html>
-    
+</html>
