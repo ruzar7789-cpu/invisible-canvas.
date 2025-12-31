@@ -2,162 +2,72 @@
 <html lang="cs">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>TADY - M.D.</title>
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TADY - Vše se děje tady</title>
+    <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        :root { --p: #764ba2; --s: #667eea; --cyan: #00f2ff; --bg: #0b1118; }
-        body, html { margin: 0; padding: 0; width: 100%; height: 100%; font-family: sans-serif; background: var(--bg); color: #fff; overflow: hidden; }
-        
-        /* Animované hvězdné pozadí z landing page */
-        #landing-page { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: radial-gradient(circle at center, #162a35 0%, #0b1118 100%); display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 5000; }
-        .stars { position: absolute; width: 100%; height: 100%; pointer-events: none; background: transparent url('https://www.transparenttextures.com/patterns/stardust.png') repeat; animation: moveStars 100s linear infinite; opacity: 0.3; }
-        @keyframes moveStars { from { background-position: 0 0; } to { background-position: 1000px 1000px; } }
-
-        .landing-logo { font-size: 4rem; color: var(--cyan); font-weight: 900; letter-spacing: 8px; margin-bottom: 10px; text-shadow: 0 0 30px rgba(0,242,255,0.6); z-index: 10; }
-        .btn-vstoupit { background: var(--cyan); color: #0b1118; padding: 18px 55px; border-radius: 40px; font-weight: bold; border: none; cursor: pointer; font-size: 1.2rem; z-index: 10; box-shadow: 0 0 20px rgba(0,242,255,0.4); }
-
-        /* Rozhraní aplikace */
-        #app-interface { display: none; width: 100%; height: 100%; position: relative; }
-        #ar-view { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: #000; z-index: 1; }
-        video { width: 100%; height: 100%; object-fit: cover; opacity: 0.5; }
-
-        /* Tvůj bankovní QR kód */
-        #qr-section { position: absolute; top: 85px; left: 50%; transform: translateX(-50%); background: white; padding: 15px; border-radius: 25px; text-align: center; z-index: 100; color: #333; width: 220px; box-shadow: 0 15px 40px rgba(0,0,0,0.6); }
-        #qr-section img { width: 180px; height: 180px; border-radius: 15px; }
-        .qr-text { margin-top: 10px; font-weight: 800; color: var(--p); font-size: 0.9rem; letter-spacing: 0.5px; }
-
-        /* Plovoucí vzkazy napojené na Neon */
-        .vzkaz-float { position: absolute; background: rgba(0,242,255,0.15); backdrop-filter: blur(12px); padding: 14px; border-radius: 20px; border: 1px solid var(--cyan); color: white; font-size: 0.9rem; animation: float 7s infinite ease-in-out; pointer-events: auto; z-index: 10; box-shadow: 0 5px 15px rgba(0,0,0,0.2); max-width: 180px; }
-        @keyframes float { 0%, 100% { transform: translateY(0) rotate(-1.5deg); } 50% { transform: translateY(-25px) rotate(1.5deg); } }
-
-        /* Spodní lišta pro psaní */
-        .ui-bottom { position: absolute; bottom: 35px; left: 0; width: 100%; z-index: 200; display: flex; flex-direction: column; align-items: center; }
-        .input-box { background: rgba(255,255,255,0.95); width: 85%; padding: 12px 18px; border-radius: 35px; display: flex; gap: 12px; box-shadow: 0 8px 25px rgba(0,0,0,0.5); }
-        input { flex: 1; border: none; outline: none; font-size: 1rem; color: #222; font-weight: 500; background: transparent; }
-        .btn-add { background: var(--p); color: white; border: none; width: 48px; height: 48px; border-radius: 50%; font-size: 1.8rem; cursor: pointer; }
-
-        /* Horní navigace */
-        .nav-tabs { position: absolute; top: 25px; width: 100%; display: flex; justify-content: center; gap: 15px; z-index: 300; }
-        .tab { background: rgba(0,0,0,0.7); padding: 10px 25px; border-radius: 25px; font-size: 0.85rem; font-weight: bold; cursor: pointer; border: 1px solid var(--cyan); letter-spacing: 1px; color: white; }
-        .tab.active { background: var(--cyan); color: #000; box-shadow: 0 0 15px var(--cyan); }
-
-        #map-view { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 150; display: none; }
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&display=swap');
+        body { font-family: 'Inter', sans-serif; background: #000; color: white; overflow-x: hidden; }
+        .gradient-text { background: linear-gradient(45deg, #00f2fe 0%, #4facfe 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        .glass-card { background: rgba(255, 255, 255, 0.05); backdrop-filter: blur(10px); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 24px; }
     </style>
 </head>
-<body>
+<body class="min-h-screen">
 
-<div id="landing-page">
-    <div class="stars"></div>
-    <div class="landing-logo">TADY</div>
-    <div style="color:white; margin-bottom:35px; opacity:0.9; letter-spacing: 3px; font-weight: 300;">PROJEKT M.D. • KONTINUUM</div>
-    <button class="btn-vstoupit" onclick="startApp()">VSTOUPIT</button>
-</div>
-
-<div id="app-interface">
-    <div class="nav-tabs">
-        <div class="tab active" id="tab-ar" onclick="switchTab('ar')">SÍŤ TADY</div>
-        <div class="tab" id="tab-map" onclick="switchTab('map')">MAPA</div>
-    </div>
-
-    <div id="qr-section">
-        <img src="https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=spayd%3A%2F%2Facc%3A2501981297%2F0800%26am%3A100%26cc%3ACZK%26msg%3ATADY_PROJEKT" alt="QR Platba">
-        <div class="qr-text">PODPOŘIT PROJEKT M.D.</div>
-    </div>
-
-    <div id="ar-view">
-        <video id="video" autoplay playsinline></video>
-        <div id="ar-overlay"></div>
-    </div>
-
-    <div id="map-view"></div>
-
-    <div class="ui-bottom">
-        <div class="input-box">
-            <input type="text" id="vzkaz-input" placeholder="Zanechte stopu M.D. v síti...">
-            <button class="btn-add" onclick="poslatDoNeonu()">+</button>
+    <nav class="fixed w-full z-50 px-6 py-4 flex justify-between items-center glass-card mt-4 mx-auto max-w-7xl left-0 right-0">
+        <div class="text-3xl font-extrabold tracking-tighter gradient-text">TADY</div>
+        <div class="hidden md:flex space-x-8 font-medium">
+            <a href="#" class="hover:text-blue-400 transition">Komunita</a>
+            <a href="#" class="hover:text-blue-400 transition">Projekty</a>
+            <a href="#" class="hover:text-blue-400 transition">Tržiště</a>
         </div>
-    </div>
-</div>
+        <button class="bg-blue-600 hover:bg-blue-500 px-6 py-2 rounded-full font-bold transition">Spustit aplikaci</button>
+    </nav>
 
-<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-<script>
-    let vzkazy = [];
-    let map;
-
-    async function startApp() {
-        document.getElementById('landing-page').style.display = 'none';
-        document.getElementById('app-interface').style.display = 'block';
-        try {
-            const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
-            document.getElementById('video').srcObject = stream;
-        } catch (e) { console.log("Kamera aktivována"); }
-        nactiZNeonu();
-    }
-
-    // NOVÝ KÓD: Načítání z Neonu
-    async function nactiZNeonu() {
-        try {
-            const res = await fetch('/api/vzkaz');
-            if(res.ok) {
-                vzkazy = await res.json();
-                renderAR();
-            }
-        } catch (e) { console.error("Chyba databáze"); }
-    }
-
-    function renderAR() {
-        const container = document.getElementById('ar-overlay');
-        // Zobrazíme poslední vzkazy z databáze (s.txt místo s.text)
-        container.innerHTML = vzkazy.slice(0, 4).map((v, i) => `
-            <div class="vzkaz-float" style="left: ${10 + (i*20)}%; top: ${25 + (i*12)}%;">
-                <b style="color: var(--cyan); font-size: 0.7rem;">M.D.</b><br>${v.txt || '---'}
+    <main class="pt-32 pb-20 px-6 max-w-7xl mx-auto">
+        <div class="text-center space-y-8">
+            <h1 class="text-6xl md:text-8xl font-black leading-tight">
+                TADY SE DĚJE <br>
+                <span class="gradient-text">VŠECHNO</span>
+            </h1>
+            <p class="text-xl text-gray-400 max-w-2xl mx-auto">
+                Jediná platforma, která propojuje reálný život, byznys a technologie v jeden celek. Vaše vize, vaše komunita, váš prostor.
+            </p>
+            <div class="flex flex-col md:flex-row justify-center gap-4 pt-10">
+                <button class="bg-white text-black text-lg font-bold px-10 py-4 rounded-2xl hover:bg-gray-200 transition">Vytvořit účet</button>
+                <button class="glass-card text-lg font-bold px-10 py-4 rounded-2xl hover:bg-white/10 transition">Více informací</button>
             </div>
-        `).join('');
-    }
+        </div>
 
-    // NOVÝ KÓD: Odesílání do Neonu
-    async function poslatDoNeonu() {
-        const text = document.getElementById('vzkaz-input').value;
-        if(!text) return;
+        <div class="mt-20 glass-card p-4 md:p-8 transform rotate-1 hover:rotate-0 transition-transform duration-700">
+            <div class="flex items-center justify-between mb-6">
+                <div class="flex space-x-2">
+                    <div class="w-3 h-3 bg-red-500 rounded-full"></div>
+                    <div class="w-3 h-3 bg-yellow-500 rounded-full"></div>
+                    <div class="w-3 h-3 bg-green-500 rounded-full"></div>
+                </div>
+                <div class="text-gray-500 text-sm">tady.app/dashboard</div>
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div class="h-40 bg-white/5 rounded-xl border border-white/10 p-4">
+                    <div class="text-gray-400 mb-2">Aktivní projekty</div>
+                    <div class="text-3xl font-bold">128</div>
+                </div>
+                <div class="h-40 bg-white/5 rounded-xl border border-white/10 p-4">
+                    <div class="text-gray-400 mb-2">Hodnota sítě</div>
+                    <div class="text-3xl font-bold">€ 1.2M</div>
+                </div>
+                <div class="h-40 bg-white/5 rounded-xl border border-white/10 p-4">
+                    <div class="text-gray-400 mb-2">Členové online</div>
+                    <div class="text-3xl font-bold">14,209</div>
+                </div>
+            </div>
+        </div>
+    </main>
 
-        navigator.geolocation.getCurrentPosition(async pos => {
-            const data = {
-                txt: text, type: 'ar_stopa',
-                lat: pos.coords.latitude, lng: pos.coords.longitude,
-                autor: 'M.D.'
-            };
-            const res = await fetch('/api/vzkaz', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(data)
-            });
-            if(res.ok) {
-                document.getElementById('vzkaz-input').value = '';
-                nactiZNeonu();
-            }
-        });
-    }
+    <footer class="py-10 text-center text-gray-600 border-t border-white/5">
+        &copy; 2025 TADY. Všechna práva vyhrazena. Iniciály zakladatele: M.D.
+    </footer>
 
-    function switchTab(type) {
-        document.getElementById('tab-ar').classList.toggle('active', type === 'ar');
-        document.getElementById('tab-map').classList.toggle('active', type === 'map');
-        
-        if(type === 'map') {
-            document.getElementById('map-view').style.display = 'block';
-            document.getElementById('qr-section').style.display = 'none';
-            if(!map) {
-                map = L.map('map-view').setView([50.91, 14.62], 13);
-                L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
-            }
-            vzkazy.forEach(v => {
-                if(v.lat && v.lng) L.marker([v.lat, v.lng]).addTo(map).bindPopup(v.txt);
-            });
-        } else {
-            document.getElementById('map-view').style.display = 'none';
-            document.getElementById('qr-section').style.display = 'block';
-        }
-    }
-</script>
 </body>
 </html>
