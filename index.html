@@ -2,8 +2,8 @@
 <html lang="cs">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TADY - Augmented Reality Interface</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>TADY - Všechno se děje tady</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
@@ -13,131 +13,153 @@
         
         :root { 
             --accent-cyan: #00f2fe; --accent-gold: #ffd700; 
-            --bg-main: #020202; --text-main: #ffffff;
-            --glass: rgba(15, 15, 15, 0.85); --border: rgba(255, 255, 255, 0.1);
+            --bg-main: #020202; --glass: rgba(10, 10, 10, 0.8);
+            --border: rgba(255, 255, 255, 0.08);
         }
 
-        .light-mode {
-            --bg-main: #f8fafc; --text-main: #0f172a;
-            --glass: rgba(255, 255, 255, 0.9); --border: rgba(0, 0, 0, 0.1);
-        }
-
-        body { font-family: 'Plus Jakarta Sans', sans-serif; background: var(--bg-main); color: var(--text-main); margin: 0; overflow: hidden; transition: 0.5s; }
+        body { font-family: 'Plus Jakarta Sans', sans-serif; background: var(--bg-main); color: white; margin: 0; overflow: hidden; user-select: none; }
         .gradient-text { background: linear-gradient(45deg, var(--accent-cyan) 0%, #4facfe 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        .glass-panel { background: var(--glass); backdrop-filter: blur(20px); border: 1px solid var(--border); }
         
-        .glass-card { background: var(--glass); backdrop-filter: blur(25px); border: 1px solid var(--border); transition: all 0.4s ease; }
-        
+        /* Map & Video layers */
         #ar-video { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; z-index: 0; display: none; transform: scaleX(-1); }
-        #map-bg { position: absolute; inset: 0; z-index: 1; transition: opacity 0.5s ease; }
-        .night-map { filter: brightness(0.25) contrast(1.2) grayscale(1); }
-        
-        .bottom-controls { position: absolute; bottom: 30px; right: 30px; z-index: 100; display: flex; gap: 15px; }
-        .ctrl-btn { width: 60px; height: 60px; border-radius: 20px; display: flex; align-items: center; justify-content: center; font-size: 20px; cursor: pointer; transition: 0.3s; }
-        .camera-active { background: #ff4b2b !important; color: white !important; animation: pulse 2s infinite; }
-        
-        .ar-float { animation: float 6s ease-in-out infinite; pointer-events: auto; }
-        @keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-12px); } }
-        
-        /* Audio vizualizace */
-        .audio-wave { display: flex; align-items: flex-end; gap: 2px; height: 12px; }
-        .wave-bar { width: 2px; background: var(--accent-cyan); animation: wave 1s infinite alternate; }
-        @keyframes wave { from { height: 2px; } to { height: 12px; } }
-        .wave-bar:nth-child(2) { animation-delay: 0.2s; }
-        .wave-bar:nth-child(3) { animation-delay: 0.4s; }
+        #map-bg { position: absolute; inset: 0; z-index: 1; filter: brightness(0.2) contrast(1.2); transition: 0.6s cubic-bezier(0.4, 0, 0.2, 1); }
 
-        .hidden { display: none; }
+        /* Energy & UI Elements */
+        #energy-fill { height: 100%; background: linear-gradient(90deg, var(--accent-cyan), #4facfe); box-shadow: 0 0 20px rgba(0, 242, 254, 0.5); transition: width 0.7s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+        .tab-btn { font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: 2px; transition: 0.3s; border-bottom: 2px solid transparent; }
+        .tab-btn.active { color: var(--accent-cyan); border-bottom-color: var(--accent-cyan); }
+
+        /* AR Traces & Animations */
+        .ar-float { animation: float 5s ease-in-out infinite; pointer-events: auto; }
+        @keyframes float { 0%, 100% { transform: translateY(0) scale(1); } 50% { transform: translateY(-15px) scale(1.02); } }
+        
+        .hot-spot { border: 2px solid var(--accent-cyan) !important; animation: hot-pulse 1.5s infinite alternate !important; background: rgba(0, 242, 254, 0.05) !important; }
+        @keyframes hot-pulse { 
+            from { box-shadow: 0 0 10px rgba(0, 242, 254, 0.2); border-color: rgba(0, 242, 254, 0.4); } 
+            to { box-shadow: 0 0 40px rgba(0, 242, 254, 0.6); border-color: var(--accent-cyan); } 
+        }
+
+        .camera-active { background: #ff3b3b !important; color: white !important; box-shadow: 0 0 20px rgba(255, 59, 59, 0.4); }
+        
+        /* Scrollbar hide */
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
     </style>
 </head>
-<body class="h-screen w-screen overflow-hidden">
+<body>
 
-    <div id="landing-page" class="absolute inset-0 z-[200] flex flex-col justify-center items-center px-6 text-center bg-[#020202]">
-        <div class="mb-4 text-3xl font-black gradient-text italic tracking-tighter italic">TADY</div>
-        <h1 class="text-6xl md:text-8xl font-extrabold mb-6 tracking-tight leading-none uppercase italic text-white italic">Audio<br><span class="gradient-text italic">Senzor</span></h1>
-        <button onclick="enterApp()" class="bg-white text-black font-extrabold px-16 py-6 rounded-2xl text-xs tracking-[0.3em] mt-8 hover:bg-cyan-400 transition italic">AKTIVOVAT PROSTOR</button>
-        <p class="mt-12 text-[10px] text-gray-500 font-bold tracking-widest uppercase italic italic">Founders Access: M.D.</p>
+    <div id="landing-page" class="absolute inset-0 z-[1000] flex flex-col justify-center items-center px-10 text-center bg-[#020202] transition-opacity duration-700">
+        <div class="mb-2 text-4xl font-black gradient-text italic tracking-tighter">TADY</div>
+        <div class="h-[1px] w-20 bg-white/10 mb-8"></div>
+        <h1 class="text-6xl font-extrabold mb-4 tracking-tight leading-none uppercase italic text-white">Všechno se<br><span class="gradient-text">děje tady</span></h1>
+        <p class="text-[10px] text-gray-500 font-bold tracking-[0.4em] uppercase mb-12 italic">M.D. INITIAL ACCESS 2025</p>
+        <button onclick="bootSystem()" class="relative group">
+            <div class="absolute -inset-1 bg-gradient-to-r from-cyan-500 to-blue-600 rounded-2xl blur opacity-25 group-hover:opacity-75 transition duration-1000"></div>
+            <div class="relative bg-white text-black font-black px-12 py-5 rounded-xl text-xs tracking-[0.3em] uppercase transition transform active:scale-95">Aktivovat systém</div>
+        </button>
     </div>
 
-    <div id="app-interface" class="hidden h-full w-full flex flex-col md:flex-row">
+    <div id="app-interface" class="hidden h-screen w-screen flex flex-col md:flex-row overflow-hidden">
         
-        <aside class="w-full md:w-[380px] glass-card p-8 flex flex-col z-50 border-r relative">
-            <div class="flex justify-between items-center mb-10">
-                <div class="text-2xl font-black gradient-text italic">TADY / Console</div>
-                <div id="audio-indicator" class="audio-wave opacity-50">
-                    <div class="wave-bar"></div><div class="wave-bar"></div><div class="wave-bar"></div>
+        <aside class="w-full md:w-[400px] glass-panel p-8 flex flex-col z-50 border-r relative">
+            <div class="flex justify-between items-center mb-8">
+                <div class="text-2xl font-black gradient-text italic tracking-tighter">TADY / CONSOLE</div>
+                <div class="flex gap-1">
+                    <div class="w-1 h-4 bg-cyan-500/50 animate-pulse"></div>
+                    <div class="w-1 h-4 bg-cyan-500 animate-pulse" style="animation-delay: 0.2s"></div>
                 </div>
             </div>
-            
-            <div class="space-y-6 flex-1 overflow-y-auto">
+
+            <div class="mb-8 p-5 bg-white/5 rounded-2xl border border-white/5">
+                <div class="flex justify-between items-end mb-3">
+                    <span class="text-[9px] font-black uppercase tracking-widest opacity-40">Energy Status</span>
+                    <span id="energy-val" class="text-lg font-black text-cyan-400 leading-none">30%</span>
+                </div>
+                <div class="w-full h-2 bg-black/50 rounded-full overflow-hidden">
+                    <div id="energy-fill" style="width: 30%"></div>
+                </div>
+            </div>
+
+            <div class="flex border-b border-white/5 mb-8">
+                <button onclick="switchTab('emit')" id="tab-emit" class="tab-btn active flex-1 pb-4">Vysílat</button>
+                <button onclick="switchTab('archive')" id="tab-archive" class="tab-btn flex-1 pb-4">Archiv</button>
+            </div>
+
+            <div id="content-emit" class="space-y-6 flex-1 overflow-y-auto no-scrollbar">
                 <div class="grid grid-cols-2 gap-3">
-                    <button onclick="setTraceType('business')" id="btn-biz" class="p-3 rounded-xl border border-white/10 text-[10px] font-bold uppercase transition">Byznys</button>
-                    <button onclick="setTraceType('personal')" id="btn-pers" class="p-3 rounded-xl border-2 border-cyan-500/50 bg-cyan-500/10 text-[10px] font-bold text-cyan-400 uppercase transition">Osobní</button>
+                    <button onclick="setMode('personal')" id="btn-pers" class="p-4 rounded-xl border-2 border-cyan-500 bg-cyan-500/10 text-[10px] font-bold text-cyan-400 uppercase italic">Osobní (+5)</button>
+                    <button onclick="setMode('business')" id="btn-biz" class="p-4 rounded-xl border border-white/10 text-[10px] font-bold text-white/40 uppercase italic">Byznys (+10)</button>
                 </div>
-
-                <div class="space-y-4">
-                    <input type="text" id="trace-title" class="w-full bg-white/5 border border-white/10 rounded-xl p-4 text-sm outline-none focus:border-cyan-500" placeholder="Název stopy">
-                    <textarea id="trace-desc" class="w-full bg-white/5 border border-white/10 rounded-xl p-4 text-sm h-24 outline-none focus:border-cyan-500" placeholder="Zpráva..."></textarea>
+                <div class="space-y-3">
+                    <input type="text" id="t-title" class="w-full bg-white/5 border border-white/10 rounded-xl p-4 text-sm outline-none focus:border-cyan-500 transition" placeholder="Název stopy...">
+                    <textarea id="t-desc" class="w-full bg-white/5 border border-white/10 rounded-xl p-4 text-sm h-28 outline-none focus:border-cyan-500 transition resize-none" placeholder="Co se tady děje?"></textarea>
                 </div>
-
-                <button onclick="placeTrace()" class="w-full bg-gradient-to-r from-blue-600 to-cyan-400 text-black p-5 rounded-2xl font-black text-[10px] uppercase tracking-widest hover:brightness-110 transition italic">VYSTŘELIT STOPU</button>
+                <button onclick="vysilat()" class="w-full bg-white text-black py-5 rounded-2xl font-black text-[11px] uppercase tracking-[0.3em] hover:bg-cyan-400 transition transform active:scale-95 italic">Vystřelit do prostoru</button>
             </div>
 
-            <div class="mt-8 pt-6 border-t border-white/10 flex items-center justify-between">
-                <div class="flex items-center space-x-3">
-                    <div class="w-10 h-10 bg-white/10 rounded-xl flex items-center justify-center font-bold border border-white/10 italic">MD</div>
-                    <div class="text-[10px]"><p class="font-bold uppercase italic">M.D. Verified</p></div>
+            <div id="content-archive" class="hidden flex-1 overflow-y-auto no-scrollbar">
+                <div id="archive-list" class="space-y-3">
+                    <p class="text-center text-[10px] opacity-30 mt-20 uppercase tracking-widest">Žádné záznamy v dosahu</p>
+                </div>
+            </div>
+
+            <div class="mt-8 pt-6 border-t border-white/5 flex items-center justify-between">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-white/10 to-transparent border border-white/10 flex items-center justify-center font-black text-xs">MD</div>
+                    <div>
+                        <p class="text-[10px] font-black uppercase italic tracking-tighter">M.D. Station</p>
+                        <p class="text-[8px] opacity-40 uppercase font-bold">Varnsdorf Sector</p>
+                    </div>
                 </div>
             </div>
         </aside>
 
-        <main class="flex-1 relative overflow-hidden bg-black">
+        <main class="flex-1 relative bg-black">
             <video id="ar-video" autoplay playsinline></video>
-            <div id="map-bg" class="night-map"></div>
-
-            <div id="trace-container" class="absolute inset-0 z-30 pointer-events-none p-20">
-                <div class="ar-float trace-item business absolute top-[25%] left-[35%] w-72 glass-card p-6 rounded-[35px] pointer-events-auto border-yellow-500/40 border">
-                    <h4 class="text-sm font-extrabold mb-1 italic">U Dědka AR Spot</h4>
-                    <p class="text-[10px] opacity-70 mb-4 italic">Poslouchejte tep města.</p>
-                    <button onclick="addReaction(this)" class="bg-white/5 px-3 py-1 rounded-full text-[10px]">🔥 <span class="count">312</span></button>
+            <div id="map-bg"></div>
+            
+            <div id="trace-container" class="absolute inset-0 z-30 pointer-events-none p-10 md:p-20 overflow-hidden">
                 </div>
-            </div>
 
-            <div class="bottom-controls">
-                <div onclick="toggleCamera()" id="cam-btn" class="ctrl-btn glass-card"><i class="fas fa-camera"></i></div>
-                <div onclick="toggleMode()" id="mode-btn" class="ctrl-btn glass-card">🌙</div>
+            <div class="absolute bottom-10 right-10 z-[100] flex flex-col gap-4">
+                <button onclick="toggleCamera()" id="cam-btn" class="w-14 h-14 rounded-2xl glass-panel flex items-center justify-center text-xl hover:border-cyan-500 transition duration-500">
+                    <i class="fas fa-camera"></i>
+                </button>
+                <button onclick="toggleMapMode()" class="w-14 h-14 rounded-2xl glass-panel flex items-center justify-center text-xl hover:border-cyan-500 transition duration-500">
+                    <i class="fas fa-layer-group"></i>
+                </button>
             </div>
         </main>
     </div>
 
     <script>
-        let currentType = 'personal';
-        let isDarkMode = true;
-        let isCameraOn = false;
+        let energy = 30;
+        let mode = 'personal';
+        let traces = [];
         let map, audioCtx;
+        let isCamOn = false;
 
-        // Audio System
-        function playSound(freq, type = 'sine', duration = 0.1) {
-            if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        // Sound System
+        function tone(freq, dur = 0.1, type = 'sine') {
+            if(!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
             const osc = audioCtx.createOscillator();
             const gain = audioCtx.createGain();
-            osc.type = type;
-            osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+            osc.type = type; osc.frequency.value = freq;
             gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
-            gain.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + duration);
-            osc.connect(gain);
-            gain.connect(audioCtx.destination);
-            osc.start();
-            osc.stop(audioCtx.currentTime + duration);
+            gain.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + dur);
+            osc.connect(gain); gain.connect(audioCtx.destination);
+            osc.start(); osc.stop(audioCtx.currentTime + dur);
         }
 
-        function enterApp() {
+        function bootSystem() {
             document.getElementById('landing-page').style.opacity = '0';
             setTimeout(() => {
-                document.getElementById('landing-page').classList.add('hidden');
+                document.getElementById('landing-page').style.display = 'none';
                 document.getElementById('app-interface').classList.remove('hidden');
                 initMap();
-                if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-                playSound(100, 'triangle', 0.5); // Start ambient sound
-            }, 500);
+                tone(200, 0.5, 'triangle');
+            }, 700);
         }
 
         function initMap() {
@@ -145,59 +167,135 @@
             L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png').addTo(map);
         }
 
+        function switchTab(t) {
+            document.getElementById('content-emit').classList.toggle('hidden', t !== 'emit');
+            document.getElementById('content-archive').classList.toggle('hidden', t !== 'archive');
+            document.getElementById('tab-emit').classList.toggle('active', t === 'emit');
+            document.getElementById('tab-archive').classList.toggle('active', t === 'archive');
+            if(t === 'archive') renderArchive();
+            tone(400, 0.05);
+        }
+
+        function setMode(m) {
+            mode = m;
+            document.getElementById('btn-pers').className = m === 'personal' ? 'p-4 rounded-xl border-2 border-cyan-500 bg-cyan-500/10 text-[10px] font-bold text-cyan-400 uppercase italic' : 'p-4 rounded-xl border border-white/10 text-[10px] font-bold text-white/40 uppercase italic';
+            document.getElementById('btn-biz').className = m === 'business' ? 'p-4 rounded-xl border-2 border-yellow-500 bg-yellow-500/10 text-[10px] font-bold text-yellow-500 uppercase italic' : 'p-4 rounded-xl border border-white/10 text-[10px] font-bold text-white/40 uppercase italic';
+            tone(600, 0.05);
+        }
+
+        function updateEnergy(val) {
+            energy = Math.min(100, Math.max(0, energy + val));
+            document.getElementById('energy-fill').style.width = energy + '%';
+            document.getElementById('energy-val').innerText = energy + '%';
+            if(energy >= 100) tone(1200, 0.6, 'square');
+        }
+
+        function vysilat() {
+            const title = document.getElementById('t-title').value;
+            const desc = document.getElementById('t-desc').value;
+            if(!title) return;
+
+            const trace = {
+                id: Date.now(),
+                title: title,
+                desc: desc,
+                type: mode,
+                hot: false,
+                x: Math.random() * 60 + 10,
+                y: Math.random() * 60 + 10,
+                likes: 0
+            };
+
+            traces.push(trace);
+            updateEnergy(mode === 'business' ? 10 : 5);
+            renderTraces();
+            tone(800, 0.2);
+            document.getElementById('t-title').value = '';
+            document.getElementById('t-desc').value = '';
+        }
+
+        function addLike(id) {
+            const t = traces.find(x => x.id === id);
+            t.likes++;
+            if(t.likes >= 5) t.hot = true;
+            updateEnergy(1);
+            renderTraces();
+            tone(1000, 0.1);
+        }
+
+        function renderTraces() {
+            const cont = document.getElementById('trace-container');
+            cont.innerHTML = traces.map(t => `
+                <div class="ar-float trace-item absolute glass-panel p-6 rounded-[30px] w-64 pointer-events-auto transition-all duration-500 ${t.hot ? 'hot-spot' : ''}" 
+                     style="left:${t.x}%; top:${t.y}%; border-color: ${t.type === 'business' ? 'rgba(255,215,0,0.3)' : 'rgba(0,242,254,0.3)'}">
+                    <div class="flex justify-between items-start mb-2">
+                         <h4 class="text-xs font-black uppercase italic tracking-tight">${t.title}</h4>
+                         ${t.hot ? '<i class="fas fa-fire text-orange-500 text-[10px] animate-pulse"></i>' : ''}
+                    </div>
+                    <p class="text-[10px] opacity-60 italic mb-4 leading-relaxed">"${t.desc}"</p>
+                    <button onclick="addLike(${t.id})" class="text-[10px] font-black bg-white/5 border border-white/10 px-4 py-2 rounded-full hover:bg-white/10 transition">
+                        ${t.type === 'business' ? '💎' : '🔥'} ${t.likes}
+                    </button>
+                </div>
+            `).join('');
+        }
+
+        function renderArchive() {
+            const list = document.getElementById('archive-list');
+            list.innerHTML = traces.length ? traces.map(t => `
+                <div class="p-4 bg-white/5 border border-white/10 rounded-xl">
+                    <div class="flex justify-between items-center mb-2">
+                        <span class="text-[10px] font-black uppercase italic ${t.type === 'business' ? 'text-yellow-500' : 'text-cyan-400'}">${t.title}</span>
+                        <span class="text-[8px] opacity-30">${new Date(t.id).toLocaleTimeString()}</span>
+                    </div>
+                    <div class="flex gap-2">
+                        <button onclick="boost(${t.id})" class="flex-1 bg-cyan-500/10 text-cyan-400 text-[8px] font-black py-2 rounded-lg uppercase tracking-widest">Boost (-20)</button>
+                        <button onclick="deleteTrace(${t.id})" class="w-10 bg-red-500/10 text-red-500 py-2 rounded-lg"><i class="fas fa-trash text-[8px]"></i></button>
+                    </div>
+                </div>
+            `).join('') : '<p class="text-center text-[10px] opacity-30 mt-20 uppercase tracking-widest">Prázdný archiv</p>';
+        }
+
+        function boost(id) {
+            if(energy < 20) return;
+            const t = traces.find(x => x.id === id);
+            t.hot = true;
+            updateEnergy(-20);
+            renderTraces(); renderArchive();
+            tone(1100, 0.4, 'square');
+        }
+
+        function deleteTrace(id) {
+            traces = traces.filter(x => x.id !== id);
+            renderTraces(); renderArchive();
+            tone(200, 0.1);
+        }
+
         async function toggleCamera() {
-            const video = document.getElementById('ar-video');
-            const camBtn = document.getElementById('cam-btn');
-            if (!isCameraOn) {
+            const v = document.getElementById('ar-video');
+            const btn = document.getElementById('cam-btn');
+            if(!isCamOn) {
                 try {
-                    const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } });
-                    video.srcObject = stream; video.style.display = 'block';
+                    const s = await navigator.mediaDevices.getUserMedia({video: {facingMode:'environment'}});
+                    v.srcObject = s; v.style.display = 'block';
                     document.getElementById('map-bg').style.opacity = '0';
-                    camBtn.classList.add('camera-active');
-                    isCameraOn = true;
-                    playSound(440, 'sine', 0.2);
-                } catch (err) { alert("Kamera nedostupná."); }
+                    btn.classList.add('camera-active');
+                    isCamOn = true;
+                    tone(440, 0.2);
+                } catch(e) { alert("Kamera zamítnuta."); }
             } else {
-                video.srcObject.getTracks().forEach(t => t.stop());
-                video.style.display = 'none';
+                v.srcObject.getTracks().forEach(t => t.stop());
+                v.style.display = 'none';
                 document.getElementById('map-bg').style.opacity = '1';
-                camBtn.classList.remove('camera-active');
-                isCameraOn = false;
+                btn.classList.remove('camera-active');
+                isCamOn = false;
             }
         }
 
-        function toggleMode() {
-            isDarkMode = !isDarkMode;
-            document.body.classList.toggle('light-mode');
-            document.getElementById('mode-btn').innerText = isDarkMode ? '🌙' : '☀️';
-            playSound(isDarkMode ? 200 : 600, 'sine', 0.1);
-        }
-
-        function setTraceType(type) {
-            currentType = type;
-            document.getElementById('btn-biz').className = type === 'business' ? 'p-3 rounded-xl border-2 border-yellow-500 bg-yellow-500/10 text-[10px] font-bold text-yellow-500 uppercase transition' : 'p-3 rounded-xl border border-gray-500 text-[10px] font-bold uppercase';
-            document.getElementById('btn-pers').className = type === 'personal' ? 'p-3 rounded-xl border-2 border-cyan-500 bg-cyan-500/10 text-[10px] font-bold text-cyan-400 uppercase transition' : 'p-3 rounded-xl border border-gray-500 text-[10px] font-bold uppercase';
-            playSound(300, 'square', 0.05);
-        }
-
-        function addReaction(btn) {
-            const count = btn.querySelector('.count');
-            count.innerText = parseInt(count.innerText) + 1;
-            playSound(currentType === 'business' ? 800 : 400, 'sine', 0.1);
-        }
-
-        function placeTrace() {
-            const title = document.getElementById('trace-title').value;
-            if(!title) return;
-            const container = document.getElementById('trace-container');
-            const newTrace = document.createElement('div');
-            newTrace.className = `ar-float trace-item absolute glass-card p-6 rounded-[35px] w-72 pointer-events-auto border ${currentType === 'business' ? 'border-yellow-500/40' : 'border-cyan-500/20'}`;
-            newTrace.style.left = (Math.random() * 60 + 10) + '%';
-            newTrace.style.top = (Math.random() * 60 + 10) + '%';
-            newTrace.innerHTML = `<h4 class="text-sm font-extrabold mb-1 italic uppercase">${title}</h4><p class="text-[10px] opacity-70 mb-4 italic">"${document.getElementById('trace-desc').value}"</p><button onclick="addReaction(this)" class="bg-white/5 px-3 py-1 rounded-full text-[10px] italic">${currentType==='business'?'🔥':'❤️'} <span class="count">0</span></button>`;
-            container.appendChild(newTrace);
-            playSound(1200, 'sine', 0.3); // High-tech "shoot" sound
-            document.getElementById('trace-title').value = ''; document.getElementById('trace-desc').value = '';
+        function toggleMapMode() {
+            const filter = document.getElementById('map-bg').style.filter;
+            document.getElementById('map-bg').style.filter = filter.includes('grayscale') ? 'brightness(0.6) contrast(1.2)' : 'brightness(0.2) contrast(1.2) grayscale(1)';
+            tone(500, 0.1);
         }
     </script>
 </body>
