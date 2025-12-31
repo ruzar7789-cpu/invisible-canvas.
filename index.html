@@ -3,232 +3,201 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TADY - Všechno důležité je tady</title>
+    <title>TADY - Augmented Reality Interface</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;600;800&display=swap');
         
-        :root {
-            --accent-cyan: #00f2fe;
-            --accent-blue: #4facfe;
-            --accent-gold: #ffd700;
+        :root { 
+            --accent-cyan: #00f2fe; --accent-gold: #ffd700; 
+            --bg-main: #020202; --text-main: #ffffff;
+            --glass: rgba(15, 15, 15, 0.85); --border: rgba(255, 255, 255, 0.1);
         }
 
-        body { 
-            font-family: 'Plus Jakarta Sans', sans-serif; 
-            background: #020202; 
-            color: white; 
-            margin: 0; 
-            overflow: hidden; 
+        .light-mode {
+            --bg-main: #f8fafc; --text-main: #0f172a;
+            --glass: rgba(255, 255, 255, 0.9); --border: rgba(0, 0, 0, 0.1);
         }
 
-        .gradient-text { 
-            background: linear-gradient(45deg, var(--accent-cyan) 0%, var(--accent-blue) 100%); 
-            -webkit-background-clip: text; 
-            -webkit-text-fill-color: transparent; 
-        }
-
-        .glass-card { 
-            background: rgba(255, 255, 255, 0.03); 
-            backdrop-filter: blur(25px); 
-            border: 1px solid rgba(255, 255, 255, 0.12); 
-            box-shadow: 0 20px 40px rgba(0,0,0,0.4);
-        }
-
-        /* Design virtuální vizitky */
-        .business-card {
-            border: 1px solid rgba(255, 215, 0, 0.3);
-            background: linear-gradient(135deg, rgba(255, 215, 0, 0.05) 0%, rgba(255, 255, 255, 0.02) 100%);
-            box-shadow: 0 0 30px rgba(255, 215, 0, 0.15);
-            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-        }
-
-        .business-card:hover {
-            transform: scale(1.05) translateY(-5px);
-            border-color: rgba(255, 215, 0, 0.6);
-        }
-
-        .personal-bubble {
-            border: 1px solid rgba(0, 242, 254, 0.2);
-            background: rgba(255, 255, 255, 0.02);
-        }
-
-        .btn-primary {
-            background: linear-gradient(90deg, #4facfe 0%, #00f2fe 100%);
-            transition: all 0.3s ease;
-        }
-
-        .btn-primary:hover {
-            box-shadow: 0 0 20px rgba(0, 242, 254, 0.4);
-            transform: translateY(-1px);
-        }
+        body { font-family: 'Plus Jakarta Sans', sans-serif; background: var(--bg-main); color: var(--text-main); margin: 0; overflow: hidden; transition: 0.5s; }
+        .gradient-text { background: linear-gradient(45deg, var(--accent-cyan) 0%, #4facfe 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        
+        .glass-card { background: var(--glass); backdrop-filter: blur(25px); border: 1px solid var(--border); transition: all 0.4s ease; }
+        
+        #ar-video { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; z-index: 0; display: none; transform: scaleX(-1); }
+        #map-bg { position: absolute; inset: 0; z-index: 1; transition: opacity 0.5s ease; }
+        .night-map { filter: brightness(0.25) contrast(1.2) grayscale(1); }
+        
+        .bottom-controls { position: absolute; bottom: 30px; right: 30px; z-index: 100; display: flex; gap: 15px; }
+        .ctrl-btn { width: 60px; height: 60px; border-radius: 20px; display: flex; align-items: center; justify-content: center; font-size: 20px; cursor: pointer; transition: 0.3s; }
+        .camera-active { background: #ff4b2b !important; color: white !important; animation: pulse 2s infinite; }
+        
+        .ar-float { animation: float 6s ease-in-out infinite; pointer-events: auto; }
+        @keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-12px); } }
+        
+        /* Audio vizualizace */
+        .audio-wave { display: flex; align-items: flex-end; gap: 2px; height: 12px; }
+        .wave-bar { width: 2px; background: var(--accent-cyan); animation: wave 1s infinite alternate; }
+        @keyframes wave { from { height: 2px; } to { height: 12px; } }
+        .wave-bar:nth-child(2) { animation-delay: 0.2s; }
+        .wave-bar:nth-child(3) { animation-delay: 0.4s; }
 
         .hidden { display: none; }
-        
-        .ar-float { animation: float 5s ease-in-out infinite; }
-        @keyframes float { 
-            0%, 100% { transform: translateY(0) rotate(0deg); } 
-            50% { transform: translateY(-20px) rotate(1deg); } 
-        }
-
-        /* Detailní zobrazení vizitky */
-        .card-detail {
-            animation: slideUp 0.3s ease-out;
-        }
-        @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
     </style>
 </head>
 <body class="h-screen w-screen overflow-hidden">
 
-    <div id="landing-page" class="absolute inset-0 z-50 flex flex-col justify-center items-center px-6 text-center bg-[#020202]">
-        <div class="mb-6 text-3xl font-black gradient-text tracking-tighter">TADY</div>
-        <h1 class="text-6xl md:text-8xl font-extrabold mb-6 tracking-tight leading-none">VŠE DŮLEŽITÉ<br>JE <span class="gradient-text italic uppercase">TADY</span></h1>
-        <p class="text-gray-400 max-w-lg mb-12 text-lg font-light leading-relaxed">
-            Nová dimenze reality. Sledujte byznys stopy a osobní vzkazy přímo v prostoru kolem vás.
-        </p>
-        <button onclick="enterApp()" class="btn-primary text-black font-extrabold px-14 py-5 rounded-2xl text-sm tracking-[0.2em] transition-all">
-            AKTIVOVAT ROZHRANÍ
-        </button>
-        <div class="mt-16 text-[10px] text-gray-500 uppercase tracking-widest font-bold opacity-50">Edition 2025 • M.D. Verified</div>
+    <div id="landing-page" class="absolute inset-0 z-[200] flex flex-col justify-center items-center px-6 text-center bg-[#020202]">
+        <div class="mb-4 text-3xl font-black gradient-text italic tracking-tighter italic">TADY</div>
+        <h1 class="text-6xl md:text-8xl font-extrabold mb-6 tracking-tight leading-none uppercase italic text-white italic">Audio<br><span class="gradient-text italic">Senzor</span></h1>
+        <button onclick="enterApp()" class="bg-white text-black font-extrabold px-16 py-6 rounded-2xl text-xs tracking-[0.3em] mt-8 hover:bg-cyan-400 transition italic">AKTIVOVAT PROSTOR</button>
+        <p class="mt-12 text-[10px] text-gray-500 font-bold tracking-widest uppercase italic italic">Founders Access: M.D.</p>
     </div>
 
     <div id="app-interface" class="hidden h-full w-full flex flex-col md:flex-row">
         
-        <aside class="w-full md:w-[400px] glass-card p-10 flex flex-col z-20 border-r border-white/10">
-            <div class="text-2xl font-black mb-12 tracking-tighter">TADY <span class="text-[10px] font-bold text-gray-500 ml-2 uppercase">Console v1.0</span></div>
+        <aside class="w-full md:w-[380px] glass-card p-8 flex flex-col z-50 border-r relative">
+            <div class="flex justify-between items-center mb-10">
+                <div class="text-2xl font-black gradient-text italic">TADY / Console</div>
+                <div id="audio-indicator" class="audio-wave opacity-50">
+                    <div class="wave-bar"></div><div class="wave-bar"></div><div class="wave-bar"></div>
+                </div>
+            </div>
             
-            <div class="space-y-8 flex-1 overflow-y-auto">
-                <div>
-                    <h3 class="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-4">Typ digitální stopy</h3>
-                    <div class="grid grid-cols-2 gap-4">
-                        <button onclick="setTraceType('business')" id="btn-biz" class="p-4 rounded-xl border border-white/10 text-[10px] font-bold uppercase transition hover:bg-white/5">
-                            Byznys (Zlato)
-                        </button>
-                        <button onclick="setTraceType('personal')" id="btn-pers" class="p-4 rounded-xl border-2 border-cyan-500/50 bg-cyan-500/10 text-[10px] font-bold text-cyan-400 uppercase transition">
-                            Osobní (Čirá)
-                        </button>
-                    </div>
+            <div class="space-y-6 flex-1 overflow-y-auto">
+                <div class="grid grid-cols-2 gap-3">
+                    <button onclick="setTraceType('business')" id="btn-biz" class="p-3 rounded-xl border border-white/10 text-[10px] font-bold uppercase transition">Byznys</button>
+                    <button onclick="setTraceType('personal')" id="btn-pers" class="p-3 rounded-xl border-2 border-cyan-500/50 bg-cyan-500/10 text-[10px] font-bold text-cyan-400 uppercase transition">Osobní</button>
                 </div>
 
-                <div>
-                    <h3 class="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-4">Zpráva nebo Název firmy</h3>
-                    <input type="text" id="trace-title" class="w-full bg-white/5 border border-white/10 rounded-xl p-4 text-sm outline-none focus:border-blue-500 mb-3" placeholder="Např. Restaurace U Dědka">
-                    <textarea id="trace-desc" class="w-full bg-white/5 border border-white/10 rounded-xl p-4 text-sm h-24 outline-none focus:border-blue-500" placeholder="Popis nebo vzkaz..."></textarea>
+                <div class="space-y-4">
+                    <input type="text" id="trace-title" class="w-full bg-white/5 border border-white/10 rounded-xl p-4 text-sm outline-none focus:border-cyan-500" placeholder="Název stopy">
+                    <textarea id="trace-desc" class="w-full bg-white/5 border border-white/10 rounded-xl p-4 text-sm h-24 outline-none focus:border-cyan-500" placeholder="Zpráva..."></textarea>
                 </div>
 
-                <button onclick="placeTrace()" class="btn-primary w-full p-5 rounded-2xl font-black text-xs text-black uppercase tracking-widest">
-                    Umístit do AR prostoru
-                </button>
+                <button onclick="placeTrace()" class="w-full bg-gradient-to-r from-blue-600 to-cyan-400 text-black p-5 rounded-2xl font-black text-[10px] uppercase tracking-widest hover:brightness-110 transition italic">VYSTŘELIT STOPU</button>
             </div>
 
-            <div class="mt-10 pt-8 border-t border-white/10 flex items-center justify-between">
-                <div class="flex items-center space-x-4">
-                    <div class="w-12 h-12 bg-gradient-to-br from-blue-500 to-cyan-400 rounded-2xl flex items-center justify-center font-bold text-black shadow-lg shadow-cyan-500/20">MD</div>
-                    <div>
-                        <p class="font-bold text-sm">M.D.</p>
-                        <p class="text-[10px] text-green-500 font-bold uppercase">Zakladatel</p>
-                    </div>
+            <div class="mt-8 pt-6 border-t border-white/10 flex items-center justify-between">
+                <div class="flex items-center space-x-3">
+                    <div class="w-10 h-10 bg-white/10 rounded-xl flex items-center justify-center font-bold border border-white/10 italic">MD</div>
+                    <div class="text-[10px]"><p class="font-bold uppercase italic">M.D. Verified</p></div>
                 </div>
             </div>
         </aside>
 
-        <main class="flex-1 relative bg-[#010101] flex items-center justify-center">
-            <div class="absolute inset-0 opacity-10 bg-[radial-gradient(#ffffff_1px,transparent_1px)] [background-size:40px_40px]"></div>
-            <div id="trace-container" class="w-full h-full relative">
-                
-                <div class="ar-float absolute top-1/4 left-1/4 w-72 business-card p-6 rounded-[32px] glass-card card-detail">
-                    <div class="flex items-center justify-between mb-4">
-                        <div class="w-10 h-10 bg-yellow-500/20 rounded-xl flex items-center justify-center border border-yellow-500/50">
-                            <span class="text-yellow-500 text-lg">★</span>
-                        </div>
-                        <span class="text-[10px] font-bold text-yellow-500/70 uppercase tracking-widest italic">Business</span>
-                    </div>
-                    <h4 class="text-xl font-extrabold mb-1 tracking-tight">Fusion Bistro</h4>
-                    <p class="text-xs text-gray-400 mb-4 leading-relaxed">Čerstvá energie pro váš den. Speciální menu k nahlédnutí.</p>
-                    <button class="w-full bg-yellow-500/10 border border-yellow-500/30 py-3 rounded-xl text-[10px] font-bold text-yellow-500 hover:bg-yellow-500/20 transition uppercase">Zobrazit Menu</button>
-                </div>
+        <main class="flex-1 relative overflow-hidden bg-black">
+            <video id="ar-video" autoplay playsinline></video>
+            <div id="map-bg" class="night-map"></div>
 
-                <div class="ar-float absolute bottom-1/4 right-1/3 w-64 personal-bubble p-6 rounded-[32px] glass-card card-detail">
-                    <span class="text-[9px] font-black text-cyan-400 uppercase tracking-widest mb-3 block"># Osobní vzkaz</span>
-                    <p class="text-sm font-medium italic text-gray-200 leading-relaxed">"Tady jsme se poprvé potkali. M."</p>
-                    <div class="mt-4 flex items-center space-x-2 opacity-50">
-                        <div class="w-1 h-1 bg-white rounded-full"></div>
-                        <span class="text-[9px] font-bold">Před 2 dny</span>
-                    </div>
+            <div id="trace-container" class="absolute inset-0 z-30 pointer-events-none p-20">
+                <div class="ar-float trace-item business absolute top-[25%] left-[35%] w-72 glass-card p-6 rounded-[35px] pointer-events-auto border-yellow-500/40 border">
+                    <h4 class="text-sm font-extrabold mb-1 italic">U Dědka AR Spot</h4>
+                    <p class="text-[10px] opacity-70 mb-4 italic">Poslouchejte tep města.</p>
+                    <button onclick="addReaction(this)" class="bg-white/5 px-3 py-1 rounded-full text-[10px]">🔥 <span class="count">312</span></button>
                 </div>
+            </div>
 
+            <div class="bottom-controls">
+                <div onclick="toggleCamera()" id="cam-btn" class="ctrl-btn glass-card"><i class="fas fa-camera"></i></div>
+                <div onclick="toggleMode()" id="mode-btn" class="ctrl-btn glass-card">🌙</div>
             </div>
         </main>
     </div>
 
     <script>
         let currentType = 'personal';
+        let isDarkMode = true;
+        let isCameraOn = false;
+        let map, audioCtx;
+
+        // Audio System
+        function playSound(freq, type = 'sine', duration = 0.1) {
+            if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.type = type;
+            osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+            gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + duration);
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+            osc.start();
+            osc.stop(audioCtx.currentTime + duration);
+        }
 
         function enterApp() {
             document.getElementById('landing-page').style.opacity = '0';
             setTimeout(() => {
                 document.getElementById('landing-page').classList.add('hidden');
                 document.getElementById('app-interface').classList.remove('hidden');
+                initMap();
+                if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                playSound(100, 'triangle', 0.5); // Start ambient sound
             }, 500);
+        }
+
+        function initMap() {
+            map = L.map('map-bg', { zoomControl: false, attributionControl: false }).setView([50.912, 14.619], 15);
+            L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png').addTo(map);
+        }
+
+        async function toggleCamera() {
+            const video = document.getElementById('ar-video');
+            const camBtn = document.getElementById('cam-btn');
+            if (!isCameraOn) {
+                try {
+                    const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } });
+                    video.srcObject = stream; video.style.display = 'block';
+                    document.getElementById('map-bg').style.opacity = '0';
+                    camBtn.classList.add('camera-active');
+                    isCameraOn = true;
+                    playSound(440, 'sine', 0.2);
+                } catch (err) { alert("Kamera nedostupná."); }
+            } else {
+                video.srcObject.getTracks().forEach(t => t.stop());
+                video.style.display = 'none';
+                document.getElementById('map-bg').style.opacity = '1';
+                camBtn.classList.remove('camera-active');
+                isCameraOn = false;
+            }
+        }
+
+        function toggleMode() {
+            isDarkMode = !isDarkMode;
+            document.body.classList.toggle('light-mode');
+            document.getElementById('mode-btn').innerText = isDarkMode ? '🌙' : '☀️';
+            playSound(isDarkMode ? 200 : 600, 'sine', 0.1);
         }
 
         function setTraceType(type) {
             currentType = type;
-            const bBiz = document.getElementById('btn-biz');
-            const bPers = document.getElementById('btn-pers');
-            
-            if(type === 'business') {
-                bBiz.classList.add('border-yellow-500/50', 'bg-yellow-500/10', 'text-yellow-500', 'border-2');
-                bPers.classList.remove('border-cyan-500/50', 'bg-cyan-500/10', 'text-cyan-400', 'border-2');
-            } else {
-                bPers.classList.add('border-cyan-500/50', 'bg-cyan-500/10', 'text-cyan-400', 'border-2');
-                bBiz.classList.remove('border-yellow-500/50', 'bg-yellow-500/10', 'text-yellow-500', 'border-2');
-            }
+            document.getElementById('btn-biz').className = type === 'business' ? 'p-3 rounded-xl border-2 border-yellow-500 bg-yellow-500/10 text-[10px] font-bold text-yellow-500 uppercase transition' : 'p-3 rounded-xl border border-gray-500 text-[10px] font-bold uppercase';
+            document.getElementById('btn-pers').className = type === 'personal' ? 'p-3 rounded-xl border-2 border-cyan-500 bg-cyan-500/10 text-[10px] font-bold text-cyan-400 uppercase transition' : 'p-3 rounded-xl border border-gray-500 text-[10px] font-bold uppercase';
+            playSound(300, 'square', 0.05);
+        }
+
+        function addReaction(btn) {
+            const count = btn.querySelector('.count');
+            count.innerText = parseInt(count.innerText) + 1;
+            playSound(currentType === 'business' ? 800 : 400, 'sine', 0.1);
         }
 
         function placeTrace() {
             const title = document.getElementById('trace-title').value;
-            const desc = document.getElementById('trace-desc').value;
             if(!title) return;
-
             const container = document.getElementById('trace-container');
             const newTrace = document.createElement('div');
-            
-            const x = Math.random() * 50 + 10;
-            const y = Math.random() * 50 + 10;
-
-            if(currentType === 'business') {
-                newTrace.className = 'ar-float absolute w-72 business-card p-6 rounded-[32px] glass-card card-detail';
-                newTrace.style.left = x + '%';
-                newTrace.style.top = y + '%';
-                newTrace.innerHTML = `
-                    <div class="flex items-center justify-between mb-4">
-                        <div class="w-10 h-10 bg-yellow-500/20 rounded-xl flex items-center justify-center border border-yellow-500/50">
-                            <span class="text-yellow-500 text-lg">★</span>
-                        </div>
-                        <span class="text-[10px] font-bold text-yellow-500/70 uppercase tracking-widest italic font-bold">Business</span>
-                    </div>
-                    <h4 class="text-xl font-extrabold mb-1 tracking-tight">${title}</h4>
-                    <p class="text-xs text-gray-400 mb-4 leading-relaxed">${desc}</p>
-                    <button class="w-full bg-yellow-500/10 border border-yellow-500/30 py-3 rounded-xl text-[10px] font-bold text-yellow-500 hover:bg-yellow-500/20 transition uppercase">Kontaktovat</button>
-                `;
-            } else {
-                newTrace.className = 'ar-float absolute w-64 personal-bubble p-6 rounded-[32px] glass-card card-detail';
-                newTrace.style.left = x + '%';
-                newTrace.style.top = y + '%';
-                newTrace.innerHTML = `
-                    <span class="text-[9px] font-black text-cyan-400 uppercase tracking-widest mb-3 block"># ${title}</span>
-                    <p class="text-sm font-medium italic text-gray-200 leading-relaxed">"${desc}"</p>
-                    <div class="mt-4 flex items-center space-x-2 opacity-50">
-                        <div class="w-1 h-1 bg-white rounded-full"></div>
-                        <span class="text-[9px] font-bold uppercase">Právě teď</span>
-                    </div>
-                `;
-            }
-
+            newTrace.className = `ar-float trace-item absolute glass-card p-6 rounded-[35px] w-72 pointer-events-auto border ${currentType === 'business' ? 'border-yellow-500/40' : 'border-cyan-500/20'}`;
+            newTrace.style.left = (Math.random() * 60 + 10) + '%';
+            newTrace.style.top = (Math.random() * 60 + 10) + '%';
+            newTrace.innerHTML = `<h4 class="text-sm font-extrabold mb-1 italic uppercase">${title}</h4><p class="text-[10px] opacity-70 mb-4 italic">"${document.getElementById('trace-desc').value}"</p><button onclick="addReaction(this)" class="bg-white/5 px-3 py-1 rounded-full text-[10px] italic">${currentType==='business'?'🔥':'❤️'} <span class="count">0</span></button>`;
             container.appendChild(newTrace);
-            document.getElementById('trace-title').value = '';
-            document.getElementById('trace-desc').value = '';
+            playSound(1200, 'sine', 0.3); // High-tech "shoot" sound
+            document.getElementById('trace-title').value = ''; document.getElementById('trace-desc').value = '';
         }
     </script>
 </body>
