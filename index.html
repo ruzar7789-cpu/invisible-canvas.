@@ -13,64 +13,76 @@
         :root { --accent-cyan: #00f2fe; --accent-gold: #ffca2c; --accent-purple: #bf5af2; --active-color: #00f2fe; }
         body { font-family: 'Plus Jakarta Sans', sans-serif; background: #000; color: white; margin: 0; overflow: hidden; touch-action: manipulation; }
 
-        /* BOOT SEQUENCE */
-        #boot-bar-wrap { width: 280px; height: 3px; background: rgba(255,255,255,0.05); position: relative; }
-        #boot-progress { width: 0%; height: 100%; background: var(--accent-cyan); box-shadow: 0 0 30px var(--accent-cyan); transition: width 0.1s linear; }
+        /* --- NOVÁ ÚVODNÍ STRÁNKA --- */
+        #landing-page { transition: opacity 1s cubic-bezier(0.4, 0, 0.2, 1); }
         
-        /* MAPA */
-        #map-bg { position: absolute; inset: 0; z-index: 1; filter: contrast(1.1) brightness(0.6) saturate(0.9); transition: opacity 0.5s; }
-        
-        /* AR ZAMĚŘOVAČ */
-        #ar-reticle {
-            position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%);
-            width: 40px; height: 40px; border: 2px solid white; border-radius: 50%;
-            display: none; z-index: 1500; pointer-events: none; opacity: 0.5;
+        .glitch-text {
+            font-size: clamp(4rem, 15vw, 8rem);
+            font-weight: 900;
+            letter-spacing: -0.05em;
+            position: relative;
+            text-transform: uppercase;
+            font-style: italic;
+        }
+        .glitch-text::before, .glitch-text::after {
+            content: 'TADY';
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            opacity: 0.8;
+        }
+        .glitch-text::before { color: #0ff; z-index: -1; animation: glitch 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94) both infinite; }
+        .glitch-text::after { color: #f0f; z-index: -2; animation: glitch 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94) reverse both infinite; }
+
+        @keyframes glitch {
+            0% { transform: translate(0); }
+            20% { transform: translate(-3px, 3px); }
+            40% { transform: translate(-3px, -3px); }
+            60% { transform: translate(3px, 3px); }
+            80% { transform: translate(3px, -3px); }
+            100% { transform: translate(0); }
         }
 
-        /* PULSNÍ BOD */
-        .pulse-marker {
-            width: 12px; height: 12px; background: var(--active-color);
-            border-radius: 50%; box-shadow: 0 0 15px var(--active-color);
-            animation: markerPulse 2s infinite;
+        #boot-log {
+            font-size: 8px; font-family: monospace; color: var(--accent-cyan);
+            opacity: 0.5; height: 12px; margin-top: 10px; text-transform: uppercase; letter-spacing: 2px;
         }
-        @keyframes markerPulse { 0% { transform: scale(1); opacity: 1; } 100% { transform: scale(3); opacity: 0; } }
 
-        /* RADAR */
-        #radar-panel {
-            position: absolute; bottom: 0; left: 0; right: 0; 
-            background: rgba(0,0,0,0.92); backdrop-filter: blur(30px);
-            border-top: 1px solid rgba(255,255,255,0.1); z-index: 5000;
-            transition: transform 0.6s cubic-bezier(0.19, 1, 0.22, 1);
-            transform: translateY(calc(100% - 80px)); border-radius: 40px 40px 0 0;
-        }
-        #radar-panel.open { transform: translateY(0); }
+        #boot-bar-wrap { width: 200px; height: 2px; background: rgba(255,255,255,0.1); margin-top: 30px; position: relative; overflow: hidden; }
+        #boot-progress { width: 0%; height: 100%; background: white; box-shadow: 0 0 15px white; transition: width 0.1s linear; }
 
-        .wave-bar { width: 4px; height: 5px; background: var(--active-color); border-radius: 10px; transition: height 0.05s ease; }
+        /* --- MAPA A UI --- */
+        #map-bg { position: absolute; inset: 0; z-index: 1; filter: contrast(1.1) brightness(0.5) saturate(0.8); transition: opacity 0.8s; }
         .active-mode { border-color: var(--active-color) !important; color: var(--active-color) !important; background: rgba(255,255,255,0.05); }
         #ar-video { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; z-index: 0; display: none; }
         
         .neon-trace { 
-            background: rgba(10, 10, 10, 0.9); backdrop-filter: blur(40px);
-            border: 2px solid var(--active-color); border-radius: 40px; padding: 25px; 
-            width: 90%; max-width: 320px; position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%);
-            z-index: 2000; pointer-events: auto;
+            background: rgba(0, 0, 0, 0.95); backdrop-filter: blur(20px);
+            border: 1px solid var(--active-color); border-radius: 35px; padding: 25px; 
+            width: 85%; max-width: 320px; position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%);
+            z-index: 2000; pointer-events: auto; box-shadow: 0 0 40px rgba(0,0,0,0.8);
         }
 
-        .price-tag { font-size: 8px; font-weight: 800; opacity: 0.6; margin-top: 4px; display: block; }
+        #radar-panel {
+            position: absolute; bottom: 0; left: 0; right: 0; 
+            background: rgba(0,0,0,0.95); backdrop-filter: blur(40px);
+            border-top: 1px solid rgba(255,255,255,0.05); z-index: 5000;
+            transition: transform 0.6s cubic-bezier(0.19, 1, 0.22, 1);
+            transform: translateY(calc(100% - 80px)); border-radius: 40px 40px 0 0;
+        }
+        #radar-panel.open { transform: translateY(0); }
+        .wave-bar { width: 4px; height: 5px; background: var(--active-color); border-radius: 10px; transition: height 0.05s ease; }
     </style>
 </head>
 <body>
 
     <div id="landing-page" class="fixed inset-0 z-[9999] bg-black flex flex-col justify-center items-center">
-        <div class="text-[80px] font-black italic text-white tracking-tighter">TADY</div>
-        <div class="text-[10px] font-bold text-white/30 tracking-[1em] uppercase mb-12">invisible-canes</div>
+        <div class="glitch-text">TADY</div>
+        <div id="boot-log">Inicializace systému...</div>
         <div id="boot-bar-wrap"><div id="boot-progress"></div></div>
-        <button onclick="bootApp()" id="boot-btn" class="hidden bg-white text-black font-black px-16 py-5 rounded-full text-[11px] tracking-[0.5em] uppercase italic mt-10">Inicializovat</button>
+        <button onclick="bootApp()" id="boot-btn" class="hidden bg-white text-black font-black px-12 py-4 rounded-full text-[10px] tracking-[0.4em] uppercase italic mt-12 hover:scale-105 transition-all">Vstoupit</button>
     </div>
 
     <div id="app-interface" class="hidden h-screen w-screen flex flex-col md:flex-row overflow-hidden">
-        <div class="absolute top-10 left-10 z-[100] text-[9px] font-black tracking-[0.3em] text-white/40 uppercase italic">Authorized: M.D.</div>
-        <div id="ar-reticle"></div>
+        <div class="absolute top-10 left-10 z-[100] text-[9px] font-black tracking-[0.3em] text-white/30 uppercase italic">Authorized: M.D.</div>
 
         <aside class="w-full md:w-[380px] bg-black p-8 flex flex-col z-[50] border-r border-white/5 overflow-y-auto">
             <div class="mb-10 mt-6">
@@ -80,18 +92,9 @@
             
             <div class="space-y-5 flex-1">
                 <div class="grid grid-cols-3 gap-2 text-center">
-                    <button onclick="setMode('personal')" id="btn-p" class="p-3 rounded-2xl border border-white/10 text-[9px] font-black uppercase active-mode">
-                        Personal
-                        <span class="price-tag">29 Kč</span>
-                    </button>
-                    <button onclick="setMode('business')" id="btn-b" class="p-3 rounded-2xl border border-white/10 text-[9px] font-black uppercase text-white/20">
-                        Business
-                        <span class="price-tag">199 Kč</span>
-                    </button>
-                    <button onclick="setMode('capsule')" id="btn-c" class="p-3 rounded-2xl border border-white/10 text-[9px] font-black uppercase text-white/20">
-                        Capsule
-                        <span class="price-tag">49 Kč</span>
-                    </button>
+                    <button onclick="setMode('personal')" id="btn-p" class="p-3 rounded-2xl border border-white/10 text-[9px] font-black uppercase active-mode">Personal<span class="block text-[7px] opacity-50 mt-1">29 Kč</span></button>
+                    <button onclick="setMode('business')" id="btn-b" class="p-3 rounded-2xl border border-white/10 text-[9px] font-black uppercase text-white/20">Business<span class="block text-[7px] opacity-50 mt-1">199 Kč</span></button>
+                    <button onclick="setMode('capsule')" id="btn-c" class="p-3 rounded-2xl border border-white/10 text-[9px] font-black uppercase text-white/20">Capsule<span class="block text-[7px] opacity-50 mt-1">49 Kč</span></button>
                 </div>
 
                 <input type="text" id="t-title" class="w-full p-5 bg-white/5 border border-white/10 rounded-2xl text-[11px] font-bold text-white uppercase outline-none focus:border-cyan-400" placeholder="Kód záznamu">
@@ -131,28 +134,32 @@
     <script>
         let map, currentMode = 'personal', activeTrace = null, selectedImg = null, videoStream = null;
         let isRecording = false, audioCtx, audioSource, analyser, animationId, userCoords = [50.912, 14.619];
-        const config = { 
-            personal: { color: '#00f2fe', price: 29 }, 
-            business: { color: '#ffca2c', price: 199 }, 
-            capsule: { color: '#bf5af2', price: 49 } 
-        };
+        const config = { personal: { color: '#00f2fe', price: 29 }, business: { color: '#ffca2c', price: 199 }, capsule: { color: '#bf5af2', price: 49 } };
 
+        // LOGIKA ÚVODNÍHO BOOTU
         window.onload = () => {
             const bar = document.getElementById('boot-progress');
+            const log = document.getElementById('boot-log');
             const btn = document.getElementById('boot-btn');
+            const logs = ["Příprava jádra...", "Lokalizace GPS...", "Aktivace senzorů...", "Šifrování kanálu...", "Všechno důležité je tady."];
             let p = 0;
             let iv = setInterval(() => {
-                p += 5; if(p >= 100) { p = 100; clearInterval(iv); btn.classList.remove('hidden'); }
+                p += Math.floor(Math.random() * 3) + 1;
+                if (p % 20 === 0) log.innerText = logs[Math.floor(p/25)] || logs[4];
+                if(p >= 100) { p = 100; clearInterval(iv); btn.classList.remove('hidden'); log.innerText = "Systém připraven."; }
                 bar.style.width = p + '%';
-            }, 30);
+            }, 50);
         };
 
         function bootApp() { 
             audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-            document.getElementById('landing-page').style.display = 'none'; 
-            document.getElementById('app-interface').classList.remove('hidden'); 
-            initMap();
-            loadStoredTraces();
+            document.getElementById('landing-page').style.opacity = '0';
+            setTimeout(() => {
+                document.getElementById('landing-page').style.display = 'none'; 
+                document.getElementById('app-interface').classList.remove('hidden'); 
+                initMap();
+                loadStoredTraces();
+            }, 1000);
         }
 
         function initMap() {
@@ -205,21 +212,17 @@
             if(activeTrace) activeTrace.remove();
             activeTrace = document.createElement('div');
             activeTrace.className = "neon-trace";
-            let imgPart = selectedImg ? `<img src="${selectedImg}" class="w-full h-24 object-cover rounded-2xl mb-4">` : '';
             activeTrace.innerHTML = `
-                ${imgPart}
-                <div class="text-[8px] font-bold text-center uppercase opacity-50 mb-1" style="color:var(--active-color)">Tarif: ${currentMode}</div>
-                <h2 class="text-lg font-black italic uppercase text-center mb-1">${document.getElementById('t-title').value || 'ZÁZNAM'}</h2>
-                <p class="text-[10px] text-white/50 text-center mb-6 px-2">"${document.getElementById('t-desc').value || 'Bez popisu.'}"</p>
-                <button onclick="confirmTrace()" class="w-full bg-white text-black py-4 rounded-full font-black text-[10px] uppercase">Zaplatit a Ukotvit (${config[currentMode].price} Kč)</button>
+                <div class="text-[7px] font-bold text-center uppercase opacity-50 mb-1" style="color:var(--active-color)">${currentMode} access</div>
+                <h2 class="text-lg font-black italic uppercase text-center mb-1">${document.getElementById('t-title').value || 'M.D. ZÁZNAM'}</h2>
+                <p class="text-[10px] text-white/50 text-center mb-6 px-4">"${document.getElementById('t-desc').value || 'Záznam v prostoru.'}"</p>
+                <button onclick="confirmTrace()" class="w-full bg-white text-black py-4 rounded-full font-black text-[9px] uppercase tracking-[0.2em]">Zaplatit ${config[currentMode].price} Kč</button>
             `;
             document.getElementById('trace-container').appendChild(activeTrace);
         }
 
         function confirmTrace() {
-            // HAPTICKÁ ODEZVA (VIBRACE)
-            if ("vibrate" in navigator) { navigator.vibrate(80); }
-
+            if ("vibrate" in navigator) { navigator.vibrate(60); }
             const traceData = {
                 title: document.getElementById('t-title').value || 'ZÁZNAM',
                 desc: document.getElementById('t-desc').value,
@@ -234,17 +237,16 @@
             updateTotal();
             if(activeTrace) activeTrace.remove();
             activeTrace = null;
-            selectedImg = null;
         }
 
         function addTraceToUI(data) {
-            const icon = L.divIcon({ className: 'custom-div-icon', html: `<div class="pulse-marker" style="background:${config[data.mode].color}"></div>`, iconSize: [12, 12] });
-            L.marker(data.coords, { icon }).addTo(map).bindPopup(`<b>${data.title}</b><br>${data.price} Kč`);
+            const icon = L.divIcon({ className: 'custom-div-icon', html: `<div style="width:10px;height:10px;background:${config[data.mode].color};border-radius:50%;box-shadow:0 0 10px ${config[data.mode].color}"></div>`, iconSize: [10, 10] });
+            L.marker(data.coords, { icon }).addTo(map);
 
             const item = document.createElement('div');
-            item.className = 'flex justify-between items-center p-5 bg-white/5 rounded-3xl border border-white/5';
-            item.innerHTML = `<div><div class="text-[12px] font-black uppercase">${data.title}</div><div class="text-[8px] text-white/30 uppercase">${data.mode} • ${data.price} Kč • ${data.time}</div></div>
-                              <div class="w-2 h-2 rounded-full" style="background:${config[data.mode].color}"></div>`;
+            item.className = 'flex justify-between items-center p-5 bg-white/5 rounded-3xl border border-white/10 transition-all';
+            item.innerHTML = `<div><div class="text-[11px] font-black uppercase">${data.title}</div><div class="text-[7px] text-white/30 uppercase">${data.mode} • ${data.price} Kč</div></div>
+                              <div class="w-1.5 h-1.5 rounded-full" style="background:${config[data.mode].color}"></div>`;
             document.getElementById('radar-list').prepend(item);
         }
 
@@ -267,21 +269,17 @@
         }
 
         function toggleRadar() { document.getElementById('radar-panel').classList.toggle('open'); }
-        function handleImage(input) {
-            const r = new FileReader();
-            r.onload = (e) => selectedImg = e.target.result;
-            r.readAsDataURL(input.files[0]);
-        }
+        function handleImage(input) {}
         async function toggleCam() {
-            const v = document.getElementById('ar-video'), m = document.getElementById('map-bg'), r = document.getElementById('ar-reticle');
+            const v = document.getElementById('ar-video'), m = document.getElementById('map-bg');
             if(v.style.display !== 'block') {
                 try {
                     videoStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
-                    v.srcObject = videoStream; v.style.display = 'block'; m.style.opacity = '0.3'; r.style.display = 'block';
+                    v.srcObject = videoStream; v.style.display = 'block'; m.style.opacity = '0.3';
                 } catch(e) { alert("Kamera nedostupná."); }
             } else {
                 if(videoStream) videoStream.getTracks().forEach(t => t.stop());
-                v.style.display = 'none'; m.style.opacity = '1'; r.style.display = 'none';
+                v.style.display = 'none'; m.style.opacity = '1';
             }
         }
     </script>
