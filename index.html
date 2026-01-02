@@ -4,228 +4,160 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>TADY // invisible-canes // M.D.</title>
-    
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@200;400;600;800&display=swap');
-        
-        :root { 
-            --accent: #00f2fe; 
-            --active-color: #00f2fe; 
-            --p-color: #00f2fe; 
-            --b-color: #ffca2c; 
-            --c-color: #bf5af2; 
-        }
-        
+        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@200;800&display=swap');
+        :root { --p: #00f2fe; --b: #ffca2c; --c: #bf5af2; --active: #00f2fe; }
         body { font-family: 'Plus Jakarta Sans', sans-serif; background: #000; color: white; margin: 0; overflow: hidden; height: 100vh; }
-
-        /* BOOT SCREEN */
-        #intro { position: fixed; inset: 0; z-index: 9999; background: #000; display: flex; flex-direction: column; align-items: center; justify-content: center; }
-        .glitch-title { font-size: 5.5rem; font-weight: 800; font-style: italic; letter-spacing: -0.05em; text-transform: uppercase; }
-        #boot-bar { width: 260px; height: 1px; background: rgba(255,255,255,0.05); margin-top: 30px; }
-        #boot-fill { width: 0%; height: 100%; background: var(--p-color); box-shadow: 0 0 20px var(--p-color); transition: width 3.5s linear; }
-
-        /* DYNAMICKÝ VZKAZ - ROZLIŠENÍ BAREV */
-        .neon-trace { 
-            background: rgba(10, 10, 10, 0.5); backdrop-filter: blur(50px) saturate(200%); -webkit-backdrop-filter: blur(50px) saturate(200%);
-            border: 2px solid var(--active-color); border-radius: 50px; padding: 25px; 
-            width: 90%; max-width: 380px; position: absolute; left: 50%; top: 48%; transform: translate(-50%, -50%);
-            z-index: 4000; animation: tracePulse 3s infinite ease-in-out;
-            max-height: 75vh; display: flex; flex-direction: column; pointer-events: auto;
+        
+        /* MAPA A CROSSHAIR */
+        #map { position: absolute; inset: 0; z-index: 1; filter: brightness(0.4) contrast(1.2); }
+        #crosshair { 
+            position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+            z-index: 10; pointer-events: none; width: 40px; height: 40px;
+            border: 1px solid var(--active); border-radius: 50%; display: flex; align-items: center; justify-content: center;
         }
-        .trace-body { overflow-y: auto; flex: 1; padding-bottom: 15px; }
-        @keyframes tracePulse { 
-            0%, 100% { box-shadow: 0 0 30px -15px var(--active-color); opacity: 0.95; } 
-            50% { box-shadow: 0 0 60px -5px var(--active-color); opacity: 1; } 
+        #crosshair::after { content: ''; width: 2px; height: 10px; background: var(--active); position: absolute; }
+        #crosshair::before { content: ''; width: 10px; height: 2px; background: var(--active); position: absolute; }
+
+        /* PULZUJÍCÍ BODY NA MAPĚ */
+        .energy-node { 
+            width: 15px; height: 15px; border-radius: 50%; 
+            box-shadow: 0 0 15px var(--active); animation: pulse 2s infinite; 
         }
+        @keyframes pulse { 0% { transform: scale(1); opacity: 1; } 100% { transform: scale(3); opacity: 0; } }
 
-        /* RADAR - TOP PRIORITA */
-        #radar-panel {
-            position: absolute; bottom: 0; left: 0; right: 0; 
-            background: rgba(5,5,5,0.98); border-top: 1px solid var(--c-color);
-            z-index: 6000; transition: transform 0.6s cubic-bezier(0.2, 1, 0.3, 1);
-            transform: translateY(calc(100% - 90px));
-            border-radius: 45px 45px 0 0;
-        }
-        #radar-panel.open { transform: translateY(0); }
+        /* AUDIO VIZUALIZACE */
+        #audio-canvas { width: 100%; height: 60px; background: rgba(255,255,255,0.05); border-radius: 15px; }
 
-        /* VLNY */
-        .wave-bar { width: 4px; height: 12px; background: var(--active-color); border-radius: 10px; transition: background 0.3s; }
-        .wave-anim { animation: wave 0.5s infinite alternate; }
-        @keyframes wave { from { height: 6px; } to { height: 24px; } }
+        /* AR VIEW */
+        #ar-vid { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; z-index: 2; display: none; }
 
-        #map-bg { position: absolute; inset: 0; z-index: 1; filter: brightness(0.25) contrast(1.2) grayscale(0.5); }
-        #ar-vid { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; z-index: 0; display: none; }
-        .m-d-sign { position: absolute; top: 110px; left: 30px; font-size: 8px; font-weight: 900; color: rgba(255,255,255,0.15); letter-spacing: 0.6em; z-index: 100; }
+        .neon-ui { background: rgba(10,10,10,0.7); backdrop-filter: blur(25px); border: 1px solid rgba(255,255,255,0.1); }
     </style>
 </head>
 <body>
 
-    <div id="intro">
-        <div class="glitch-title italic text-white">TADY</div>
-        <div class="text-[10px] font-black text-white/20 tracking-[1.2em] uppercase">invisible-canes</div>
-        <div id="boot-bar"><div id="boot-fill"></div></div>
-        <button id="go-btn" onclick="initApp()" class="hidden bg-white text-black font-black px-16 py-6 rounded-full text-[10px] tracking-[0.6em] uppercase italic mt-16 shadow-2xl">Vstoupit</button>
-    </div>
+    <div id="map"></div>
+    <video id="ar-vid" autoplay playsinline muted></video>
+    <div id="crosshair"></div>
 
-    <div id="app" class="hidden h-screen w-screen flex flex-col md:flex-row bg-black overflow-hidden">
-        <div class="m-d-sign">SYSTEM OWNER: M.D.</div>
+    <aside class="absolute left-0 top-0 bottom-0 w-full md:w-[360px] p-8 z-[100] neon-ui flex flex-col pointer-events-auto transition-transform" id="sidebar">
+        <div class="mb-8">
+            <h1 class="text-5xl font-black italic uppercase">TADY</h1>
+            <p class="text-[8px] text-cyan-400 tracking-[0.5em] font-bold">invisible-canes // M.D.</p>
+        </div>
 
-        <aside class="w-full md:w-[380px] bg-black p-10 flex flex-col z-[100] border-r border-white/5 overflow-y-auto">
-            <div class="mb-14">
-                <div class="text-6xl font-black italic tracking-tighter uppercase">TADY</div>
-                <div class="text-[9px] font-bold text-cyan-400 tracking-[0.5em] uppercase mt-2">AudioSenzor Technology</div>
+        <div class="space-y-4 flex-1 overflow-y-auto pr-2">
+            <div class="grid grid-cols-3 gap-2">
+                <button onclick="setMode('personal')" id="btn-p" class="p-3 border-2 border-cyan-400 text-cyan-400 rounded-xl text-[8px] font-black uppercase">Personal</button>
+                <button onclick="setMode('business')" id="btn-b" class="p-3 border border-white/10 text-white/20 rounded-xl text-[8px] font-black uppercase">Business</button>
+                <button onclick="setMode('capsule')" id="btn-c" class="p-3 border border-white/10 text-white/20 rounded-xl text-[8px] font-black uppercase">Capsule</button>
             </div>
 
-            <div class="space-y-6 flex-1">
-                <div class="grid grid-cols-3 gap-2">
-                    <button id="btn-p" onclick="setMode('personal')" class="p-4 border-2 border-cyan-400 text-cyan-400 rounded-2xl text-[9px] font-black uppercase">Personal</button>
-                    <button id="btn-b" onclick="setMode('business')" class="p-4 border border-white/10 text-white/20 rounded-2xl text-[9px] font-black uppercase">Business</button>
-                    <button id="btn-c" onclick="setMode('capsule')" class="p-4 border border-white/10 text-white/20 rounded-2xl text-[9px] font-black uppercase">Capsule</button>
-                </div>
-
-                <input type="text" id="in-t" class="w-full p-6 bg-white/5 border border-white/10 rounded-3xl text-[11px] text-white uppercase font-bold outline-none focus:border-white/40" placeholder="NÁZEV STOPY">
-                <textarea id="in-d" class="w-full p-6 bg-white/5 border border-white/10 rounded-3xl text-[11px] h-32 text-white outline-none focus:border-white/40" placeholder="Vzkaz v prostoru..."></textarea>
-
-                <div class="grid grid-cols-2 gap-4">
-                    <button onclick="document.getElementById('img-in').click()" class="bg-white/5 p-6 rounded-[30px] text-[9px] font-black text-white/30 border border-white/5 uppercase">Foto</button>
-                    <button id="audio-btn" onclick="toggleAudio()" class="bg-white/5 p-6 rounded-[30px] text-[9px] font-black text-white/30 border border-white/5 uppercase">Audio</button>
-                    <input type="file" id="img-in" class="hidden" accept="image/*" onchange="previewImg(this)">
-                </div>
-
-                <button onclick="createTrace()" class="w-full py-8 rounded-[40px] font-black text-[12px] uppercase tracking-[0.6em] italic mt-4 shadow-2xl transition-all" id="main-act-btn" style="background: var(--p-color); color: black;">Ukotvit</button>
-            </div>
-        </aside>
-
-        <main class="flex-1 relative bg-black">
-            <div id="map-bg" class="h-full w-full"></div>
-            <video id="ar-vid" autoplay playsinline muted></video>
+            <input type="text" id="t-name" class="w-full p-4 bg-white/5 border border-white/10 rounded-2xl text-[10px] text-white uppercase outline-none" placeholder="Název stopy">
+            <textarea id="t-msg" class="w-full p-4 bg-white/5 border border-white/10 rounded-2xl text-[10px] h-20 text-white outline-none" placeholder="Vzkaz v prostoru..."></textarea>
             
-            <div id="trace-zone" class="absolute inset-0 z-[4000] pointer-events-none"></div>
-
-            <button onclick="toggleCam()" class="absolute top-10 right-10 z-[5500] w-16 h-16 bg-white rounded-[25px] text-black flex items-center justify-center shadow-2xl border-8 border-black">
-                <i class="fas fa-expand-alt text-xl"></i>
-            </button>
-
-            <div id="radar-panel">
-                <div class="h-[90px] flex flex-col items-center justify-center cursor-pointer" onclick="document.getElementById('radar-panel').classList.toggle('open')">
-                    <div class="w-16 h-1 bg-white/10 rounded-full mb-4"></div>
-                    <div class="text-[10px] font-black tracking-[0.8em] text-purple-400 uppercase italic">Radar Energie</div>
-                </div>
-                <div class="px-12 pb-12 space-y-5 max-h-[400px] overflow-y-auto" id="radar-list">
-                    <div class="flex justify-between items-center p-6 bg-white/5 rounded-[40px] border border-white/5">
-                        <span class="text-[14px] font-black uppercase tracking-tighter">M.D. Core System</span>
-                        <span class="text-cyan-400 font-black text-xs italic">Aktivní</span>
-                    </div>
-                </div>
+            <div class="space-y-2">
+                <p class="text-[7px] uppercase tracking-widest text-white/40">AudioSenzor Spectrum</p>
+                <canvas id="audio-canvas"></canvas>
+                <button onclick="startAudio()" id="rec-btn" class="w-full p-4 bg-white/5 border border-white/10 rounded-2xl text-[8px] font-black uppercase">Spustit záznam</button>
             </div>
-        </main>
-    </div>
 
-    <div id="pay-screen" class="fixed inset-0 z-[8000] bg-black/98 hidden flex-col items-center justify-center">
-        <div id="final-price" class="text-[10rem] font-black italic text-white mb-10 tracking-tighter">29</div>
-        <button onclick="confirmAll()" class="w-full max-w-xs bg-white text-black py-8 rounded-full font-black text-[13px] tracking-widest uppercase italic">Potvrdit</button>
-    </div>
+            <button onclick="anchor()" class="w-full py-6 rounded-full font-black text-[10px] uppercase tracking-[0.4em] italic shadow-xl transition-all" id="act-btn" style="background: var(--p); color: black;">Ukotvit na pozici</button>
+        </div>
+        
+        <button onclick="toggleSidebar()" class="mt-4 text-[8px] text-white/20 uppercase tracking-widest">Skrýt panel</button>
+    </aside>
+
+    <button onclick="toggleAR()" class="absolute top-6 right-6 z-[200] w-14 h-14 bg-white rounded-2xl text-black flex items-center justify-center shadow-2xl">
+        <i class="fas fa-camera"></i>
+    </button>
 
     <script>
-        let map, mode = 'personal', imgData = null, isRec = false;
-        const config = { 
-            personal: { p: '29', c: '#00f2fe' }, 
-            business: { p: '199', c: '#ffca2c' }, 
-            capsule: { p: '49', c: '#bf5af2' } 
-        };
+        let map, mode = 'personal', markers = [];
+        const config = { personal: '#00f2fe', business: '#ffca2c', capsule: '#bf5af2' };
 
-        window.onload = () => {
-            document.getElementById('boot-fill').style.width = '100%';
-            setTimeout(() => { document.getElementById('go-btn').classList.remove('hidden'); }, 3500);
-        };
+        // INIT MAPA
+        map = L.map('map', { zoomControl: false, attributionControl: false }).setView([50.912, 14.619], 16);
+        L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png').addTo(map);
 
-        function initApp() {
-            document.getElementById('intro').style.display = 'none';
-            document.getElementById('app').classList.remove('hidden');
-            map = L.map('map-bg', { zoomControl: false, attributionControl: false }).setView([50.912, 14.619], 16);
-            L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png').addTo(map);
+        // PŘIDÁNÍ M.D. CORE NA MAPU
+        function addEnergyNode(lat, lng, color) {
+            const icon = L.divIcon({
+                className: 'custom-div-icon',
+                html: `<div class="energy-node" style="background:${color}; --active:${color}"></div>`,
+                iconSize: [20, 20]
+            });
+            L.marker([lat, lng], {icon: icon}).addTo(map);
         }
+        addEnergyNode(50.912, 14.619, config.personal); // M.D. Core
 
         function setMode(m) {
             mode = m;
-            const c = config[m].c;
-            document.documentElement.style.setProperty('--active-color', c);
-            
-            // UI Buttons update
+            document.documentElement.style.setProperty('--active', config[m]);
+            document.getElementById('act-btn').style.background = config[m];
             ['p','b','c'].forEach(x => {
                 const b = document.getElementById('btn-'+x);
-                b.classList.remove('text-cyan-400', 'border-cyan-400', 'text-white/20', 'border-white/10');
-                b.style.borderColor = (x === m[0]) ? c : 'rgba(255,255,255,0.1)';
-                b.style.color = (x === m[0]) ? c : 'rgba(255,255,255,0.2)';
+                b.style.borderColor = (x === m[0]) ? config[m] : 'rgba(255,255,255,0.1)';
+                b.style.color = (x === m[0]) ? config[m] : 'rgba(255,255,255,0.2)';
             });
-            document.getElementById('main-act-btn').style.background = c;
         }
 
-        function toggleAudio() {
-            isRec = !isRec;
-            document.getElementById('audio-btn').style.color = isRec ? '#ff3b30' : '';
-            document.getElementById('audio-btn').style.borderColor = isRec ? '#ff3b30' : '';
+        async function startAudio() {
+            const canvas = document.getElementById('audio-canvas');
+            const ctx = canvas.getContext('2d');
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                const source = audioCtx.createMediaStreamSource(stream);
+                const analyzer = audioCtx.createAnalyser();
+                source.connect(analyzer);
+                analyzer.fftSize = 64;
+                const bufferLength = analyzer.frequencyBinCount;
+                const dataArray = new Uint8Array(bufferLength);
+
+                document.getElementById('rec-btn').innerText = "Nahrávám...";
+
+                function draw() {
+                    requestAnimationFrame(draw);
+                    analyzer.getByteFrequencyData(dataArray);
+                    ctx.clearRect(0, 0, canvas.width, canvas.height);
+                    const barWidth = (canvas.width / bufferLength) * 2.5;
+                    let x = 0;
+                    for(let i = 0; i < bufferLength; i++) {
+                        const barHeight = dataArray[i]/2;
+                        ctx.fillStyle = config[mode];
+                        ctx.fillRect(x, canvas.height - barHeight, barWidth, barHeight);
+                        x += barWidth + 1;
+                    }
+                }
+                draw();
+            } catch(e) { alert("Povolte mikrofon pro AudioSenzor."); }
         }
 
-        function previewImg(input) {
-            const r = new FileReader();
-            r.onload = e => { imgData = e.target.result; };
-            r.readAsDataURL(input.files[0]);
-        }
-
-        async function toggleCam() {
+        async function toggleAR() {
             const v = document.getElementById('ar-vid');
             if(v.style.display === 'none' || v.style.display === '') {
-                const s = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
-                v.srcObject = s; v.style.display = 'block';
+                try {
+                    const s = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
+                    v.srcObject = s; v.style.display = 'block';
+                } catch(e) { alert("Kamera nelze spustit."); }
             } else { v.style.display = 'none'; }
         }
 
-        function createTrace() {
-            const zone = document.getElementById('trace-zone');
-            zone.innerHTML = '';
-            const t = document.createElement('div');
-            t.className = 'neon-trace';
-            
-            let img = imgData ? `<img src="${imgData}" class="w-full h-48 object-cover rounded-[35px] mb-6">` : '';
-            let waves = isRec ? 'wave-anim' : '';
-
-            t.innerHTML = `
-                <div class="flex justify-center gap-2 mb-6 h-6">
-                    <div class="wave-bar ${waves}"></div><div class="wave-bar ${waves}" style="animation-delay:0.2s"></div>
-                    <div class="wave-bar ${waves}" style="animation-delay:0.4s"></div>
-                </div>
-                <div class="trace-body">
-                    <h2 class="text-3xl font-black italic text-center uppercase mb-2 tracking-tighter" style="color:${config[mode].c}">${document.getElementById('in-t').value || 'M.D. TRACE'}</h2>
-                    <p class="text-[12px] text-white/40 text-center italic mb-8 px-4">"${document.getElementById('in-d').value || 'Záznam v invisible-canes.'}"</p>
-                    ${img}
-                </div>
-                <button onclick="openPay()" class="w-full bg-white text-black py-7 rounded-[35px] font-black text-[12px] uppercase tracking-widest mt-4">Aktivovat</button>
-            `;
-            zone.appendChild(t);
+        function anchor() {
+            const center = map.getCenter();
+            addEnergyNode(center.lat, center.lng, config[mode]);
+            alert(`Ukotveno na: ${center.lat.toFixed(4)}, ${center.lng.toFixed(4)}`);
         }
 
-        function openPay() {
-            document.getElementById('final-price').innerText = config[mode].p;
-            document.getElementById('pay-screen').style.display = 'flex';
-        }
-
-        function confirmAll() {
-            document.getElementById('pay-screen').style.display = 'none';
-            document.getElementById('trace-zone').innerHTML = '';
-            const item = document.createElement('div');
-            item.className = 'flex justify-between items-center p-6 bg-white/5 rounded-[40px] border border-white/10 mb-4';
-            item.innerHTML = `
-                <div><div class="text-[14px] font-black uppercase">${document.getElementById('in-t').value || 'TRACE'}</div><div class="text-[8px] text-white/20 uppercase">${mode}</div></div>
-                <div class="font-black italic text-xs" style="color:${config[mode].c}">UKOTVENO</div>
-            `;
-            document.getElementById('radar-list').prepend(item);
-            alert("SYSTEM: Ukotveno na 1000% v rozlišení " + mode.toUpperCase());
+        function toggleSidebar() {
+            const s = document.getElementById('sidebar');
+            s.style.transform = s.style.transform === 'translateX(-100%)' ? 'translateX(0)' : 'translateX(-100%)';
         }
     </script>
 </body>
