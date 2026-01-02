@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>TADY // core-optimized // M.D.</title>
+    <title>TADY // deep-space // M.D.</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
@@ -13,55 +13,53 @@
         :root { --accent-cyan: #00f2fe; --active-color: #00f2fe; }
         body { font-family: 'Plus Jakarta Sans', sans-serif; background: #000; color: white; margin: 0; overflow: hidden; touch-action: none; }
 
-        /* --- OPTIMALIZOVANÝ 3D ÚVOD 2.5 --- */
+        /* --- ÚVODNÍ STRÁNKA 2.6 (BEZ MŘÍŽKY) --- */
         #landing-page { perspective: 1000px; overflow: hidden; background: #000; }
         
-        /* Celý vesmír v jednom kontejneru pro plynulý pohyb */
         #universe {
             position: absolute; inset: 0;
             transform-style: preserve-3d;
             will-change: transform;
-            transition: transform 0.1s linear;
         }
         
-        #stars-container { position: absolute; inset: 0; pointer-events: none; }
-        .star { position: absolute; background: white; border-radius: 50%; opacity: 0.6; }
+        #stars-container { position: absolute; inset: -50%; width: 200%; height: 200%; pointer-events: none; }
+        .star { position: absolute; background: white; border-radius: 50%; opacity: 0.7; }
 
-        #bg-grid {
-            position: absolute; width: 300%; height: 300%;
-            background-image: 
-                linear-gradient(rgba(0, 242, 254, 0.2) 1px, transparent 1px),
-                linear-gradient(90deg, rgba(0, 242, 254, 0.2) 1px, transparent 1px);
-            background-size: 70px 70px; 
-            transform: rotateX(75deg) translateZ(-300px); 
-            top: -100%; left: -100%;
-            pointer-events: none;
+        /* PULZUJÍCÍ / BLIKAJÍCÍ NÁPIS */
+        .glitch-text { 
+            font-size: clamp(4.5rem, 18vw, 9rem); font-weight: 900; font-style: italic; 
+            text-transform: uppercase; letter-spacing: -0.02em;
+            animation: blink-glow 3s infinite;
+        }
+
+        @keyframes blink-glow {
+            0%, 100% { opacity: 1; text-shadow: 0 0 40px var(--accent-cyan); }
+            50% { opacity: 0.7; text-shadow: 0 0 10px var(--accent-cyan); }
+            52% { opacity: 0.9; }
+            54% { opacity: 0.6; }
         }
 
         .hero-wrap { position: relative; z-index: 100; text-align: center; pointer-events: none; }
-        .glitch-text { 
-            font-size: clamp(4rem, 16vw, 8.5rem); font-weight: 800; font-style: italic; 
-            text-shadow: 0 0 30px rgba(0,242,254,0.5);
-        }
 
-        /* --- MAPA A PULZUJÍCÍ BOD --- */
+        /* --- MAPA A PRŮHLEDNOST --- */
         #map-bg { position: absolute; inset: 0; z-index: 1; filter: contrast(1.1) brightness(0.4); }
         .user-pulse { 
-            width: 14px; height: 14px; background: var(--accent-cyan); border-radius: 50%; 
-            box-shadow: 0 0 0 rgba(0, 242, 254, 0.4); animation: pulse 2s infinite; 
+            width: 16px; height: 16px; background: var(--accent-cyan); border-radius: 50%; 
+            box-shadow: 0 0 0 rgba(0, 242, 254, 0.4); animation: mapPulse 2s infinite; 
         }
-        @keyframes pulse { 0% { box-shadow: 0 0 0 0 rgba(0, 242, 254, 0.7); } 70% { box-shadow: 0 0 0 15px rgba(0, 242, 254, 0); } 100% { box-shadow: 0 0 0 0 rgba(0, 242, 254, 0); } }
+        @keyframes mapPulse { 0% { box-shadow: 0 0 0 0 rgba(0, 242, 254, 0.7); } 70% { box-shadow: 0 0 0 20px rgba(0, 242, 254, 0); } 100% { box-shadow: 0 0 0 0 rgba(0, 242, 254, 0); } }
 
-        /* PRŮHLEDNÝ VZKAZ */
         .neon-trace { 
-            background: rgba(10, 10, 10, 0.4); backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px);
-            border: 1px solid rgba(255, 255, 255, 0.15); border-radius: 40px; padding: 25px; width: 85%; max-width: 320px;
+            background: rgba(15, 15, 15, 0.35); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 40px; padding: 25px; width: 85%; max-width: 320px;
             position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); z-index: 2000;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.5);
         }
 
+        /* OSTATNÍ UI */
         .active-mode { border-color: var(--active-color) !important; color: var(--active-color) !important; background: rgba(0,242,254,0.1); }
         .wave-bar { width: 4px; height: 5px; background: var(--active-color); border-radius: 10px; transition: height 0.05s ease; }
-        #radar-panel { position: absolute; bottom: 0; left: 0; right: 0; background: rgba(0,0,0,0.96); backdrop-filter: blur(30px); z-index: 5000; transition: transform 0.5s cubic-bezier(0.1, 0, 0.3, 1); transform: translateY(calc(100% - 80px)); border-radius: 40px 40px 0 0; border-top: 1px solid rgba(255,255,255,0.1); }
+        #radar-panel { position: absolute; bottom: 0; left: 0; right: 0; background: rgba(0,0,0,0.96); backdrop-filter: blur(40px); z-index: 5000; transition: transform 0.5s cubic-bezier(0.19, 1, 0.22, 1); transform: translateY(calc(100% - 80px)); border-radius: 40px 40px 0 0; border-top: 1px solid rgba(255,255,255,0.1); }
         #radar-panel.open { transform: translateY(0); }
     </style>
 </head>
@@ -70,20 +68,19 @@
     <div id="landing-page" class="fixed inset-0 z-[9999] bg-black flex flex-col justify-center items-center">
         <div id="universe">
             <div id="stars-container"></div>
-            <div id="bg-grid"></div>
         </div>
         
         <div class="hero-wrap" id="hero-element">
             <div class="glitch-text text-white">TADY</div>
-            <div id="boot-status" class="text-[9px] text-cyan-400 mt-4 tracking-[0.5em] font-black uppercase opacity-60">Identity Verified // M.D.</div>
+            <div class="text-[9px] text-cyan-400 mt-6 tracking-[0.7em] font-black uppercase opacity-60">Deep Space Anchor // M.D.</div>
         </div>
 
-        <div id="fingerprint-zone" onclick="bootApp(event)" class="mt-16 flex flex-col items-center cursor-pointer z-[200] opacity-0 transition-opacity duration-700">
-            <div class="w-[80px] h-[80px] border-2 border-cyan-400 rounded-full flex items-center justify-center relative overflow-hidden bg-cyan-400/5">
-                <i class="fas fa-fingerprint text-3xl text-cyan-400"></i>
-                <div class="absolute w-full h-1 bg-cyan-400 top-0 left-0 shadow-[0_0_15px_cyan] animate-[scan_2s_infinite_linear]"></div>
+        <div id="fingerprint-zone" onclick="bootApp(event)" class="mt-20 flex flex-col items-center cursor-pointer z-[200]">
+            <div class="w-[85px] h-[85px] border border-white/20 rounded-full flex items-center justify-center relative bg-white/5 backdrop-blur-sm">
+                <i class="fas fa-fingerprint text-3xl text-white"></i>
+                <div class="absolute w-full h-[2px] bg-cyan-400 top-0 left-0 shadow-[0_0_15px_cyan] animate-[scan_2s_infinite_ease-in-out]"></div>
             </div>
-            <div class="text-[9px] font-black tracking-[0.4em] uppercase mt-4 text-white">Authorize</div>
+            <div class="text-[9px] font-bold tracking-[0.5em] uppercase mt-6 text-white/40">Hold to Access</div>
         </div>
     </div>
 
@@ -131,12 +128,11 @@
         let audioCtx, analyser, dataArray, animationId, userCoords = [50.912, 14.619];
         const config = { personal: { color: '#00f2fe', price: 29 }, business: { color: '#ffca2c', price: 199 }, capsule: { color: '#bf5af2', price: 49 } };
 
-        // --- VYHLAZENÝ 3D POHYB ---
         function updateMotion(x, y) {
             const universe = document.getElementById('universe');
             const hero = document.getElementById('hero-element');
-            if (universe) universe.style.transform = `rotateX(${y * 10}deg) rotateY(${x * 10}deg)`;
-            if (hero) hero.style.transform = `translateZ(50px)`;
+            if (universe) universe.style.transform = `rotateX(${y * 15}deg) rotateY(${x * 15}deg)`;
+            if (hero) hero.style.transform = `translateZ(60px) rotateY(${x * 5}deg)`;
         }
 
         function requestSensors() {
@@ -155,33 +151,25 @@
             if (e.beta) updateMotion(e.gamma / 45, (e.beta - 45) / 45);
         });
 
-        // RYCHLÝ GENERÁTOR HVĚZD
         function initStars() {
             const container = document.getElementById('stars-container');
             container.innerHTML = '';
-            for(let i=0; i<100; i++) {
+            for(let i=0; i<150; i++) {
                 const s = document.createElement('div');
                 s.className = 'star';
-                const size = Math.random() * 2 + 'px';
+                const size = Math.random() * 2.5 + 'px';
                 s.style.width = size; s.style.height = size;
                 s.style.top = Math.random() * 100 + '%';
                 s.style.left = Math.random() * 100 + '%';
-                // Náhodná hloubka pro 3D efekt bez blur filtru
-                s.style.transform = `translateZ(${Math.random() * 200 - 100}px)`;
+                s.style.transform = `translateZ(${Math.random() * 400 - 200}px)`;
                 container.appendChild(s);
             }
         }
 
-        window.onload = () => {
-            initStars();
-            setTimeout(() => { 
-                document.getElementById('fingerprint-zone').style.opacity = '1'; 
-            }, 1000);
-        };
+        window.onload = () => { initStars(); };
 
         function bootApp(e) {
             e.stopPropagation();
-            if ("vibrate" in navigator) navigator.vibrate(30);
             document.getElementById('landing-page').style.opacity = '0';
             setTimeout(() => {
                 document.getElementById('landing-page').style.display = 'none'; 
@@ -194,7 +182,7 @@
             if (map) return;
             map = L.map('map-bg', { zoomControl: false, attributionControl: false }).setView(userCoords, 17);
             L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager_labels_under/{z}/{x}/{y}{r}.png').addTo(map);
-            const pulseIcon = L.divIcon({ className: 'pulse-wrapper', html: '<div class="user-pulse"></div>', iconSize: [20, 20] });
+            const pulseIcon = L.divIcon({ className: 'p-wrap', html: '<div class="user-pulse"></div>', iconSize: [20, 20] });
             L.marker(userCoords, { icon: pulseIcon }).addTo(map);
         }
 
@@ -214,7 +202,7 @@
                         bars.forEach((b, i) => { b.style.height = Math.max(4, (dataArray[i] || 0) / 4) + 'px'; });
                     }
                     render();
-                } catch (err) { alert("Chyba mikrofonu."); }
+                } catch (err) { alert("Chyba."); }
             } else {
                 isAudioActive = false; document.getElementById('mic-btn').style.background = "rgba(255,255,255,0.1)";
                 cancelAnimationFrame(animationId); bars.forEach(b => b.style.height = '4px');
