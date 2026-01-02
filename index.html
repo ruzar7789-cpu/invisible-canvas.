@@ -2,190 +2,265 @@
 <html lang="cs">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>TADY // invisible-canes // M.D.</title>
-    
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@200;800&display=swap');
-        :root { --p: #00f2fe; --b: #ffca2c; --c: #bf5af2; --active: #00f2fe; }
-        body { font-family: 'Plus Jakarta Sans', sans-serif; background: #000; color: white; margin: 0; overflow: hidden; height: 100vh; }
+        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@200;400;600;800&display=swap');
+        :root { --accent-cyan: #00f2fe; --accent-gold: #ffca2c; --accent-purple: #bf5af2; --active-color: #00f2fe; }
+        body { font-family: 'Plus Jakarta Sans', sans-serif; background: #000; color: white; margin: 0; overflow: hidden; touch-action: manipulation; }
 
-        /* BOOT SEQUENCE */
-        #intro { position: fixed; inset: 0; z-index: 9999; background: #000; display: flex; flex-direction: column; align-items: center; justify-content: center; }
-        .glitch-title { font-size: 5rem; font-weight: 800; font-style: italic; letter-spacing: -0.05em; text-transform: uppercase; }
-        #boot-bar { width: 240px; height: 1px; background: rgba(255,255,255,0.1); margin-top: 30px; position: relative; }
-        #boot-fill { width: 0%; height: 100%; background: var(--p); box-shadow: 0 0 15px var(--p); transition: width 3s ease-in-out; }
+        /* INTRO 1000% */
+        .intro-text { font-size: clamp(5rem, 15vw, 10rem); font-weight: 800; letter-spacing: -0.05em; line-height: 1; position: relative; }
+        .intro-text::after { content: 'TADY'; position: absolute; left: 0; top: 0; color: var(--accent-cyan); filter: blur(15px); opacity: 0.5; animation: pulse 2s infinite; }
+        #boot-bar-wrap { width: 280px; height: 3px; background: rgba(255,255,255,0.05); position: relative; overflow: visible; }
+        #boot-progress { width: 0%; height: 100%; background: var(--accent-cyan); box-shadow: 0 0 30px var(--accent-cyan); transition: width 3s cubic-bezier(0.1, 0, 0.3, 1); }
+        #boot-percent { position: absolute; right: 0; top: -20px; font-size: 10px; font-weight: 900; color: var(--accent-cyan); font-variant-numeric: tabular-nums; }
 
-        /* MAPA A ZAMĚŘENÍ */
-        #map { position: absolute; inset: 0; z-index: 1; filter: brightness(0.3) contrast(1.2); }
-        #crosshair { 
-            position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
-            z-index: 10; pointer-events: none; width: 40px; height: 40px;
-            border: 1px solid var(--active); border-radius: 50%; display: flex; align-items: center; justify-content: center;
-        }
-        #crosshair::after { content: ''; width: 2px; height: 10px; background: var(--active); position: absolute; }
-        #crosshair::before { content: ''; width: 10px; height: 2px; background: var(--active); position: absolute; }
-
-        /* ENERGETICKÉ BODY NA MAPĚ */
-        .energy-node { width: 15px; height: 15px; border-radius: 50%; box-shadow: 0 0 15px var(--active); animation: pulse 2s infinite; }
-        @keyframes pulse { 0% { transform: scale(1); opacity: 1; } 100% { transform: scale(3); opacity: 0; } }
-
-        /* AR A UI */
-        #ar-vid { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; z-index: 2; display: none; }
-        .glass { background: rgba(10,10,10,0.75); backdrop-filter: blur(30px); border: 1px solid rgba(255,255,255,0.05); }
-        #audio-canvas { width: 100%; height: 60px; background: rgba(255,255,255,0.03); border-radius: 20px; }
-
-        /* VZKAZ V PROSTORU */
+        /* VZKAZ - PRŮHLEDNÝ, PULZUJÍCÍ, PERFEKTNÍ */
         .neon-trace { 
-            background: rgba(10, 10, 10, 0.8); border: 1px solid var(--active); border-radius: 40px; padding: 25px; 
-            width: 90%; max-width: 360px; position: absolute; left: 50%; top: 45%; transform: translate(-50%, -50%);
-            z-index: 4000; display: none; flex-direction: column; max-height: 70vh;
+            background: rgba(10, 10, 10, 0.4); backdrop-filter: blur(40px) saturate(180%); -webkit-backdrop-filter: blur(40px) saturate(180%);
+            border: 1px solid rgba(255, 255, 255, 0.15); border-radius: 40px; padding: 25px; 
+            width: 90%; max-width: 350px; position: absolute; left: 50%; top: 45%; transform: translate(-50%, -50%);
+            z-index: 1000; animation: traceGlow 4s infinite ease-in-out;
+            max-height: 70vh; display: flex; flex-direction: column; pointer-events: auto;
         }
-        .trace-content { overflow-y: auto; flex: 1; margin-bottom: 15px; }
+        @keyframes traceGlow {
+            0%, 100% { box-shadow: 0 0 40px -20px var(--active-color); border-color: rgba(255,255,255,0.1); }
+            50% { box-shadow: 0 0 80px -10px var(--active-color); border-color: var(--active-color); }
+        }
+
+        /* RADAR - EXTRÉMNÍ Z-INDEX */
+        #radar-panel {
+            position: absolute; bottom: 0; left: 0; right: 0; 
+            background: rgba(0,0,0,0.95); backdrop-filter: blur(30px);
+            border-top: 1px solid var(--accent-purple);
+            z-index: 5000; transition: transform 0.6s cubic-bezier(0.19, 1, 0.22, 1);
+            transform: translateY(calc(100% - 80px));
+            border-radius: 40px 40px 0 0;
+        }
+        #radar-panel.open { transform: translateY(0); }
+
+        /* OSTATNÍ */
+        .founder-tag { position: absolute; top: 110px; left: 30px; z-index: 100; font-size: 9px; font-weight: 800; letter-spacing: 0.3em; color: rgba(255,255,255,0.3); }
+        #map-bg { position: absolute; inset: 0; z-index: 1; filter: contrast(1.2) brightness(0.3); }
+        .wave-bar { width: 3px; height: 100%; background: var(--active-color); border-radius: 10px; animation: wave 1s infinite ease-in-out; }
+        @keyframes wave { 0%, 100% { height: 5px; } 50% { height: 20px; } }
+        .active-mode { border-color: var(--active-color) !important; color: var(--active-color) !important; }
+        #ar-video { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; z-index: 0; display: none; }
     </style>
 </head>
 <body>
 
-    <div id="intro">
-        <div class="glitch-title">TADY</div>
-        <div class="text-[9px] font-black text-white/20 tracking-[1em] uppercase">invisible-canes</div>
-        <div id="boot-bar"><div id="boot-fill"></div></div>
-        <button id="entry-btn" onclick="startApp()" class="hidden bg-white text-black font-black px-12 py-5 rounded-full text-[10px] tracking-[0.5em] uppercase italic mt-12">Inicializovat</button>
+    <div id="landing-page" class="fixed inset-0 z-[9999] bg-black flex flex-col justify-center items-center">
+        <div class="intro-text italic text-white mb-2">TADY</div>
+        <div class="text-[11px] font-black text-white/30 tracking-[1.2em] uppercase mb-16">invisible-canes</div>
+        <div id="boot-bar-wrap">
+            <div id="boot-progress"></div>
+            <div id="boot-percent">00%</div>
+        </div>
+        <button onclick="bootApp()" id="boot-btn" class="hidden bg-white text-black font-black px-20 py-6 rounded-full text-[11px] tracking-[0.6em] uppercase italic mt-12 hover:scale-105 active:scale-95 transition-all">Inicializovat</button>
     </div>
 
-    <div id="map"></div>
-    <video id="ar-vid" autoplay playsinline muted></video>
-    <div id="crosshair"></div>
+    <div id="app-interface" class="hidden h-screen w-screen flex flex-col md:flex-row overflow-hidden bg-black">
+        
+        <div class="founder-tag uppercase italic">Authorized: M.D.</div>
 
-    <aside id="sidebar" class="absolute left-0 top-0 bottom-0 w-full md:w-[380px] p-10 z-[100] glass flex flex-col transition-transform duration-500">
-        <div class="mb-10">
-            <h1 class="text-5xl font-black italic uppercase">TADY</h1>
-            <p class="text-[9px] text-cyan-400 tracking-[0.4em] font-bold uppercase mt-1">AudioSenzor Technology</p>
-        </div>
-
-        <div class="space-y-5 flex-1 overflow-y-auto pr-2">
-            <div class="grid grid-cols-3 gap-2">
-                <button onclick="setMode('personal')" id="btn-p" class="p-4 border-2 border-cyan-400 text-cyan-400 rounded-2xl text-[9px] font-black uppercase">Personal</button>
-                <button onclick="setMode('business')" id="btn-b" class="p-4 border border-white/5 text-white/20 rounded-2xl text-[9px] font-black uppercase">Business</button>
-                <button onclick="setMode('capsule')" id="btn-c" class="p-4 border border-white/5 text-white/20 rounded-2xl text-[9px] font-black uppercase">Capsule</button>
+        <aside class="w-full md:w-[400px] bg-black p-10 flex flex-col z-[50] border-r border-white/5 overflow-y-auto">
+            <div class="mb-12">
+                <div class="text-5xl font-black text-white italic tracking-tighter uppercase">TADY</div>
+                <div class="text-[9px] font-bold text-cyan-400 tracking-[0.5em] uppercase mt-2">invisible-canes // SYSTEM</div>
             </div>
-
-            <input type="text" id="t-title" class="w-full p-5 bg-white/5 border border-white/10 rounded-3xl text-[11px] text-white font-bold outline-none" placeholder="NÁZEV ZÁZNAMU">
-            <textarea id="t-text" class="w-full p-5 bg-white/5 border border-white/10 rounded-3xl text-[11px] h-24 text-white outline-none" placeholder="Textová stopa..."></textarea>
             
-            <div class="space-y-3">
-                <canvas id="audio-canvas"></canvas>
-                <button onclick="initAudio()" id="mic-btn" class="w-full p-4 bg-white/5 border border-white/5 rounded-2xl text-[9px] font-black uppercase">Aktivovat Senzor</button>
+            <div class="space-y-6 flex-1">
+                <div class="grid grid-cols-3 gap-2">
+                    <button onclick="setMode('personal')" id="btn-p" class="p-4 rounded-2xl border border-white/10 text-[9px] font-black uppercase active-mode">Personal</button>
+                    <button onclick="setMode('business')" id="btn-b" class="p-4 rounded-2xl border border-white/10 text-[9px] font-black uppercase text-white/20">Business</button>
+                    <button onclick="setMode('capsule')" id="btn-c" class="p-4 rounded-2xl border border-white/10 text-[9px] font-black uppercase text-white/20">Capsule</button>
+                </div>
+
+                <input type="text" id="t-title" class="w-full p-6 bg-white/5 border border-white/10 rounded-3xl text-[11px] font-bold text-white uppercase outline-none focus:border-cyan-400" placeholder="Kód záznamu">
+                <textarea id="t-desc" class="w-full p-6 bg-white/5 border border-white/10 rounded-3xl text-[11px] h-32 resize-none text-white outline-none focus:border-cyan-400" placeholder="Audio vzkaz (textový přepis)..."></textarea>
+
+                <div class="grid grid-cols-2 gap-4">
+                    <button onclick="document.getElementById('t-img').click()" class="bg-white/5 p-6 rounded-3xl text-[9px] font-black text-white/40 flex items-center justify-center gap-3 border border-white/5"><i class="fas fa-camera"></i> FOTO</button>
+                    <button onclick="toggleRecord()" id="mic-btn" class="bg-white/5 p-6 rounded-3xl text-[9px] font-black text-white/40 flex items-center justify-center gap-3 border border-white/5"><i class="fas fa-microphone"></i> AUDIO</button>
+                    <input type="file" id="t-img" accept="image/*" class="hidden" onchange="handleImage(this)">
+                </div>
+
+                <button onclick="prepareTrace()" class="w-full bg-cyan-400 text-black py-8 rounded-[40px] font-black text-[12px] uppercase tracking-[0.6em] italic shadow-2xl mt-4 active:scale-95 transition-all">Ukotvit v prostoru</button>
+            </div>
+        </aside>
+
+        <main class="flex-1 relative bg-black overflow-hidden">
+            <video id="ar-video" autoplay playsinline muted></video>
+            <div id="map-bg" class="h-full w-full"></div>
+            
+            <div id="trace-container" class="absolute inset-0 z-[1000] pointer-events-none"></div>
+            
+            <div class="absolute top-10 right-10 z-[2000]">
+                <button onclick="toggleCam()" class="w-16 h-16 rounded-[28px] bg-white text-black flex items-center justify-center shadow-2xl border-[6px] border-black"><i id="cam-icon" class="fas fa-expand-alt text-xl"></i></button>
             </div>
 
-            <button onclick="previewTrace()" class="w-full py-8 rounded-[40px] font-black text-[12px] uppercase tracking-[0.5em] italic mt-4 shadow-2xl" id="main-btn" style="background: var(--p); color: black;">Ukotvit</button>
-        </div>
-        <div class="mt-6 text-[8px] text-white/20 uppercase tracking-[0.5em] text-center">Founder Status: M.D.</div>
-    </aside>
-
-    <div id="trace-preview" class="neon-trace">
-        <div class="trace-content text-center">
-            <h2 id="prev-h" class="text-3xl font-black italic uppercase mb-2"></h2>
-            <p id="prev-p" class="text-[11px] text-white/50 italic px-4"></p>
-            <div id="prev-img-wrap" class="mt-4"></div>
-        </div>
-        <button onclick="confirmAnchor()" class="w-full bg-white text-black py-6 rounded-[30px] font-black text-[11px] uppercase tracking-widest">Potvrdit Energetický bod</button>
+            <div id="radar-panel">
+                <div class="h-[80px] flex flex-col items-center justify-center cursor-pointer" onclick="toggleRadar()">
+                    <div class="w-16 h-1 bg-white/20 rounded-full mb-4"></div>
+                    <div class="text-[10px] font-black tracking-[0.6em] text-purple-500 uppercase italic">Radar: Okolní energie</div>
+                </div>
+                <div class="p-10 space-y-6 max-h-[450px] overflow-y-auto" id="radar-list">
+                    <div class="flex justify-between items-center p-6 bg-white/5 rounded-[35px] border border-white/5">
+                        <div class="flex items-center gap-6">
+                            <div class="flex gap-1 h-5"><div class="wave-bar"></div><div class="wave-bar" style="animation-delay:0.2s"></div></div>
+                            <div><div class="text-[14px] font-black uppercase">M.D. CORE</div><div class="text-[9px] text-white/30 uppercase tracking-[0.2em]">Master Access Active</div></div>
+                        </div>
+                        <div class="text-cyan-400 font-black italic text-xs">0m</div>
+                    </div>
+                </div>
+            </div>
+        </main>
     </div>
 
-    <button onclick="toggleCamera()" class="absolute top-8 right-8 z-[500] w-16 h-16 bg-white rounded-[25px] text-black flex items-center justify-center shadow-2xl border-[6px] border-black">
-        <i class="fas fa-expand-alt text-xl"></i>
-    </button>
+    <div id="pay-modal" class="fixed inset-0 z-[10000] bg-black/95 hidden justify-center items-center backdrop-blur-3xl">
+        <div class="w-full max-w-sm p-12 text-center">
+            <div id="pay-price" class="text-9xl font-black italic text-white mb-16 tracking-tighter">29</div>
+            <button onclick="confirmAll()" class="w-full bg-white text-black py-8 rounded-[45px] font-black text-[13px] tracking-[0.5em] uppercase">Potvrdit a Ukotvit</button>
+        </div>
+    </div>
 
     <script>
-        let map, mode = 'personal', isRec = false;
-        const meta = { personal: '#00f2fe', business: '#ffca2c', capsule: '#bf5af2' };
+        let map, currentMode = 'personal', activeTrace = null, selectedImg = null, videoStream = null, isRecording = false;
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        const config = { personal: { price: '29 Kč', color: '#00f2fe' }, business: { price: '199 Kč', color: '#ffca2c' }, capsule: { price: '49 Kč', color: '#bf5af2' } };
 
         // 1. BOOT SEQUENCE
         window.onload = () => {
-            document.getElementById('boot-fill').style.width = '100%';
-            setTimeout(() => { document.getElementById('entry-btn').classList.remove('hidden'); }, 3000);
+            const bar = document.getElementById('boot-progress');
+            const perc = document.getElementById('boot-percent');
+            const btn = document.getElementById('boot-btn');
+            
+            let p = 0;
+            let iv = setInterval(() => {
+                p += Math.floor(Math.random() * 5) + 1;
+                if(p >= 100) { p = 100; clearInterval(iv); btn.classList.remove('hidden'); }
+                bar.style.width = p + '%';
+                perc.innerText = p.toString().padStart(2, '0') + '%';
+            }, 80);
         };
 
-        function startApp() {
-            document.getElementById('intro').style.display = 'none';
-            initMap();
+        function playSound(f, d, t='sine') {
+            const o = audioCtx.createOscillator(), g = audioCtx.createGain();
+            o.type = t; o.connect(g); g.connect(audioCtx.destination);
+            o.frequency.value = f; g.gain.setValueAtTime(0.1, audioCtx.currentTime);
+            g.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + d);
+            o.start(); o.stop(audioCtx.currentTime + d);
+        }
+
+        function bootApp() { 
+            playSound(800, 0.5); playSound(1200, 0.8);
+            document.getElementById('landing-page').style.opacity = '0';
+            setTimeout(() => { 
+                document.getElementById('landing-page').style.display = 'none'; 
+                document.getElementById('app-interface').classList.remove('hidden'); 
+                initMap(); 
+            }, 800);
         }
 
         function initMap() {
-            map = L.map('map', { zoomControl: false, attributionControl: false }).setView([50.912, 14.619], 16);
+            map = L.map('map-bg', { zoomControl: false, attributionControl: false }).setView([50.912, 14.619], 16);
             L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png').addTo(map);
-            addPoint(50.912, 14.619, meta.personal); // M.D. Core Point
+        }
+
+        function toggleRadar() { 
+            document.getElementById('radar-panel').classList.toggle('open'); 
+            playSound(400, 0.2, 'square'); 
         }
 
         function setMode(m) {
-            mode = m;
-            document.documentElement.style.setProperty('--active', meta[m]);
-            document.getElementById('main-btn').style.background = meta[m];
-            ['p','b','c'].forEach(x => {
-                const b = document.getElementById('btn-'+x);
-                b.style.borderColor = (x === m[0]) ? meta[m] : 'rgba(255,255,255,0.05)';
-                b.style.color = (x === m[0]) ? meta[m] : 'rgba(255,255,255,0.2)';
-            });
+            currentMode = m; playSound(600, 0.1);
+            document.querySelectorAll('aside button').forEach(b => b.classList.remove('active-mode', 'text-white/20'));
+            document.getElementById(`btn-${m[0]}`).classList.add('active-mode');
+            document.documentElement.style.setProperty('--active-color', config[m].color);
         }
 
-        async function initAudio() {
-            try {
-                const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-                const ctx = new (window.AudioContext || window.webkitAudioContext)();
-                const analyzer = ctx.createAnalyser();
-                ctx.createMediaStreamSource(stream).connect(analyzer);
-                analyzer.fftSize = 64;
-                const data = new Uint8Array(analyzer.frequencyBinCount);
-                const canv = document.getElementById('audio-canvas');
-                const c = canv.getContext('2d');
-                document.getElementById('mic-btn').innerText = "SENZOR AKTIVNÍ";
-                
-                function loop() {
-                    requestAnimationFrame(loop);
-                    analyzer.getByteFrequencyData(data);
-                    c.clearRect(0,0,canv.width,canv.height);
-                    data.forEach((v, i) => {
-                        c.fillStyle = meta[mode];
-                        c.fillRect(i*8, canv.height - v/2, 6, v/2);
-                    });
-                }
-                loop();
-            } catch(e) { alert("Povolte mikrofon."); }
+        function toggleRecord() {
+            isRecording = !isRecording;
+            const btn = document.getElementById('mic-btn');
+            if(isRecording) { btn.style.background = "#ff3b30"; btn.style.color = "white"; playSound(1000, 0.1); }
+            else { btn.style.background = "rgba(255,255,255,0.05)"; btn.style.color = "rgba(255,255,255,0.4)"; playSound(700, 0.1); }
         }
 
-        async function toggleCamera() {
-            const v = document.getElementById('ar-vid');
+        function handleImage(input) {
+            const r = new FileReader();
+            r.onload = (e) => { selectedImg = e.target.result; playSound(1500, 0.2); };
+            r.readAsDataURL(input.files[0]);
+        }
+
+        async function toggleCam() {
+            const v = document.getElementById('ar-video'), m = document.getElementById('map-bg');
             if(v.style.display === 'none' || v.style.display === '') {
-                const s = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
-                v.srcObject = s; v.style.display = 'block';
-            } else { v.style.display = 'none'; }
+                videoStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
+                v.srcObject = videoStream; v.style.display = 'block'; m.style.opacity = '0'; v.play();
+            } else {
+                videoStream.getTracks().forEach(t => t.stop());
+                v.style.display = 'none'; m.style.opacity = '1';
+            }
         }
 
-        function previewTrace() {
-            document.getElementById('prev-h').innerText = document.getElementById('t-title').value || 'M.D. TRACE';
-            document.getElementById('prev-p').innerText = document.getElementById('t-text').value || 'Ukotveno v síti.';
-            document.getElementById('trace-preview').style.display = 'flex';
+        function prepareTrace() {
+            playSound(900, 0.2);
+            if(activeTrace) activeTrace.remove();
+            
+            const cont = document.getElementById('trace-container');
+            activeTrace = document.createElement('div');
+            activeTrace.className = "neon-trace";
+            
+            let img = selectedImg ? `<img src="${selectedImg}" class="w-full h-40 object-cover rounded-[30px] mb-6">` : '';
+            let timer = currentMode === 'capsule' ? `<div id="live-timer" class="text-[10px] font-black text-center text-purple-400 mb-4 tracking-[0.3em]">ENCRYPTING...</div>` : '';
+
+            activeTrace.innerHTML = `
+                ${timer}
+                <div class="flex justify-center gap-2 mb-6 h-6"><div class="wave-bar"></div><div class="wave-bar" style="animation-delay:0.1s"></div><div class="wave-bar" style="animation-delay:0.2s"></div></div>
+                ${img}
+                <div class="overflow-y-auto px-2">
+                    <h2 class="text-3xl font-black italic uppercase text-center mb-2 tracking-tighter">${document.getElementById('t-title').value || 'M.D. ZÁZNAM'}</h2>
+                    <p class="text-[12px] text-white/50 italic text-center mb-8 leading-relaxed">"${document.getElementById('t-desc').value || 'Vzkaz v prostoru invisible-canes.'}"</p>
+                </div>
+                <button onclick="showPay()" class="bg-white text-black py-6 rounded-[30px] font-black text-[12px] uppercase tracking-widest mt-auto">Aktivovat Ukotvení</button>
+            `;
+            cont.appendChild(activeTrace);
+
+            if(currentMode === 'capsule') {
+                let t = 86400;
+                setInterval(() => { t--; let h=Math.floor(t/3600), m=Math.floor((t%3600)/60), s=t%60; if(document.getElementById('live-timer')) document.getElementById('live-timer').innerText = `UNLOCK: ${h}:${m}:${s}`; }, 1000);
+            }
         }
 
-        function confirmAnchor() {
-            const pos = map.getCenter();
-            addPoint(pos.lat, pos.lng, meta[mode]);
-            document.getElementById('trace-preview').style.display = 'none';
-            alert("Ukotveno na mapě energií.");
+        function showPay() {
+            document.getElementById('pay-price').innerText = config[currentMode].price.split(' ')[0];
+            document.getElementById('pay-modal').style.display = 'flex';
+            playSound(1100, 0.3);
         }
 
-        function addPoint(lat, lng, color) {
-            const icon = L.divIcon({
-                className: 'custom-icon',
-                html: `<div class="energy-node" style="background:${color}; --active:${color}"></div>`,
-                iconSize: [20, 20]
-            });
-            L.marker([lat, lng], {icon: icon}).addTo(map);
+        function confirmAll() {
+            playSound(1500, 0.6);
+            document.getElementById('pay-modal').style.display = 'none';
+            if(activeTrace) activeTrace.remove();
+            
+            const list = document.getElementById('radar-list');
+            const item = document.createElement('div');
+            item.className = 'flex justify-between items-center p-6 bg-white/5 rounded-[35px] border border-white/5 mb-4';
+            item.innerHTML = `
+                <div class="flex items-center gap-6">
+                    <div class="flex gap-1 h-4"><div class="wave-bar" style="background:${config[currentMode].color}"></div><div class="wave-bar" style="background:${config[currentMode].color}"></div></div>
+                    <div><div class="text-[14px] font-black uppercase">${document.getElementById('t-title').value || 'M.D. ZÁZNAM'}</div><div class="text-[9px] text-white/30 uppercase">${currentMode}</div></div>
+                </div>
+                <div class="font-black italic text-xs" style="color:${config[currentMode].color}">0m</div>
+            `;
+            list.prepend(item);
+            alert("SYSTEM: Ukotveno 1000%.");
         }
     </script>
 </body>
