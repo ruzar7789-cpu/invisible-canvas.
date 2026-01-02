@@ -3,16 +3,197 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>TADY // invisible-canes // M.D.</title>
+    <title>TADY // invisible-canes</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@200;400;600;800&display=swap');
-        :root { --accent-cyan: #00f2fe; --accent-gold: #ffca2c; --accent-purple: #bf5af2; --active-color: #00f2fe; }
-        body { font-family: 'Plus Jakarta Sans', sans-serif; background: #000; color: white; margin: 0; overflow: hidden; touch-action: none; position: fixed; width: 100%; height: 100%; }
+        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@200;800&display=swap');
+        :root { --accent-cyan: #00f2fe; --accent-purple: #bf5af2; --active-color: #00f2fe; }
+        body, html { background: #000; color: #fff; margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; font-family: 'Plus Jakarta Sans', sans-serif; }
+        
+        /* BOOT SCREEN */
+        #landing-page { position: fixed; inset: 0; z-index: 9999; background: #000; display: flex; flex-direction: column; align-items: center; justify-content: center; transition: opacity 0.8s ease; }
+        .glitch-title { font-size: 5rem; font-weight: 800; italic: true; letter-spacing: -0.05em; margin-bottom: 0.5rem; text-transform: uppercase; color: #fff; }
+        #boot-bar { width: 200px; height: 2px; background: rgba(255,255,255,0.1); position: relative; }
+        #boot-fill { width: 0%; height: 100%; background: var(--accent-cyan); box-shadow: 0 0 15px var(--accent-cyan); transition: width 0.1s linear; }
+        
+        /* UI FIXES */
+        .neon-trace { 
+            background: rgba(15, 15, 15, 0.7); backdrop-filter: blur(30px); -webkit-backdrop-filter: blur(30px);
+            border: 1px solid rgba(255, 255, 255, 0.2); border-radius: 40px; padding: 20px; 
+            width: 90%; max-width: 360px; position: absolute; left: 50%; bottom: 120px; transform: translateX(-50%);
+            z-index: 4000; animation: tracePulse 3s infinite; pointer-events: auto; max-height: 60vh; display: flex; flex-direction: column;
+        }
+        @keyframes tracePulse { 0%, 100% { box-shadow: 0 0 30px -10px var(--active-color); } 50% { box-shadow: 0 0 50px 0px var(--active-color); } }
+        .trace-scroll { overflow-y: auto; flex: 1; margin-bottom: 15px; }
 
-        /* 1. PROFESIONÁLNÍ GLITCH ÚVOD */
-        .glitch-wrap { position: relative; display: inline-block; }
-        .glitch-title { font-size: clamp(4rem, 15vw, 8rem); font-weight: 800; font-style
+        #radar-panel {
+            position: absolute; bottom: 0; left: 0; right: 0; background: #050505;
+            border-top: 1px solid var(--accent-purple); z-index: 5000;
+            transform: translateY(calc(100% - 80px)); transition: transform 0.5s ease; border-radius: 35px 35px 0 0;
+        }
+        #radar-panel.open { transform: translateY(0); }
+        #map-bg { position: absolute; inset: 0; z-index: 1; filter: brightness(0.3); }
+    </style>
+</head>
+<body>
+
+    <div id="landing-page">
+        <div class="glitch-title italic">TADY</div>
+        <div class="text-[9px] font-black text-white/20 tracking-[1em] uppercase mb-10">invisible-canes</div>
+        <div id="boot-bar"><div id="boot-fill"></div></div>
+        <div id="boot-status" class="mt-4 text-[8px] text-cyan-400 font-bold tracking-widest">INITIALIZING: 0%</div>
+        <button id="start-btn" onclick="enterApp()" class="mt-10 hidden bg-white text-black font-black px-12 py-4 rounded-full text-[10px] uppercase tracking-widest italic">Vstoupit</button>
+    </div>
+
+    <div id="main-app" class="hidden h-screen w-screen flex flex-col md:flex-row bg-black">
+        <aside class="w-full md:w-[350px] p-8 border-r border-white/5 z-[100] flex flex-col bg-black">
+            <div class="mb-10">
+                <h1 class="text-4xl font-black italic uppercase">TADY</h1>
+                <p class="text-[8px] text-cyan-400 tracking-[0.5em] font-bold uppercase">invisible-canes // M.D.</p>
+            </div>
+
+            <div class="space-y-4 flex-1">
+                <div class="grid grid-cols-3 gap-2">
+                    <button onclick="setMode('personal')" class="p-3 border border-cyan-400 text-cyan-400 rounded-xl text-[8px] font-black uppercase">Personal</button>
+                    <button onclick="setMode('business')" class="p-3 border border-white/5 text-white/20 rounded-xl text-[8px] font-black uppercase">Business</button>
+                    <button onclick="setMode('capsule')" class="p-3 border border-white/5 text-white/20 rounded-xl text-[8px] font-black uppercase">Capsule</button>
+                </div>
+                <input type="text" id="t-title" class="w-full p-4 bg-white/5 border border-white/10 rounded-2xl text-[10px] text-white uppercase outline-none" placeholder="Název záznamu">
+                <textarea id="t-desc" class="w-full p-4 bg-white/5 border border-white/10 rounded-2xl text-[10px] h-24 text-white outline-none" placeholder="Zpráva..."></textarea>
+                <div class="grid grid-cols-2 gap-2">
+                    <button onclick="document.getElementById('file-in').click()" class="bg-white/5 p-4 rounded-2xl text-[8px] font-black text-white/40 border border-white/5 uppercase">Foto</button>
+                    <button onclick="toggleAudio()" id="mic-btn" class="bg-white/5 p-4 rounded-2xl text-[8px] font-black text-white/40 border border-white/5 uppercase">Audio</button>
+                </div>
+                <input type="file" id="file-in" class="hidden" accept="image/*" onchange="handleImg(this)">
+                <button onclick="createTrace()" class="w-full bg-cyan-400 text-black py-6 rounded-[30px] font-black text-[10px] uppercase tracking-[0.4em] italic shadow-xl mt-4">Ukotvit</button>
+            </div>
+        </aside>
+
+        <main class="flex-1 relative">
+            <div id="map-bg"></div>
+            <video id="ar-vid" class="absolute inset-0 w-full h-full object-cover hidden" autoplay playsinline muted></video>
+            <div id="trace-layer" class="absolute inset-0 z-[3000] pointer-events-none"></div>
+            <button onclick="toggleAR()" class="absolute top-6 right-6 z-[5500] w-14 h-14 bg-white rounded-2xl text-black flex items-center justify-center shadow-2xl border-4 border-black"><i class="fas fa-expand text-lg"></i></button>
+
+            <div id="radar-panel">
+                <div class="h-[80px] flex flex-col items-center justify-center cursor-pointer" onclick="document.getElementById('radar-panel').classList.toggle('open')">
+                    <div class="w-10 h-1 bg-white/10 rounded-full mb-3"></div>
+                    <p class="text-[8px] font-black tracking-[0.5em] text-purple-400 uppercase italic">Radar Energie</p>
+                </div>
+                <div class="p-8 space-y-4" id="radar-list">
+                    <div class="flex justify-between items-center p-4 bg-white/5 rounded-2xl border border-white/5">
+                        <span class="text-[10px] font-black uppercase tracking-widest">M.D. Core</span>
+                        <span class="text-cyan-400 text-[9px] font-black uppercase">Aktivní</span>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <div id="confirm-modal" class="fixed inset-0 z-[8000] bg-black/95 hidden flex-col items-center justify-center p-10">
+        <div id="price-tag" class="text-8xl font-black italic mb-10">29</div>
+        <button onclick="finalize()" class="w-full max-w-xs bg-white text-black py-6 rounded-full font-black text-[10px] tracking-widest uppercase">Potvrdit</button>
+    </div>
+
+    <script>
+        let currentMode = 'personal', selectedImg = null, audioActive = false;
+        const conf = { personal: { p: '29', c: '#00f2fe' }, business: { p: '199', c: '#ffca2c' }, capsule: { p: '49', c: '#bf5af2' } };
+
+        // AUTO-START BOOT
+        (function startBoot() {
+            let p = 0;
+            const fill = document.getElementById('boot-fill');
+            const stat = document.getElementById('boot-status');
+            const timer = setInterval(() => {
+                p++;
+                fill.style.width = p + '%';
+                stat.innerText = `INITIALIZING: ${p}%`;
+                if(p >= 100) {
+                    clearInterval(timer);
+                    document.getElementById('start-btn').classList.remove('hidden');
+                }
+            }, 30);
+        })();
+
+        function enterApp() {
+            document.getElementById('landing-page').style.opacity = '0';
+            setTimeout(() => {
+                document.getElementById('landing-page').style.display = 'none';
+                document.getElementById('main-app').classList.remove('hidden');
+                initMap();
+            }, 800);
+        }
+
+        function initMap() {
+            try {
+                const map = L.map('map-bg', { zoomControl: false, attributionControl: false }).setView([50.912, 14.619], 16);
+                L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png').addTo(map);
+            } catch(e) { console.error("Map load failed, continuing..."); }
+        }
+
+        function setMode(m) {
+            currentMode = m;
+            document.documentElement.style.setProperty('--active-color', conf[m].c);
+            alert("Mód změněn na: " + m.toUpperCase());
+        }
+
+        function toggleAudio() {
+            audioActive = !audioActive;
+            const btn = document.getElementById('mic-btn');
+            btn.style.borderColor = audioActive ? '#ff3b30' : 'rgba(255,255,255,0.05)';
+            btn.style.color = audioActive ? '#ff3b30' : 'rgba(255,255,255,0.4)';
+        }
+
+        function handleImg(input) {
+            const r = new FileReader();
+            r.onload = e => { selectedImg = e.target.result; };
+            r.readAsDataURL(input.files[0]);
+        }
+
+        function createTrace() {
+            const container = document.getElementById('trace-layer');
+            container.innerHTML = '';
+            const trace = document.createElement('div');
+            trace.className = 'neon-trace';
+            
+            let imgHtml = selectedImg ? `<img src="${selectedImg}" class="w-full h-32 object-cover rounded-3xl mb-4">` : '';
+            
+            trace.innerHTML = `
+                <div class="trace-scroll">
+                    <div class="flex gap-1 justify-center mb-4"><div class="w-1 h-4 bg-cyan-400"></div><div class="w-1 h-4 bg-cyan-400"></div></div>
+                    <h2 class="text-2xl font-black italic uppercase text-center mb-2">${document.getElementById('t-title').value || 'M.D. TRACE'}</h2>
+                    <p class="text-[10px] text-white/50 italic text-center mb-4">"${document.getElementById('t-desc').value || 'Záznam v invisible-canes'}"</p>
+                    ${imgHtml}
+                </div>
+                <button onclick="showPay()" class="w-full bg-white text-black py-4 rounded-3xl font-black text-[10px] uppercase tracking-widest">Aktivovat</button>
+            `;
+            container.appendChild(trace);
+        }
+
+        function showPay() {
+            document.getElementById('price-tag').innerText = conf[currentMode].p;
+            document.getElementById('confirm-modal').classList.remove('hidden');
+            document.getElementById('confirm-modal').classList.add('flex');
+        }
+
+        function finalize() {
+            document.getElementById('confirm-modal').classList.add('hidden');
+            document.getElementById('trace-layer').innerHTML = '';
+            alert("Ukotveno 1000%.");
+        }
+
+        async function toggleAR() {
+            const v = document.getElementById('ar-vid');
+            if(v.classList.contains('hidden')) {
+                const s = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
+                v.srcObject = s; v.classList.remove('hidden');
+            } else {
+                v.classList.add('hidden');
+            }
+        }
+    </script>
+</body>
+</html>
