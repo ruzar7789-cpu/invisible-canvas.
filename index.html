@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>TADY - AudioSenzor M.D. Core v2</title>
+    <title>TADY - AudioSenzor M.D. Ultra</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
@@ -20,118 +20,109 @@
         body { font-family: 'Plus Jakarta Sans', sans-serif; background: #000; color: white; margin: 0; overflow: hidden; user-select: none; }
         .gradient-text { background: linear-gradient(45deg, var(--accent-cyan), #4facfe); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
 
-        /* SKLO SE ZÁŘÍ (GLASSMORPHISM) */
+        /* LOADING BAR */
+        #boot-progress-container { width: 220px; height: 1px; background: rgba(255,255,255,0.05); border-radius: 10px; overflow: hidden; position: relative; }
+        #boot-progress-bar { width: 0%; height: 100%; background: var(--accent-cyan); box-shadow: 0 0 20px var(--accent-cyan); transition: width 2s cubic-bezier(0.22, 1, 0.36, 1); }
+
+        /* GLASSMORPHISM VZKAZ V2 */
         .neon-trace { 
-            background: rgba(255, 255, 255, 0.04); backdrop-filter: blur(30px); -webkit-backdrop-filter: blur(30px);
-            border: 1px solid rgba(255, 255, 255, 0.15); border-radius: 45px; padding: 35px; 
-            animation: float 4s ease-in-out infinite, glassGlow 3s infinite alternate;
-            pointer-events: auto; max-width: 320px; z-index: 40; position: absolute;
-            box-shadow: 0 25px 80px rgba(0,0,0,0.9), inset 0 0 20px rgba(255,255,255,0.05);
+            background: rgba(255, 255, 255, 0.03); backdrop-filter: blur(40px); -webkit-backdrop-filter: blur(40px);
+            border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 50px; padding: 40px; 
+            animation: float 5s ease-in-out infinite, glassGlow 3s infinite alternate;
+            pointer-events: auto; max-width: 340px; z-index: 40; position: absolute;
+            box-shadow: 0 30px 100px rgba(0,0,0,0.9);
         }
-        @keyframes glassGlow { 
-            from { border-color: rgba(255,255,255,0.1); box-shadow: 0 0 20px rgba(0,242,254,0.1); } 
-            to { border-color: var(--accent-cyan); box-shadow: 0 0 40px rgba(0,242,245,0.3); } 
-        }
-        @keyframes float { 0%, 100% { transform: translate(-50%, -50%) translateY(0); } 50% { transform: translate(-50%, -50%) translateY(-20px); } }
+        @keyframes glassGlow { from { border-color: rgba(255,255,255,0.05); } to { border-color: var(--accent-cyan); } }
+        @keyframes float { 0%, 100% { transform: translate(-50%, -50%) translateY(0); } 50% { transform: translate(-50%, -50%) translateY(-25px); } }
 
-        /* AR HUD & SCANNER */
-        #crosshair {
-            position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
-            width: 50px; height: 50px; border: 1px solid rgba(255,255,255,0.3); border-radius: 50%;
-            z-index: 100; pointer-events: none; opacity: 0;
-        }
-        .scan-line {
-            position: absolute; width: 100%; height: 3px; background: linear-gradient(90deg, transparent, var(--accent-cyan), transparent);
-            top: 0; left: 0; z-index: 10; animation: scan 4s linear infinite; display: none; opacity: 0.6;
-        }
-        @keyframes scan { 0% { top: 0%; } 100% { top: 100%; } }
+        /* AUDIO VISUALIZER ANIMACE */
+        .wave { display: flex; justify-content: center; align-items: center; gap: 3px; height: 20px; margin-bottom: 15px; }
+        .bar { width: 2px; height: 100%; background: var(--accent-cyan); border-radius: 10px; animation: sound 1s ease-in-out infinite; }
+        .bar:nth-child(2) { animation-delay: 0.1s; } .bar:nth-child(3) { animation-delay: 0.2s; }
+        @keyframes sound { 0%, 100% { height: 4px; } 50% { height: 100%; } }
 
-        /* LIVE FEED LOG */
-        #live-log {
-            position: absolute; bottom: 100px; left: 30px; z-index: 80; font-size: 8px; font-weight: 800;
-            color: var(--accent-cyan); text-transform: uppercase; letter-spacing: 2px;
-            pointer-events: none; display: none;
-        }
-
-        /* MAP STYLING & ENERGY PULSE */
-        #map-bg { position: absolute; inset: 0; z-index: 1; filter: brightness(0.4) contrast(1.3) grayscale(0.2); transition: 0.8s; }
+        #map-bg { position: absolute; inset: 0; z-index: 1; filter: brightness(0.3) contrast(1.4); transition: 1s; }
+        #ar-video { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; z-index: 0; display: none; }
+        
+        .active-btn { border-color: var(--accent-cyan) !important; color: var(--accent-cyan) !important; background: rgba(0,242,254,0.05); }
+        
         .energy-pulse {
             background: var(--accent-cyan); border-radius: 50%;
-            box-shadow: 0 0 40px var(--accent-cyan);
-            animation: pulseMarker 2.5s infinite ease-out;
+            box-shadow: 0 0 50px var(--accent-cyan);
+            animation: pulseMarker 3s infinite ease-out;
         }
-        @keyframes pulseMarker { 0% { transform: scale(0.2); opacity: 1; } 100% { transform: scale(3.5); opacity: 0; } }
+        @keyframes pulseMarker { 0% { transform: scale(0.1); opacity: 1; } 100% { transform: scale(4); opacity: 0; } }
 
-        .active-btn { border-color: var(--accent-cyan) !important; color: var(--accent-cyan) !important; background: rgba(0,242,254,0.1); box-shadow: 0 0 15px rgba(0,242,254,0.2); }
+        /* GLITCH TEXT EFFECT */
+        .glitch-text { text-shadow: 2px 0 var(--accent-purple), -2px 0 var(--accent-cyan); animation: glitch 2s infinite; }
+        @keyframes glitch { 0% { transform: translate(0); } 20% { transform: translate(-2px, 2px); } 40% { transform: translate(-2px, -2px); } 60% { transform: translate(2px, 2px); } 80% { transform: translate(2px, -2px); } 100% { transform: translate(0); } }
     </style>
 </head>
 <body>
 
     <div id="landing-page" class="fixed inset-0 z-[9999] bg-black flex flex-col justify-center items-center text-center">
-        <div class="mb-4 text-[10px] font-black tracking-[1.2em] text-cyan-400/50 uppercase animate-pulse">Syncing Energy Core</div>
-        <h1 class="text-8xl font-black mb-8 tracking-tighter uppercase italic text-white leading-none">TADY<br><span class="text-xs tracking-[0.8em] text-white/20 not-italic">v.2.0.26</span></h1>
-        <button onclick="bootApp()" class="bg-white text-black font-black px-20 py-7 rounded-[30px] text-[11px] tracking-[0.4em] uppercase italic active:scale-95 transition-all shadow-[0_0_50px_rgba(255,255,255,0.2)]">Aktivovat Senzor</button>
+        <div class="mb-3 text-[8px] font-black tracking-[1.5em] text-cyan-400/40 uppercase">Establishing Audio Link</div>
+        <h1 class="text-7xl font-black mb-12 tracking-tighter uppercase italic text-white glitch-text">TADY</h1>
+        
+        <div id="boot-progress-container" class="mb-16">
+            <div id="boot-progress-bar"></div>
+        </div>
+
+        <button onclick="bootApp()" id="boot-btn" class="opacity-0 pointer-events-none bg-white text-black font-black px-20 py-7 rounded-[35px] text-[10px] tracking-[0.5em] uppercase italic transition-all duration-1000 hover:tracking-[0.7em]">Inicializovat</button>
     </div>
 
     <div id="app-interface" class="hidden h-screen w-screen flex flex-col md:flex-row overflow-hidden">
         
-        <aside class="w-full md:w-[400px] bg-black p-10 flex flex-col z-[50] border-r border-white/5 overflow-y-auto shadow-2xl">
-            <div class="mb-14">
+        <aside class="w-full md:w-[420px] bg-black p-12 flex flex-col z-[50] border-r border-white/5 overflow-y-auto shadow-2xl">
+            <div class="mb-16">
                 <div class="text-4xl font-black gradient-text italic tracking-tighter uppercase">TADY</div>
-                <div class="text-[8px] font-black text-white/20 tracking-[0.6em] uppercase mt-1">M.D. Founders Access</div>
+                <div class="text-[7px] font-black text-white/20 tracking-[0.8em] uppercase mt-2">M.D. Core Prototype</div>
             </div>
 
-            <div class="space-y-8 flex-1">
+            <div class="space-y-10 flex-1">
                 <div class="grid grid-cols-3 gap-3">
                     <button onclick="setMode('personal')" id="btn-p" class="p-4 rounded-2xl border border-white/5 text-[8px] font-black uppercase transition active-btn">Personal</button>
-                    <button onclick="setMode('business')" id="btn-b" class="p-4 rounded-2xl border border-white/5 text-[8px] font-black uppercase transition text-white/30">Business</button>
-                    <button onclick="setMode('capsule')" id="btn-c" class="p-4 rounded-2xl border border-white/5 text-[8px] font-black uppercase transition text-white/30">Capsule</button>
+                    <button onclick="setMode('business')" id="btn-b" class="p-4 rounded-2xl border border-white/5 text-[8px] font-black uppercase transition text-white/20">Business</button>
+                    <button onclick="setMode('capsule')" id="btn-c" class="p-4 rounded-2xl border border-white/5 text-[8px] font-black uppercase transition text-white/20">Capsule</button>
                 </div>
                 
-                <div class="space-y-6">
-                    <div class="space-y-2">
-                        <label class="text-[7px] font-black text-white/20 tracking-[0.4em] uppercase ml-1">Kódové označení</label>
-                        <input type="text" id="t-title" class="w-full p-6 bg-white/5 border border-white/10 rounded-2xl text-[10px] font-bold text-white focus:border-cyan-500 transition outline-none uppercase tracking-widest" placeholder="VARNSDORF_HUB_01">
-                    </div>
-                    <div class="space-y-2">
-                        <label class="text-[7px] font-black text-white/20 tracking-[0.4em] uppercase ml-1">Datový paket</label>
-                        <textarea id="t-desc" class="w-full p-6 bg-white/5 border border-white/10 rounded-2xl text-[10px] h-28 resize-none text-white focus:border-cyan-500 transition outline-none" placeholder="ZAPIŠTE VAŠI STOPU..."></textarea>
-                    </div>
+                <div class="space-y-4">
+                    <input type="text" id="t-title" class="w-full p-6 bg-white/5 border border-white/10 rounded-3xl text-[10px] font-bold text-white focus:border-cyan-500 outline-none uppercase tracking-widest placeholder:text-white/10" placeholder="IDENTIFIKÁTOR">
+                    <textarea id="t-desc" class="w-full p-6 bg-white/5 border border-white/10 rounded-3xl text-[10px] h-32 resize-none text-white focus:border-cyan-500 outline-none placeholder:text-white/10" placeholder="ZPRÁVA V ČASOPROSTORU..."></textarea>
                 </div>
 
-                <button onclick="document.getElementById('t-img').click()" class="w-full border border-white/5 p-6 rounded-2xl text-[8px] font-black uppercase text-white/30 tracking-[0.3em] hover:bg-white/5 transition flex items-center justify-center gap-4">
-                    <i class="fas fa-layer-group"></i> <span id="img-label">NAHRÁT VIZUÁLNÍ DATA</span>
-                    <input type="file" id="t-img" accept="image/*" class="hidden" onchange="handleImage(this)">
-                </button>
+                <div class="flex gap-4">
+                    <button onclick="document.getElementById('t-img').click()" class="flex-1 border border-white/5 p-6 rounded-3xl text-[8px] font-black uppercase text-white/20 tracking-widest hover:bg-white/5 transition flex items-center justify-center gap-3">
+                        <i class="fas fa-image"></i>
+                        <input type="file" id="t-img" accept="image/*" class="hidden" onchange="handleImage(this)">
+                    </button>
+                    <button class="flex-1 border border-white/5 p-6 rounded-3xl text-[8px] font-black uppercase text-cyan-400/50 tracking-widest hover:bg-white/5 transition flex items-center justify-center gap-3">
+                        <i class="fas fa-microphone"></i>
+                    </button>
+                </div>
 
-                <button onclick="prepareTrace()" id="btn-main" class="w-full bg-cyan-400 text-black py-7 rounded-[35px] font-black text-[11px] uppercase tracking-[0.6em] italic shadow-[0_0_40px_rgba(0,242,254,0.3)] active:scale-95 transition mt-6">Ukotvit v prostoru</button>
+                <button onclick="prepareTrace()" id="btn-main" class="w-full bg-cyan-400 text-black py-8 rounded-[40px] font-black text-[11px] uppercase tracking-[0.6em] italic shadow-[0_0_60px_rgba(0,242,254,0.2)] active:scale-95 transition mt-8">Ukotvit Jádro</button>
             </div>
             
-            <div class="mt-12 text-[7px] text-white/10 font-black uppercase tracking-[0.5em] text-center italic leading-loose">
-                Encryption Status: AES-256 <br> User: M.D. Core // 2026
+            <div class="mt-12 text-[7px] text-white/10 font-black uppercase tracking-[0.6em] text-center italic">
+                System: 2.0.26 // Admin: M.D.
             </div>
         </aside>
 
         <main class="flex-1 relative bg-black">
-            <div id="crosshair"></div>
-            <div id="scan-line" class="scan-line"></div>
-            <div id="live-log">Log: System Ready...</div>
-            
             <video id="ar-video" autoplay playsinline muted></video>
             <div id="map-bg" class="h-full w-full"></div>
             <div id="trace-container" class="absolute inset-0 z-[40] pointer-events-none"></div>
             
-            <div class="absolute top-10 right-10 w-32 h-32 rounded-full border border-white/5 bg-black/40 backdrop-blur-xl z-[60] flex items-center justify-center">
-                <div class="w-28 h-28 rounded-full border border-cyan-500/10 relative animate-[spin_6s_linear_infinite]">
+            <div class="absolute top-12 right-12 w-32 h-32 rounded-full border border-white/5 bg-black/30 backdrop-blur-2xl z-[60] flex items-center justify-center">
+                <div class="w-28 h-28 rounded-full border border-cyan-500/10 relative animate-[spin_8s_linear_infinite]">
                     <div class="absolute top-0 left-1/2 w-0.5 h-1/2 bg-gradient-to-t from-cyan-400 to-transparent origin-bottom"></div>
                 </div>
-                <div class="absolute inset-0 flex items-center justify-center">
-                    <div class="w-1 h-1 bg-cyan-400 rounded-full animate-ping"></div>
-                </div>
+                <div class="absolute text-[8px] font-black text-cyan-400 animate-pulse uppercase">Active</div>
             </div>
 
             <div class="absolute bottom-12 right-12 z-[100]">
-                <button onclick="toggleCam()" class="w-20 h-20 rounded-[30px] bg-white text-black flex items-center justify-center shadow-2xl active:scale-90 transition-all border-[8px] border-black">
+                <button onclick="toggleCam()" class="w-24 h-24 rounded-[40px] bg-white text-black flex items-center justify-center shadow-2xl active:scale-90 transition-all border-[10px] border-black">
                     <i id="cam-icon" class="fas fa-expand text-2xl"></i>
                 </button>
             </div>
@@ -139,16 +130,23 @@
     </div>
 
     <div id="payment-modal" class="fixed inset-0 z-[10000] bg-black/98 hidden justify-center items-center backdrop-blur-3xl">
-        <div class="w-full max-w-sm p-14 text-center">
-            <div class="text-cyan-400 text-[10px] font-black tracking-[0.7em] mb-12 uppercase italic">Priority Anchor Fee</div>
-            <div id="pay-amount" class="text-8xl font-black text-white italic mb-14 tracking-tighter">29 Kč</div>
-            <button onclick="completePayment()" class="w-full bg-white text-black py-7 rounded-[40px] font-black uppercase text-[12px] tracking-[0.4em] shadow-2xl">Zaplatit a Ukotvit</button>
+        <div class="w-full max-w-sm p-16 text-center">
+            <div class="text-cyan-400 text-[10px] font-black tracking-[1em] mb-14 uppercase italic">Secure Uplink</div>
+            <div id="pay-amount" class="text-8xl font-black text-white italic mb-16 tracking-tighter">29 Kč</div>
+            <button onclick="completePayment()" class="w-full bg-white text-black py-8 rounded-[50px] font-black uppercase text-[12px] tracking-[0.5em] shadow-[0_0_50px_rgba(255,255,255,0.2)]">Potvrdit</button>
         </div>
     </div>
 
     <script>
         let map, currentMode = 'personal', activePreview = null, selectedImg = null, videoStream = null;
         const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+
+        window.onload = () => {
+            const bar = document.getElementById('boot-progress-bar');
+            const btn = document.getElementById('boot-btn');
+            setTimeout(() => { bar.style.width = '100%'; }, 500);
+            setTimeout(() => { btn.style.opacity = '1'; btn.style.pointerEvents = 'auto'; }, 2200);
+        };
 
         function playSound(f, d) {
             const o = audioCtx.createOscillator(), g = audioCtx.createGain();
@@ -157,15 +155,8 @@
             o.start(); setTimeout(() => o.stop(), d * 1000);
         }
 
-        function updateLog(msg) {
-            const log = document.getElementById('live-log');
-            log.innerText = `Log: ${msg}`;
-            log.style.display = 'block';
-            setTimeout(() => log.style.opacity = '0.5', 100);
-        }
-
         function bootApp() {
-            playSound(800, 0.2);
+            playSound(1000, 0.2);
             document.getElementById('landing-page').style.opacity = '0';
             setTimeout(() => {
                 document.getElementById('landing-page').style.display = 'none';
@@ -180,58 +171,53 @@
         }
 
         async function toggleCam() {
-            const v = document.getElementById('ar-video'), m = document.getElementById('map-bg'), ch = document.getElementById('crosshair'), sl = document.getElementById('scan-line'), icon = document.getElementById('cam-icon');
+            const v = document.getElementById('ar-video'), m = document.getElementById('map-bg'), icon = document.getElementById('cam-icon');
             if(v.style.display === 'none' || v.style.display === '') {
                 try {
                     videoStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
-                    v.srcObject = videoStream; v.style.display = 'block'; ch.style.opacity = '0.4'; sl.style.display = 'block';
-                    m.style.opacity = '0'; icon.className = 'fas fa-map';
-                    updateLog("Scanning Reality...");
+                    v.srcObject = videoStream; v.style.display = 'block'; m.style.opacity = '0'; icon.className = 'fas fa-map';
                     await v.play();
-                } catch(e) { alert("Chyba přístupu."); }
+                } catch(e) { alert("Chyba."); }
             } else {
                 if(videoStream) videoStream.getTracks().forEach(t => t.stop());
-                v.style.display = 'none'; ch.style.opacity = '0'; sl.style.display = 'none'; m.style.opacity = '1'; icon.className = 'fas fa-expand';
+                v.style.display = 'none'; m.style.opacity = '1'; icon.className = 'fas fa-expand';
             }
         }
 
         function setMode(m) {
-            playSound(400, 0.05);
+            playSound(500, 0.05);
             currentMode = m;
-            document.querySelectorAll('aside button').forEach(b => b.classList.remove('active-btn', 'text-white/30'));
+            document.querySelectorAll('aside button').forEach(b => b.classList.remove('active-btn', 'text-white/20'));
             document.getElementById(`btn-${m[0]}`).classList.add('active-btn');
             document.getElementById('btn-main').style.backgroundColor = m==='personal'?'#00f2fe':m==='business'?'#ffca2c':'#bf5af2';
-            updateLog(`Mode: ${m.toUpperCase()}`);
         }
 
         function handleImage(input) {
             const reader = new FileReader();
-            reader.onload = (e) => { selectedImg = e.target.result; document.getElementById('img-label').innerText = "DATA SYNCED"; playSound(1000, 0.1); };
+            reader.onload = (e) => { selectedImg = e.target.result; playSound(1200, 0.1); };
             reader.readAsDataURL(input.files[0]);
         }
 
         function prepareTrace() {
-            playSound(700, 0.1);
-            updateLog("Generating Glass Trace...");
+            playSound(800, 0.1);
             if(activePreview) activePreview.remove();
             const container = document.getElementById('trace-container');
             activePreview = document.createElement('div');
             activePreview.className = `neon-trace ${currentMode==='business'?'business-trace':currentMode==='capsule'?'capsule-trace':''}`;
             activePreview.style.left = "50%"; activePreview.style.top = "45%";
             
-            let imgHtml = selectedImg ? `<img src="${selectedImg}" class="w-full h-40 object-cover rounded-[30px] mb-6 border border-white/20">` : '';
-            let timerHtml = currentMode === 'capsule' ? `<div id="caps-timer" class="text-[10px] text-purple-400 font-black mb-3 text-center tracking-[0.3em] animate-pulse">LOCKING...</div>` : '';
+            let imgHtml = selectedImg ? `<img src="${selectedImg}" class="w-full h-48 object-cover rounded-[35px] mb-8 border border-white/10">` : '';
             
             activePreview.innerHTML = `
-                ${timerHtml} ${imgHtml}
-                <h4 class="text-2xl font-black italic text-white mb-2 uppercase text-center tracking-tighter">${document.getElementById('t-title').value || 'M.D. TRACE'}</h4>
-                <p class="text-[12px] text-white/50 italic mb-10 text-center px-4 leading-relaxed">"${document.getElementById('t-desc').value || 'Zanechána digitální energie.'}"</p>
-                <button onclick="openPayment()" class="pointer-events-auto w-full bg-white text-black py-5 rounded-[25px] font-black text-[11px] uppercase tracking-[0.3em] active:scale-95 transition">Potvrdit</button>
+                <div class="wave">
+                    <div class="bar"></div><div class="bar"></div><div class="bar"></div><div class="bar"></div><div class="bar"></div>
+                </div>
+                ${imgHtml}
+                <h4 class="text-2xl font-black italic text-white mb-3 uppercase text-center tracking-tighter">${document.getElementById('t-title').value || 'MD-'+Math.floor(Math.random()*999)}</h4>
+                <p class="text-[12px] text-white/50 italic mb-12 text-center px-6 leading-relaxed">"${document.getElementById('t-desc').value || 'Digitální stopa v realitě.'}"</p>
+                <button onclick="openPayment()" class="pointer-events-auto w-full bg-white text-black py-6 rounded-[30px] font-black text-[12px] uppercase tracking-[0.4em] active:scale-95 transition shadow-2xl">Ukotvit</button>
             `;
             container.appendChild(activePreview);
-            if(currentMode === 'capsule') {
-                let t = 86400; setInterval(() => { t--; let h=Math.floor(t/3600), m=Math.floor((t%3600)/60), s=t%60; document.getElementById('caps-timer').innerText=`UNLOCK IN ${h}:${m}:${s}`; }, 1000);
-            }
         }
 
         function openPayment() {
@@ -241,18 +227,14 @@
         }
 
         function completePayment() {
-            playSound(1200, 0.3);
+            playSound(1500, 0.4);
             document.getElementById('payment-modal').style.display = 'none';
             activePreview.querySelector('button').remove();
-            updateLog("Anchor Confirmed.");
-            
             navigator.geolocation.getCurrentPosition(pos => {
-                const color = currentMode === 'personal' ? '#00f2fe' : currentMode === 'business' ? '#ffca2c' : '#bf5af2';
                 const pulse = L.divIcon({ className: 'energy-pulse', iconSize: [12, 12] });
                 L.marker([pos.coords.latitude, pos.coords.longitude], {icon: pulse}).addTo(map);
-                L.circle([pos.coords.latitude, pos.coords.longitude], { color: color, weight: 1, radius: 40, fillOpacity: 0.1 }).addTo(map);
             });
-            alert("SYSTEM: Energie byla ukotvena pod iniciály M.D.");
+            alert("SYSTEM: Ukotvení dokončeno pod ID M.D.");
         }
     </script>
 </body>
