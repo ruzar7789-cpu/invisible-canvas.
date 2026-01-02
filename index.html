@@ -10,75 +10,63 @@
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@200;400;600;800&display=swap');
-        :root { --accent-cyan: #00f2fe; --accent-gold: #ffca2c; --accent-purple: #bf5af2; --active-color: #00f2fe; }
+        :root { --accent-cyan: #00f2fe; --active-color: #00f2fe; }
         body { font-family: 'Plus Jakarta Sans', sans-serif; background: #000; color: white; margin: 0; overflow: hidden; touch-action: manipulation; }
 
-        /* --- NOVÁ ÚVODNÍ STRÁNKA --- */
-        #landing-page { transition: opacity 1s cubic-bezier(0.4, 0, 0.2, 1); }
+        /* --- ÚVODNÍ STRÁNKA 1.6 --- */
+        #landing-page { transition: all 1s ease-in-out; background: radial-gradient(circle at center, #050505 0%, #000 100%); }
         
         .glitch-text {
-            font-size: clamp(4rem, 15vw, 8rem);
-            font-weight: 900;
-            letter-spacing: -0.05em;
-            position: relative;
-            text-transform: uppercase;
-            font-style: italic;
+            font-size: clamp(4rem, 15vw, 8rem); font-weight: 900; letter-spacing: -0.05em;
+            position: relative; text-transform: uppercase; font-style: italic;
         }
-        .glitch-text::before, .glitch-text::after {
-            content: 'TADY';
-            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-            opacity: 0.8;
+        .glitch-text::before { content: 'TADY'; position: absolute; left: -2px; text-shadow: 2px 0 #0ff; top: 0; overflow: hidden; clip: rect(0, 900px, 0, 0); animation: noise-1 3s infinite linear alternate-reverse; }
+        .glitch-text::after { content: 'TADY'; position: absolute; left: 2px; text-shadow: -2px 0 #f0f; top: 0; overflow: hidden; clip: rect(0, 900px, 0, 0); animation: noise-2 3s infinite linear alternate-reverse; }
+
+        @keyframes noise-1 { 0% { clip: rect(20px, 9999px, 40px, 0); } 100% { clip: rect(80px, 9999px, 100px, 0); } }
+        @keyframes noise-2 { 0% { clip: rect(10px, 9999px, 30px, 0); } 100% { clip: rect(50px, 9999px, 70px, 0); } }
+
+        #boot-progress-container { width: 240px; margin-top: 40px; position: relative; }
+        #boot-bar { width: 0%; height: 2px; background: var(--accent-cyan); box-shadow: 0 0 15px var(--accent-cyan); transition: width 0.2s; }
+        #boot-status { font-size: 8px; font-family: monospace; color: var(--accent-cyan); margin-top: 10px; letter-spacing: 2px; opacity: 0.6; height: 15px; }
+
+        /* SKENER */
+        #fingerprint-zone {
+            margin-top: 50px; display: none; flex-direction: column; align-items: center; cursor: pointer; animation: fadeIn 1s;
         }
-        .glitch-text::before { color: #0ff; z-index: -1; animation: glitch 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94) both infinite; }
-        .glitch-text::after { color: #f0f; z-index: -2; animation: glitch 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94) reverse both infinite; }
-
-        @keyframes glitch {
-            0% { transform: translate(0); }
-            20% { transform: translate(-3px, 3px); }
-            40% { transform: translate(-3px, -3px); }
-            60% { transform: translate(3px, 3px); }
-            80% { transform: translate(3px, -3px); }
-            100% { transform: translate(0); }
+        .scan-circle {
+            width: 70px; height: 70px; border: 1px solid rgba(0,242,254,0.3); border-radius: 50%;
+            display: flex; items-center; justify-content: center; position: relative; overflow: hidden;
         }
+        .scan-line { position: absolute; width: 100%; height: 2px; background: var(--accent-cyan); top: 0; animation: scan 2s infinite; box-shadow: 0 0 10px var(--accent-cyan); }
+        @keyframes scan { 0% { top: 0; } 100% { top: 100%; } }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 
-        #boot-log {
-            font-size: 8px; font-family: monospace; color: var(--accent-cyan);
-            opacity: 0.5; height: 12px; margin-top: 10px; text-transform: uppercase; letter-spacing: 2px;
-        }
-
-        #boot-bar-wrap { width: 200px; height: 2px; background: rgba(255,255,255,0.1); margin-top: 30px; position: relative; overflow: hidden; }
-        #boot-progress { width: 0%; height: 100%; background: white; box-shadow: 0 0 15px white; transition: width 0.1s linear; }
-
-        /* --- MAPA A UI --- */
-        #map-bg { position: absolute; inset: 0; z-index: 1; filter: contrast(1.1) brightness(0.5) saturate(0.8); transition: opacity 0.8s; }
+        /* HLAVNÍ UI */
+        #map-bg { position: absolute; inset: 0; z-index: 1; filter: contrast(1.1) brightness(0.5) saturate(0.8); }
         .active-mode { border-color: var(--active-color) !important; color: var(--active-color) !important; background: rgba(255,255,255,0.05); }
         #ar-video { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; z-index: 0; display: none; }
-        
-        .neon-trace { 
-            background: rgba(0, 0, 0, 0.95); backdrop-filter: blur(20px);
-            border: 1px solid var(--active-color); border-radius: 35px; padding: 25px; 
-            width: 85%; max-width: 320px; position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%);
-            z-index: 2000; pointer-events: auto; box-shadow: 0 0 40px rgba(0,0,0,0.8);
-        }
-
-        #radar-panel {
-            position: absolute; bottom: 0; left: 0; right: 0; 
-            background: rgba(0,0,0,0.95); backdrop-filter: blur(40px);
-            border-top: 1px solid rgba(255,255,255,0.05); z-index: 5000;
-            transition: transform 0.6s cubic-bezier(0.19, 1, 0.22, 1);
-            transform: translateY(calc(100% - 80px)); border-radius: 40px 40px 0 0;
-        }
+        #radar-panel { position: absolute; bottom: 0; left: 0; right: 0; background: rgba(0,0,0,0.95); backdrop-filter: blur(40px); z-index: 5000; transition: transform 0.6s; transform: translateY(calc(100% - 80px)); border-radius: 40px 40px 0 0; }
         #radar-panel.open { transform: translateY(0); }
-        .wave-bar { width: 4px; height: 5px; background: var(--active-color); border-radius: 10px; transition: height 0.05s ease; }
     </style>
 </head>
 <body>
 
     <div id="landing-page" class="fixed inset-0 z-[9999] bg-black flex flex-col justify-center items-center">
         <div class="glitch-text">TADY</div>
-        <div id="boot-log">Inicializace systému...</div>
-        <div id="boot-bar-wrap"><div id="boot-progress"></div></div>
-        <button onclick="bootApp()" id="boot-btn" class="hidden bg-white text-black font-black px-12 py-4 rounded-full text-[10px] tracking-[0.4em] uppercase italic mt-12 hover:scale-105 transition-all">Vstoupit</button>
+        
+        <div id="boot-progress-container">
+            <div id="boot-bar"></div>
+            <div id="boot-status">INITIALIZING...</div>
+        </div>
+
+        <div id="fingerprint-zone" onclick="bootApp()">
+            <div class="scan-circle">
+                <i class="fas fa-fingerprint text-3xl text-cyan-400 opacity-60"></i>
+                <div class="scan-line"></div>
+            </div>
+            <div class="text-[9px] font-black tracking-[0.4em] uppercase mt-4 text-cyan-400">Identify M.D.</div>
+        </div>
     </div>
 
     <div id="app-interface" class="hidden h-screen w-screen flex flex-col md:flex-row overflow-hidden">
@@ -101,16 +89,11 @@
                 <textarea id="t-desc" class="w-full p-5 bg-white/5 border border-white/10 rounded-2xl text-[11px] h-20 resize-none text-white outline-none focus:border-cyan-400" placeholder="Zpráva..."></textarea>
 
                 <div class="grid grid-cols-2 gap-4">
-                    <button onclick="document.getElementById('t-img').click()" class="bg-white/5 p-5 rounded-2xl text-[9px] font-black flex items-center justify-center gap-3 border border-white/5 uppercase"><i class="fas fa-camera"></i> Foto</button>
+                    <button class="bg-white/5 p-5 rounded-2xl text-[9px] font-black flex items-center justify-center gap-3 border border-white/5 uppercase"><i class="fas fa-camera"></i> Foto</button>
                     <button onclick="toggleRecord()" id="mic-btn" class="bg-white/5 p-5 rounded-2xl text-[9px] font-black flex items-center justify-center gap-3 border border-white/5 uppercase"><i class="fas fa-microphone"></i> Audio</button>
-                    <input type="file" id="t-img" accept="image/*" class="hidden" onchange="handleImage(this)">
                 </div>
                 
-                <div id="v-container" class="flex justify-center items-end gap-1 h-6">
-                    <div class="wave-bar"></div><div class="wave-bar"></div><div class="wave-bar"></div><div class="wave-bar"></div><div class="wave-bar"></div>
-                </div>
-
-                <button onclick="prepareTrace()" class="w-full bg-cyan-400 text-black py-6 rounded-[35px] font-black text-[11px] uppercase tracking-[0.5em] italic shadow-2xl active:scale-95 transition-all">Ukotvit v prostoru</button>
+                <button onclick="prepareTrace()" class="w-full bg-cyan-400 text-black py-6 rounded-[35px] font-black text-[11px] uppercase tracking-[0.5em] italic active:scale-95 transition-all">Ukotvit v prostoru</button>
             </div>
         </aside>
 
@@ -118,8 +101,7 @@
             <video id="ar-video" autoplay playsinline muted></video>
             <div id="map-bg"></div>
             <div id="trace-container" class="absolute inset-0 z-[1000] pointer-events-none"></div>
-            
-            <button onclick="toggleCam()" class="absolute top-10 right-10 z-[2000] w-14 h-14 rounded-2xl bg-white text-black flex items-center justify-center shadow-2xl border-4 border-black"><i id="cam-icon" class="fas fa-expand-alt"></i></button>
+            <button onclick="toggleCam()" class="absolute top-10 right-10 z-[2000] w-14 h-14 rounded-2xl bg-white text-black flex items-center justify-center shadow-2xl"><i class="fas fa-expand-alt"></i></button>
 
             <div id="radar-panel">
                 <div class="h-[80px] flex flex-col items-center justify-center cursor-pointer" onclick="toggleRadar()">
@@ -132,34 +114,39 @@
     </div>
 
     <script>
-        let map, currentMode = 'personal', activeTrace = null, selectedImg = null, videoStream = null;
-        let isRecording = false, audioCtx, audioSource, analyser, animationId, userCoords = [50.912, 14.619];
+        let map, currentMode = 'personal', audioCtx, userCoords = [50.912, 14.619];
         const config = { personal: { color: '#00f2fe', price: 29 }, business: { color: '#ffca2c', price: 199 }, capsule: { color: '#bf5af2', price: 49 } };
 
-        // LOGIKA ÚVODNÍHO BOOTU
         window.onload = () => {
-            const bar = document.getElementById('boot-progress');
-            const log = document.getElementById('boot-log');
-            const btn = document.getElementById('boot-btn');
-            const logs = ["Příprava jádra...", "Lokalizace GPS...", "Aktivace senzorů...", "Šifrování kanálu...", "Všechno důležité je tady."];
+            const bar = document.getElementById('boot-bar');
+            const status = document.getElementById('boot-status');
+            const zone = document.getElementById('fingerprint-zone');
+            const steps = ["SECURE LINK...", "GPS LOCK...", "BIOMETRICS...", "M.D. VERIFIED"];
             let p = 0;
             let iv = setInterval(() => {
-                p += Math.floor(Math.random() * 3) + 1;
-                if (p % 20 === 0) log.innerText = logs[Math.floor(p/25)] || logs[4];
-                if(p >= 100) { p = 100; clearInterval(iv); btn.classList.remove('hidden'); log.innerText = "Systém připraven."; }
+                p += 2;
+                if(p % 25 === 0) status.innerText = steps[Math.floor(p/26)];
+                if(p >= 100) { clearInterval(iv); zone.style.display = 'flex'; status.innerText = "WAITING FOR ACCESS..."; }
                 bar.style.width = p + '%';
-            }, 50);
+            }, 40);
         };
 
-        function bootApp() { 
-            audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        function bootApp() {
+            // Zvukový efekt vstupu (beep)
+            const ctx = new (window.AudioContext || window.webkitAudioContext)();
+            const osc = ctx.createOscillator();
+            const gain = ctx.createGain();
+            osc.connect(gain); gain.connect(ctx.destination);
+            osc.frequency.value = 880; gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + 0.5);
+            osc.start(); osc.stop(ctx.currentTime + 0.5);
+
             document.getElementById('landing-page').style.opacity = '0';
             setTimeout(() => {
                 document.getElementById('landing-page').style.display = 'none'; 
                 document.getElementById('app-interface').classList.remove('hidden'); 
                 initMap();
                 loadStoredTraces();
-            }, 1000);
+            }, 800);
         }
 
         function initMap() {
@@ -173,34 +160,6 @@
             }
         }
 
-        async function toggleRecord() {
-            isRecording = !isRecording;
-            const btn = document.getElementById('mic-btn');
-            const bars = document.querySelectorAll('.wave-bar');
-            if (isRecording) {
-                try {
-                    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-                    audioSource = audioCtx.createMediaStreamSource(stream);
-                    analyser = audioCtx.createAnalyser(); analyser.fftSize = 32;
-                    audioSource.connect(analyser);
-                    const dataArray = new Uint8Array(analyser.frequencyBinCount);
-                    btn.style.background = "#ff3b30";
-                    function update() {
-                        if (!isRecording) return;
-                        analyser.getByteFrequencyData(dataArray);
-                        bars.forEach((b, i) => b.style.height = `${Math.max(5, dataArray[i%dataArray.length]/2.5)}px`);
-                        animationId = requestAnimationFrame(update);
-                    }
-                    update();
-                } catch (e) { isRecording = false; }
-            } else {
-                btn.style.background = "rgba(255,255,255,0.05)";
-                cancelAnimationFrame(animationId);
-                if(audioSource) audioSource.mediaStream.getTracks().forEach(t => t.stop());
-                bars.forEach(b => b.style.height = "5px");
-            }
-        }
-
         function setMode(m) {
             currentMode = m;
             document.querySelectorAll('aside button').forEach(b => b.classList.remove('active-mode', 'text-white/20'));
@@ -209,44 +168,19 @@
         }
 
         function prepareTrace() {
-            if(activeTrace) activeTrace.remove();
-            activeTrace = document.createElement('div');
-            activeTrace.className = "neon-trace";
-            activeTrace.innerHTML = `
-                <div class="text-[7px] font-bold text-center uppercase opacity-50 mb-1" style="color:var(--active-color)">${currentMode} access</div>
-                <h2 class="text-lg font-black italic uppercase text-center mb-1">${document.getElementById('t-title').value || 'M.D. ZÁZNAM'}</h2>
-                <p class="text-[10px] text-white/50 text-center mb-6 px-4">"${document.getElementById('t-desc').value || 'Záznam v prostoru.'}"</p>
-                <button onclick="confirmTrace()" class="w-full bg-white text-black py-4 rounded-full font-black text-[9px] uppercase tracking-[0.2em]">Zaplatit ${config[currentMode].price} Kč</button>
-            `;
-            document.getElementById('trace-container').appendChild(activeTrace);
-        }
-
-        function confirmTrace() {
             if ("vibrate" in navigator) { navigator.vibrate(60); }
-            const traceData = {
-                title: document.getElementById('t-title').value || 'ZÁZNAM',
-                desc: document.getElementById('t-desc').value,
-                coords: userCoords,
-                mode: currentMode,
-                price: config[currentMode].price,
-                time: new Date().toLocaleTimeString(),
-                id: Date.now()
-            };
+            const traceData = { title: document.getElementById('t-title').value || 'ZÁZNAM', coords: userCoords, mode: currentMode, price: config[currentMode].price, time: new Date().toLocaleTimeString() };
             saveTrace(traceData);
             addTraceToUI(traceData);
             updateTotal();
-            if(activeTrace) activeTrace.remove();
-            activeTrace = null;
         }
 
         function addTraceToUI(data) {
-            const icon = L.divIcon({ className: 'custom-div-icon', html: `<div style="width:10px;height:10px;background:${config[data.mode].color};border-radius:50%;box-shadow:0 0 10px ${config[data.mode].color}"></div>`, iconSize: [10, 10] });
+            const icon = L.divIcon({ className: 'custom-icon', html: `<div style="width:10px;height:10px;background:${config[data.mode].color};border-radius:50%;box-shadow:0 0 10px ${config[data.mode].color}"></div>` });
             L.marker(data.coords, { icon }).addTo(map);
-
             const item = document.createElement('div');
-            item.className = 'flex justify-between items-center p-5 bg-white/5 rounded-3xl border border-white/10 transition-all';
-            item.innerHTML = `<div><div class="text-[11px] font-black uppercase">${data.title}</div><div class="text-[7px] text-white/30 uppercase">${data.mode} • ${data.price} Kč</div></div>
-                              <div class="w-1.5 h-1.5 rounded-full" style="background:${config[data.mode].color}"></div>`;
+            item.className = 'p-5 bg-white/5 rounded-3xl border border-white/10 flex justify-between items-center';
+            item.innerHTML = `<div><div class="text-[11px] font-black uppercase">${data.title}</div><div class="text-[7px] opacity-30 uppercase">${data.mode} • ${data.price} Kč</div></div><div class="w-1.5 h-1.5 rounded-full" style="background:${config[data.mode].color}"></div>`;
             document.getElementById('radar-list').prepend(item);
         }
 
@@ -269,18 +203,14 @@
         }
 
         function toggleRadar() { document.getElementById('radar-panel').classList.toggle('open'); }
-        function handleImage(input) {}
         async function toggleCam() {
             const v = document.getElementById('ar-video'), m = document.getElementById('map-bg');
             if(v.style.display !== 'block') {
                 try {
-                    videoStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
-                    v.srcObject = videoStream; v.style.display = 'block'; m.style.opacity = '0.3';
+                    const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
+                    v.srcObject = stream; v.style.display = 'block'; m.style.opacity = '0.3';
                 } catch(e) { alert("Kamera nedostupná."); }
-            } else {
-                if(videoStream) videoStream.getTracks().forEach(t => t.stop());
-                v.style.display = 'none'; m.style.opacity = '1';
-            }
+            } else { v.style.display = 'none'; m.style.opacity = '1'; }
         }
     </script>
 </body>
