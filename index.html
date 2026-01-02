@@ -13,15 +13,31 @@
         :root { --accent-cyan: #00f2fe; --accent-gold: #ffca2c; --accent-purple: #bf5af2; --bg-main: #020202; }
         body { font-family: 'Plus Jakarta Sans', sans-serif; background: var(--bg-main); color: white; margin: 0; overflow: hidden; user-select: none; }
         .gradient-text { background: linear-gradient(45deg, var(--accent-cyan) 0%, #4facfe 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        
         #landing-page { position: fixed; inset: 0; z-index: 9999; background: #000; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; transition: 0.8s; }
-        .neon-trace { background: rgba(10, 10, 10, 0.95); backdrop-filter: blur(20px); border: 1px solid var(--accent-cyan); border-radius: 30px; padding: 25px; animation: float 4s ease-in-out infinite; pointer-events: auto; max-width: 260px; z-index: 40; position: absolute; box-shadow: 0 0 30px rgba(0,242,254,0.2); }
-        .business-trace { border-color: var(--accent-gold); box-shadow: 0 0 30px rgba(255,202,44,0.2); }
-        .capsule-trace { border-color: var(--accent-purple); border-style: dashed; }
+        
+        /* PULZUJÍCÍ NEONOVÝ VZKAZ */
+        .neon-trace { 
+            background: rgba(10, 10, 10, 0.98); backdrop-filter: blur(20px); 
+            border: 2px solid var(--accent-cyan); border-radius: 30px; padding: 25px; 
+            animation: float 4s ease-in-out infinite, neonPulseCyan 2s infinite alternate;
+            pointer-events: auto; max-width: 280px; z-index: 40; position: absolute;
+        }
+        .business-trace { border-color: var(--accent-gold); animation: float 4s ease-in-out infinite, neonPulseGold 2s infinite alternate; }
+        .capsule-trace { border-color: var(--accent-purple); border-style: dashed; animation: float 4s ease-in-out infinite, neonPulsePurple 2s infinite alternate; }
+
+        @keyframes neonPulseCyan { from { box-shadow: 0 0 10px rgba(0,242,254,0.2); } to { box-shadow: 0 0 30px rgba(0,242,254,0.6); } }
+        @keyframes neonPulseGold { from { box-shadow: 0 0 10px rgba(255,202,44,0.2); } to { box-shadow: 0 0 30px rgba(255,202,44,0.6); } }
+        @keyframes neonPulsePurple { from { box-shadow: 0 0 10px rgba(191,90,242,0.2); } to { box-shadow: 0 0 30px rgba(191,90,242,0.6); } }
         @keyframes float { 0%, 100% { transform: translate(-50%, -50%) translateY(0); } 50% { transform: translate(-50%, -50%) translateY(-15px); } }
+
         #ar-video { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; z-index: 0; display: none; background: black; }
-        #map-bg { position: absolute; inset: 0; z-index: 1; filter: brightness(0.25); transition: 0.8s; }
+        
+        /* ČITELNĚJŠÍ MAPA */
+        #map-bg { position: absolute; inset: 0; z-index: 1; filter: brightness(0.4) contrast(1.1); transition: 0.8s; }
+        
         #payment-modal { position: fixed; inset: 0; z-index: 10000; background: rgba(0,0,0,0.98); display: none; justify-content: center; align-items: center; padding: 30px; }
-        .mode-btn { border-radius: 15px; font-size: 8px; font-weight: 900; text-transform: uppercase; border: 1px solid rgba(255,255,255,0.1); }
+        .mode-btn { border-radius: 15px; font-size: 8px; font-weight: 900; text-transform: uppercase; border: 1px solid rgba(255,255,255,0.1); transition: 0.3s; }
         .active-p { border-color: var(--accent-cyan); color: var(--accent-cyan); background: rgba(0,242,254,0.1); }
         .active-b { border-color: var(--accent-gold); color: var(--accent-gold); background: rgba(255,202,44,0.1); }
         .active-c { border-color: var(--accent-purple); color: var(--accent-purple); background: rgba(191,90,242,0.1); }
@@ -32,23 +48,24 @@
     <div id="landing-page">
         <div class="mb-2 text-xl font-black gradient-text italic tracking-widest">TADY</div>
         <h1 class="text-6xl font-extrabold mb-4 tracking-tighter uppercase italic text-white leading-none">Audio<br><span class="gradient-text">Senzor</span></h1>
-        <p class="text-[9px] text-white/30 font-bold tracking-[0.6em] uppercase mb-12 italic italic">M.D. Founders Access</p>
+        <p class="text-[9px] text-white/30 font-bold tracking-[0.6em] uppercase mb-12 italic">M.D. Founders Access</p>
         <button onclick="bootApp()" class="bg-white text-black font-black px-12 py-5 rounded-2xl text-[10px] tracking-[0.3em] uppercase italic active:scale-95 transition">Aktivovat systém</button>
     </div>
 
     <div id="payment-modal">
-        <div class="w-full max-w-xs bg-zinc-900 p-8 rounded-[40px] text-center border border-white/10">
-            <div class="text-[8px] font-black uppercase tracking-widest text-cyan-400 mb-6 italic">M.D. Terminal</div>
+        <div class="w-full max-w-xs bg-zinc-900 p-8 rounded-[40px] text-center border border-white/10 shadow-[0_0_50px_rgba(0,0,0,1)]">
+            <div class="text-[8px] font-black uppercase tracking-widest text-cyan-400 mb-6 italic">M.D. Secured Terminal</div>
             <p id="pay-amount" class="text-5xl font-black mb-10 italic text-white tracking-tighter">29 Kč</p>
-            <button onclick="completePayment()" class="w-full bg-white text-black py-5 rounded-2xl font-black uppercase text-[10px] tracking-widest">Zaplatit</button>
+            <button onclick="completePayment()" class="w-full bg-white text-black py-5 rounded-2xl font-black uppercase text-[10px] tracking-widest active:scale-95 transition">Zaplatit a Ukotvit</button>
+            <button onclick="document.getElementById('payment-modal').style.display='none'" class="mt-4 text-[8px] font-bold text-white/20 uppercase tracking-widest">Zpět</button>
         </div>
     </div>
 
     <div id="app-interface" class="hidden h-screen w-screen flex flex-col md:flex-row overflow-hidden">
-        <aside class="w-full md:w-[350px] bg-black p-6 flex flex-col z-[50] border-r border-white/5 overflow-y-auto">
+        <aside class="w-full md:w-[350px] bg-black p-6 flex flex-col z-[50] border-r border-white/5 overflow-y-auto shadow-2xl">
             <div class="flex justify-between items-center mb-8">
-                <div class="text-xl font-black gradient-text italic tracking-tighter">TADY // M.D.</div>
-                <div class="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+                <div class="text-xl font-black gradient-text italic tracking-tighter uppercase">TADY // CORE</div>
+                <div class="w-2 h-2 bg-green-500 rounded-full animate-pulse shadow-[0_0_10px_#22c55e]"></div>
             </div>
             <div class="space-y-4 flex-1">
                 <div class="grid grid-cols-3 gap-2">
@@ -56,14 +73,15 @@
                     <button onclick="setMode('business')" id="btn-b" class="mode-btn p-3">Business</button>
                     <button onclick="setMode('capsule')" id="btn-c" class="mode-btn p-3">Capsule</button>
                 </div>
-                <input type="text" id="t-title" class="w-full p-4 bg-zinc-900 border border-white/5 rounded-xl text-xs font-bold" placeholder="TITULEK">
-                <textarea id="t-desc" class="w-full p-4 bg-zinc-900 border border-white/5 rounded-xl text-xs h-20 resize-none" placeholder="VZKAZ..."></textarea>
-                <button onclick="document.getElementById('t-img').click()" class="w-full border border-white/5 p-3 rounded-xl text-[7px] font-black uppercase text-white/40">
-                    <i class="fas fa-camera mr-2"></i> <span id="img-label">PŘIDAT FOTO</span>
+                <input type="text" id="t-title" class="w-full p-4 bg-zinc-900 border border-white/5 rounded-xl text-xs font-bold text-white placeholder-white/20" placeholder="NÁZEV STOPY">
+                <textarea id="t-desc" class="w-full p-4 bg-zinc-900 border border-white/5 rounded-xl text-xs h-24 resize-none text-white placeholder-white/20" placeholder="VAŠE ZPRÁVA..."></textarea>
+                <button onclick="document.getElementById('t-img').click()" class="w-full border border-white/5 p-4 rounded-xl text-[7px] font-black uppercase text-white/40 tracking-widest hover:bg-white/5 transition italic">
+                    <i class="fas fa-camera mr-2"></i> <span id="img-label">PŘIPOJIT OBRAZOVÝ DŮKAZ</span>
                     <input type="file" id="t-img" accept="image/*" class="hidden" onchange="handleImage(this)">
                 </button>
-                <button onclick="prepareTrace()" id="btn-main" class="w-full bg-cyan-400 text-black py-5 rounded-2xl font-black text-[9px] uppercase tracking-[0.4em] italic shadow-2xl">Zobrazit v AR</button>
+                <button onclick="prepareTrace()" id="btn-main" class="w-full bg-cyan-400 text-black py-5 rounded-2xl font-black text-[9px] uppercase tracking-[0.4em] italic shadow-2xl active:scale-95 transition">Zobrazit v AR</button>
             </div>
+            <div class="mt-8 pt-6 border-t border-white/5 text-[8px] font-bold text-white/20 uppercase tracking-[0.3em]">Hardware ID: M.D.-2026-TADY</div>
         </aside>
 
         <main class="flex-1 relative bg-black">
@@ -71,8 +89,8 @@
             <div id="map-bg" class="h-full w-full"></div>
             <div id="trace-container" class="absolute inset-0 z-[40] pointer-events-none"></div>
             <div class="absolute bottom-6 right-6 z-[100]">
-                <button onclick="toggleCam()" class="w-14 h-14 rounded-2xl bg-black/80 backdrop-blur-xl border border-white/10 flex items-center justify-center text-white active:scale-90 transition shadow-2xl">
-                    <i class="fas fa-expand"></i>
+                <button onclick="toggleCam()" class="w-16 h-16 rounded-2xl bg-black/80 backdrop-blur-xl border border-white/10 flex items-center justify-center text-white active:scale-90 transition shadow-2xl">
+                    <i class="fas fa-expand-alt text-xl"></i>
                 </button>
             </div>
         </main>
@@ -92,7 +110,9 @@
         }
 
         function initMap() {
+            if(map) return;
             map = L.map('map-bg', { zoomControl: false, attributionControl: false }).setView([50.912, 14.619], 15);
+            // POUŽITÍ JASNĚJŠÍ MAPY
             L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png').addTo(map);
         }
 
@@ -100,21 +120,15 @@
             const v = document.getElementById('ar-video'), m = document.getElementById('map-bg');
             if(v.style.display === 'none' || v.style.display === '') {
                 try {
-                    videoStream = await navigator.mediaDevices.getUserMedia({ 
-                        video: { facingMode: 'environment' } 
-                    });
+                    videoStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
                     v.srcObject = videoStream;
                     v.style.display = 'block';
                     m.style.opacity = '0';
-                    // OPRAVA PRO IOS: Vynucené přehrávání
                     await v.play();
-                } catch(e) { 
-                    alert("Kamera neaktivní. Povolte přístup v nastavení prohlížeče."); 
-                }
+                } catch(e) { alert("Povolte přístup ke kameře."); }
             } else {
                 if(videoStream) videoStream.getTracks().forEach(t => t.stop());
-                v.style.display = 'none';
-                m.style.opacity = '1';
+                v.style.display = 'none'; m.style.opacity = '1';
             }
         }
 
@@ -128,19 +142,19 @@
 
         function handleImage(input) {
             const reader = new FileReader();
-            reader.onload = (e) => { selectedImg = e.target.result; document.getElementById('img-label').innerText = "FOTO OK"; };
+            reader.onload = (e) => { selectedImg = e.target.result; document.getElementById('img-label').innerText = "OBRAZ NAČTEN"; };
             reader.readAsDataURL(input.files[0]);
         }
 
-        function startTimer(display) {
-            let timer = 24 * 60 * 60; // 24 hodin
-            setInterval(function () {
-                let hours = parseInt(timer / 3600, 10);
-                let minutes = parseInt((timer % 3600) / 60, 10);
-                let seconds = parseInt(timer % 60, 10);
-                display.textContent = "LOCK: " + (hours < 10 ? "0" + hours : hours) + ":" + (minutes < 10 ? "0" + minutes : minutes) + ":" + (seconds < 10 ? "0" + seconds : seconds);
-                if (--timer < 0) timer = 0;
-            }, 1000);
+        // OPRAVENÝ ČASOVAČ
+        function runTimer(el) {
+            let total = 24 * 3600;
+            const update = () => {
+                let h = Math.floor(total / 3600), m = Math.floor((total % 3600) / 60), s = total % 60;
+                el.innerText = `LOCK: ${h.toString().padStart(2,'0')}:${m.toString().padStart(2,'0')}:${s.toString().padStart(2,'0')}`;
+                if (total > 0) { total--; setTimeout(update, 1000); }
+            };
+            update();
         }
 
         function prepareTrace() {
@@ -151,17 +165,18 @@
             activePreview.style.left = "50%"; activePreview.style.top = "50%";
             activePreview.style.transform = "translate(-50%, -50%)";
             
-            let img = selectedImg ? `<img src="${selectedImg}" class="w-full h-24 object-cover rounded-xl mb-3 border border-white/10">` : '';
-            let timerHtml = currentMode === 'capsule' ? `<div id="capsule-timer" class="text-[9px] text-purple-400 font-black mb-2 text-center tracking-widest">LOCK: 24:00:00</div>` : '';
+            let img = selectedImg ? `<img src="${selectedImg}" class="w-full h-28 object-cover rounded-2xl mb-4 border border-white/10 shadow-lg">` : '';
+            let timerHtml = currentMode === 'capsule' ? `<div id="live-timer" class="text-[10px] text-purple-400 font-black mb-3 text-center tracking-[0.2em] animate-pulse">LOCK: 24:00:00</div>` : '';
             
             activePreview.innerHTML = `
-                ${timerHtml} ${img}
-                <h4 class="text-sm font-black italic text-white mb-1 uppercase text-center">${document.getElementById('t-title').value || 'TADY'}</h4>
-                <p class="text-[9px] text-white/50 italic mb-4 text-center leading-tight">${document.getElementById('t-desc').value || 'Digitální stopa v prostoru.'}</p>
-                <button onclick="openPayment()" class="pointer-events-auto w-full bg-white text-black py-3 rounded-xl font-black text-[8px] uppercase tracking-widest active:scale-90 transition">UKOTVIT</button>
+                ${timerHtml}
+                ${img}
+                <h4 class="text-lg font-black italic text-white mb-1 uppercase text-center tracking-tighter">${document.getElementById('t-title').value || 'TADY'}</h4>
+                <p class="text-[10px] text-white/50 italic mb-6 text-center leading-tight">"${document.getElementById('t-desc').value || 'Digitální stopa zanechána.'}"</p>
+                <button onclick="openPayment()" class="pointer-events-auto w-full bg-white text-black py-4 rounded-2xl font-black text-[9px] uppercase tracking-widest active:scale-90 transition">POTVRDIT UKOTVENÍ</button>
             `;
             container.appendChild(activePreview);
-            if (currentMode === 'capsule') startTimer(document.getElementById('capsule-timer'));
+            if (currentMode === 'capsule') runTimer(document.getElementById('live-timer'));
         }
 
         function openPayment() {
@@ -176,9 +191,10 @@
             activePreview.style.pointerEvents = "none";
             navigator.geolocation.getCurrentPosition((pos) => {
                 const color = currentMode === 'personal' ? '#00f2fe' : currentMode === 'business' ? '#ffca2c' : '#bf5af2';
-                L.circle([pos.coords.latitude, pos.coords.longitude], { color: color, fillColor: color, fillOpacity: 0.6, radius: 20 }).addTo(map);
+                L.circle([pos.coords.latitude, pos.coords.longitude], { color: color, fillColor: color, fillOpacity: 0.6, radius: 25 }).addTo(map);
+                map.setView([pos.coords.latitude, pos.coords.longitude], 16);
             });
-            alert("SYSTÉM: Stopa zapsána.");
+            alert("SYSTÉM: Digitální stopa byla trvale ukotvena.");
             activePreview = null; selectedImg = null;
         }
     </script>
