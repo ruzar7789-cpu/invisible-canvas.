@@ -13,34 +13,35 @@
         :root { --accent-cyan: #00f2fe; --active-color: #00f2fe; }
         body { font-family: 'Plus Jakarta Sans', sans-serif; background: #000; color: white; margin: 0; overflow: hidden; touch-action: none; }
 
-        /* --- 3D SCÉNA ÚVOD --- */
+        /* --- 3D SCÉNA ÚVOD 2.3 --- */
         #landing-page { perspective: 1000px; overflow: hidden; background: #000; }
-        #scene-3d { position: absolute; inset: 0; transform-style: preserve-3d; will-change: transform; }
+        #scene-3d { position: absolute; inset: 0; transform-style: preserve-3d; will-change: transform; transition: transform 0.2s ease-out; }
+        
+        #stars-container { position: absolute; inset: 0; pointer-events: none; transform: translateZ(-500px); }
+        .star { position: absolute; background: white; border-radius: 50%; opacity: 0.5; animation: twinkle 3s infinite alternate; }
+        @keyframes twinkle { from { opacity: 0.2; transform: scale(0.8); } to { opacity: 0.8; transform: scale(1.2); } }
+
         #bg-grid {
             position: absolute; width: 400%; height: 400%;
             background-image: linear-gradient(rgba(0, 242, 254, 0.2) 1px, transparent 1px), linear-gradient(90deg, rgba(0, 242, 254, 0.2) 1px, transparent 1px);
-            background-size: 80px 80px; transform: rotateX(75deg) translateZ(-400px); top: -150%; left: -150%;
+            background-size: 80px 80px; transform: rotateX(75deg) translateZ(-300px); top: -150%; left: -150%;
         }
-        .hero-wrap { position: relative; z-index: 10; transform-style: preserve-3d; text-align: center; pointer-events: none; }
-        .glitch-text { font-size: clamp(4rem, 15vw, 8rem); font-weight: 900; font-style: italic; text-shadow: 0 0 40px rgba(0,242,254,0.7); }
 
-        /* --- MAPA A PULZUJÍCÍ BOD --- */
+        .hero-wrap { position: relative; z-index: 10; transform-style: preserve-3d; text-align: center; pointer-events: none; }
+        .glitch-text { font-size: clamp(4rem, 15vw, 8rem); font-weight: 900; font-style: italic; text-shadow: 0 0 40px rgba(0,242,254,0.7); transform: translateZ(50px); }
+
+        /* --- UI A MAPA --- */
         #map-bg { position: absolute; inset: 0; z-index: 1; filter: contrast(1.1) brightness(0.4); }
-        .user-pulse {
-            width: 14px; height: 14px; background: var(--accent-cyan); border-radius: 50%;
-            box-shadow: 0 0 0 rgba(0, 242, 254, 0.4); animation: pulse 2s infinite;
-        }
+        .user-pulse { width: 14px; height: 14px; background: var(--accent-cyan); border-radius: 50%; box-shadow: 0 0 0 rgba(0, 242, 254, 0.4); animation: pulse 2s infinite; }
         @keyframes pulse { 0% { box-shadow: 0 0 0 0 rgba(0, 242, 254, 0.7); } 70% { box-shadow: 0 0 0 15px rgba(0, 242, 254, 0); } 100% { box-shadow: 0 0 0 0 rgba(0, 242, 254, 0); } }
 
-        /* --- PRŮHLEDNÝ VZKAZ (GLASSMORPHISM) --- */
         .neon-trace { 
-            background: rgba(255, 255, 255, 0.05); backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px);
+            background: rgba(255, 255, 255, 0.03); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
             border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 40px; padding: 25px; width: 85%; max-width: 320px;
             position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); z-index: 2000;
-            box-shadow: 0 25px 50px rgba(0,0,0,0.5); border-top: 1px solid rgba(255,255,255,0.2);
+            box-shadow: 0 25px 50px rgba(0,0,0,0.6);
         }
 
-        /* --- OSTATNÍ UI --- */
         .active-mode { border-color: var(--active-color) !important; color: var(--active-color) !important; background: rgba(0,242,254,0.1); }
         .wave-bar { width: 4px; height: 5px; background: var(--active-color); border-radius: 10px; transition: height 0.05s ease; }
         #radar-panel { position: absolute; bottom: 0; left: 0; right: 0; background: rgba(0,0,0,0.95); backdrop-filter: blur(40px); z-index: 5000; transition: transform 0.6s cubic-bezier(0.19, 1, 0.22, 1); transform: translateY(calc(100% - 80px)); border-radius: 40px 40px 0 0; border-top: 1px solid rgba(255,255,255,0.1); }
@@ -50,12 +51,17 @@
 <body onclick="requestSensors()">
 
     <div id="landing-page" class="fixed inset-0 z-[9999] bg-black flex flex-col justify-center items-center">
-        <div id="scene-3d"><div id="stars-container"></div><div id="bg-grid"></div></div>
+        <div id="scene-3d">
+            <div id="stars-container"></div>
+            <div id="bg-grid"></div>
+        </div>
+        
         <div class="hero-wrap" id="hero-element">
             <div class="glitch-text text-white">TADY</div>
-            <div id="boot-status" class="text-[9px] text-cyan-400 mt-4 tracking-[0.6em] font-black uppercase">System Online</div>
+            <div id="boot-status" class="text-[9px] text-cyan-400 mt-4 tracking-[0.6em] font-black uppercase">Všechno důležité je tady.</div>
         </div>
-        <div id="fingerprint-zone" onclick="bootApp(event)" class="mt-12 hidden flex-col items-center cursor-pointer z-[100]">
+
+        <div id="fingerprint-zone" onclick="bootApp(event)" class="mt-12 flex flex-col items-center cursor-pointer z-[100] opacity-0 transition-opacity duration-1000">
             <div class="w-[90px] h-[90px] border-2 border-cyan-400 rounded-full flex items-center justify-center relative overflow-hidden bg-cyan-400/10">
                 <i class="fas fa-fingerprint text-4xl text-cyan-400"></i>
                 <div class="absolute w-full h-1 bg-cyan-400 top-0 left-0 shadow-[0_0_15px_cyan] animate-[scan_2s_infinite_linear]"></div>
@@ -83,7 +89,7 @@
                 <div id="viz-container" class="flex justify-center items-end gap-1.5 h-4">
                     <div class="wave-bar"></div><div class="wave-bar"></div><div class="wave-bar"></div><div class="wave-bar"></div><div class="wave-bar"></div>
                 </div>
-                <button onclick="prepareTrace()" class="w-full bg-cyan-400 text-black py-6 rounded-[35px] font-black text-[11px] uppercase tracking-[0.4em] shadow-lg">Ukotvit v prostoru</button>
+                <button onclick="prepareTrace()" class="w-full bg-cyan-400 text-black py-6 rounded-[35px] font-black text-[11px] uppercase tracking-[0.4em]">Ukotvit v prostoru</button>
             </div>
         </aside>
 
@@ -108,7 +114,6 @@
         let audioCtx, analyser, dataArray, animationId, userCoords = [50.912, 14.619];
         const config = { personal: { color: '#00f2fe', price: 29 }, business: { color: '#ffca2c', price: 199 }, capsule: { color: '#bf5af2', price: 49 } };
 
-        // 3D MOTION ÚVOD
         function updateMotion(x, y) {
             const scene = document.getElementById('scene-3d');
             const hero = document.getElementById('hero-element');
@@ -132,21 +137,34 @@
             if (e.beta) updateMotion(e.gamma / 45, (e.beta - 45) / 45);
         });
 
-        window.onload = () => {
+        // GENERÁTOR HVĚZD - OPRAVENO
+        function initStars() {
             const container = document.getElementById('stars-container');
-            for(let i=0; i<80; i++) {
+            container.innerHTML = '';
+            for(let i=0; i<120; i++) {
                 const s = document.createElement('div');
                 s.className = 'star';
-                const size = Math.random() * 2 + 'px';
+                const size = Math.random() * 2.5 + 'px';
                 s.style.width = size; s.style.height = size;
-                s.style.top = Math.random() * 100 + '%'; s.style.left = Math.random() * 100 + '%';
+                s.style.top = Math.random() * 100 + '%';
+                s.style.left = Math.random() * 100 + '%';
+                s.style.animationDelay = Math.random() * 3 + 's';
                 container.appendChild(s);
             }
-            setTimeout(() => { document.getElementById('fingerprint-zone').style.display = 'flex'; }, 2000);
+        }
+
+        window.onload = () => {
+            initStars();
+            setTimeout(() => { 
+                const fz = document.getElementById('fingerprint-zone');
+                fz.classList.remove('opacity-0');
+                fz.classList.add('opacity-100');
+            }, 2000);
         };
 
         function bootApp(e) {
             e.stopPropagation();
+            if ("vibrate" in navigator) navigator.vibrate([30, 30]);
             document.getElementById('landing-page').style.opacity = '0';
             setTimeout(() => {
                 document.getElementById('landing-page').style.display = 'none'; 
@@ -155,12 +173,9 @@
             }, 600);
         }
 
-        // --- INICIALIZACE MAPY S PULSEM ---
         function initMap() {
             map = L.map('map-bg', { zoomControl: false, attributionControl: false }).setView(userCoords, 17);
             L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager_labels_under/{z}/{x}/{y}{r}.png').addTo(map);
-            
-            // Pulzující lokační bod
             const pulseIcon = L.divIcon({ className: 'pulse-wrapper', html: '<div class="user-pulse"></div>', iconSize: [20, 20] });
             L.marker(userCoords, { icon: pulseIcon }).addTo(map);
         }
@@ -202,7 +217,6 @@
             reader.readAsDataURL(input.files[0]);
         }
 
-        // --- PRŮHLEDNÝ NÁHLED VZKAZU ---
         function prepareTrace() {
             const container = document.getElementById('trace-container');
             container.innerHTML = '';
@@ -214,7 +228,7 @@
                 <div class="text-[7px] font-bold text-center uppercase opacity-60 mb-1" style="color:var(--active-color)">Security Anchor</div>
                 <h2 class="text-lg font-black italic uppercase text-center mb-2 tracking-tight">${document.getElementById('t-title').value || 'M.D. ZÁZNAM'}</h2>
                 <div class="text-[9px] text-center opacity-70 mb-4 px-2">${document.getElementById('t-desc').value || ''}</div>
-                <button onclick="confirmTrace()" class="w-full bg-white text-black py-4 rounded-full font-black text-[9px] uppercase italic shadow-xl">Zaplatit ${config[currentMode].price} Kč</button>
+                <button onclick="confirmTrace()" class="w-full bg-white text-black py-4 rounded-full font-black text-[9px] uppercase italic">Zaplatit ${config[currentMode].price} Kč</button>
             `;
             container.appendChild(el);
             container.style.pointerEvents = "auto";
@@ -224,8 +238,7 @@
             const data = { title: document.getElementById('t-title').value || 'ZÁZNAM', coords: userCoords, mode: currentMode, price: config[currentMode].price };
             let t = JSON.parse(localStorage.getItem('md_traces') || '[]'); t.push(data);
             localStorage.setItem('md_traces', JSON.stringify(t));
-            addTraceToUI(data);
-            updateTotalPrice();
+            addTraceToUI(data); updateTotalPrice();
             document.getElementById('trace-container').innerHTML = '';
             document.getElementById('trace-container').style.pointerEvents = "none";
             selectedImg = null;
@@ -248,8 +261,7 @@
 
         function loadStoredTraces() {
             let t = JSON.parse(localStorage.getItem('md_traces') || '[]');
-            t.forEach(x => addTraceToUI(x));
-            updateTotalPrice();
+            t.forEach(x => addTraceToUI(x)); updateTotalPrice();
         }
 
         function toggleRadar() { document.getElementById('radar-panel').classList.toggle('open'); }
@@ -264,5 +276,4 @@
         }
     </script>
 </body>
-                </html>
-                
+</html>
