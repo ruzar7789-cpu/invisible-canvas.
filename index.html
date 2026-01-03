@@ -4,232 +4,291 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>INVISIBLE-CANES // 2026 // M.D.</title>
+    
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@200;800&display=swap');
+        
         :root { --accent: #00f2fe; --p: #00f2fe; --b: #ffca2c; --c: #bf5af2; }
-        body, html { font-family: 'Plus Jakarta Sans', sans-serif; background: #000; color: white; margin: 0; padding: 0; overflow: hidden; height: 100vh; }
-
-        /* CORE LAYERS */
-        #sonar-map { position: fixed; inset: 0; z-index: 10; filter: invert(100%) hue-rotate(180deg) brightness(0.25) contrast(1.6); transition: 0.8s ease; }
-        #camera-stream { position: fixed; inset: 0; width: 100%; height: 100%; object-fit: cover; z-index: 5; opacity: 0; transition: 1s; }
-        #ar-canvas { position: fixed; inset: 0; z-index: 30; pointer-events: none; }
-
-        /* MARKER STYLING */
-        .cane-marker { background: none; border: none; }
-        .pulse-node { 
-            width: 12px; height: 12px; background: var(--accent); border-radius: 50%; 
-            box-shadow: 0 0 15px var(--accent); animation: pulse 2s infinite; 
-        }
-        @keyframes pulse { 0% { transform: scale(1); opacity: 1; } 100% { transform: scale(3); opacity: 0; } }
-
-        /* AR CANE */
-        .cane-entity { position: absolute; pointer-events: auto; }
-        .cane-shaft { width: 1px; height: 250px; background: linear-gradient(to top, var(--accent), transparent); position: absolute; bottom: 0; left: 50%; opacity: 0.5; }
-        .cane-head { 
-            width: 120px; height: 120px; border-radius: 50%; border: 1px solid var(--accent);
-            background: rgba(0,0,0,0.6); backdrop-filter: blur(10px);
-            transform: translateY(-240px) translateX(-50%); display: flex; items-center justify-center; overflow: hidden;
-            box-shadow: 0 0 30px var(--accent); animation: float 4s infinite ease-in-out;
-        }
-        @keyframes float { 0%, 100% { transform: translateY(-240px) translateX(-50%); } 50% { transform: translateY(-260px) translateX(-50%); } }
-
-        /* UI OVERLAYS */
-        .hud { position: fixed; z-index: 100; pointer-events: none; }
-        .top-left { top: 40px; left: 40px; }
-        .bottom-ctr { bottom: 50px; left: 0; width: 100%; display: flex; flex-direction: column; align-items: center; }
-
-        .main-btn { 
-            width: 80px; height: 80px; border-radius: 50%; border: 1px solid rgba(255,255,255,0.1);
-            background: rgba(10,10,10,0.8); backdrop-filter: blur(20px); pointer-events: auto;
-            display: flex; items-center justify-center; transition: 0.4s; 
+        
+        body, html { 
+            font-family: 'Plus Jakarta Sans', sans-serif; 
+            background: #000; color: white; margin: 0; padding: 0; 
+            overflow: hidden; height: 100vh; width: 100vw;
         }
 
-        /* DETAIL VIEW */
-        #detail-view {
-            position: fixed; inset: 0; z-index: 2000; background: rgba(0,0,0,0.95);
-            display: none; flex-direction: column; items-center justify-center; p: 2rem;
+        /* MAPA MUSÍ BÝT VŽDY NA SPODU ALE VIDITELNÁ */
+        #map { 
+            position: absolute; inset: 0; z-index: 10; 
+            background: #000;
+            filter: invert(100%) hue-rotate(180deg) brightness(0.3) contrast(1.4);
         }
-        .detail-card { width: 85%; max-width: 400px; text-align: center; }
 
-        #imprint-shield {
-            position: fixed; inset: 0; z-index: 1000; background: rgba(0,0,0,0.98);
-            display: none; flex-direction: column; align-items: center; justify-content: center;
+        /* AR VRSTVA */
+        #camera-view { 
+            position: absolute; inset: 0; z-index: 5; opacity: 0; 
+            transition: opacity 0.5s ease; pointer-events: none;
         }
+        #camera-view video { width: 100%; height: 100%; object-fit: cover; }
+
+        #ar-overlay { 
+            position: absolute; inset: 0; z-index: 30; 
+            pointer-events: none; display: none;
+        }
+
+        /* HUD - VRCHNÍ VRSTVA */
+        .ui-layer { position: absolute; inset: 0; z-index: 100; pointer-events: none; }
+        .pointer-all { pointer-events: all; }
+
+        /* PULZUJÍCÍ BODY NA MAPĚ */
+        .cane-dot {
+            width: 14px; height: 14px; border-radius: 50%;
+            background: var(--accent);
+            box-shadow: 0 0 15px var(--accent);
+            border: 2px solid white;
+            animation: pulse-ring 2s infinite;
+        }
+        @keyframes pulse-ring { 0% { box-shadow: 0 0 0 0 rgba(255,255,255,0.7); } 70% { box-shadow: 0 0 0 15px rgba(255,255,255,0); } 100% { box-shadow: 0 0 0 0 rgba(255,255,255,0); } }
+
+        /* DESIGN HOLE V AR */
+        .ar-cane { position: absolute; display: flex; flex-direction: column; align-items: center; }
+        .ar-line { width: 2px; height: 300px; background: linear-gradient(to top, var(--accent), transparent); }
+        .ar-head { 
+            width: 100px; height: 100px; border-radius: 50%; border: 2px solid var(--accent);
+            background: rgba(0,0,0,0.8); overflow: hidden; transform: translateY(-20px);
+            box-shadow: 0 0 20px var(--accent);
+        }
+
+        /* OVERLAYS */
+        .glass { background: rgba(10,10,10,0.9); backdrop-filter: blur(20px); border: 1px solid rgba(255,255,255,0.1); }
+        .mode-btn { width: 10px; height: 10px; border-radius: 50%; background: rgba(255,255,255,0.2); transition: 0.4s; }
+        .mode-btn.active { transform: scale(2); background: var(--accent); box-shadow: 0 0 15px var(--accent); }
     </style>
 </head>
-<body onclick="if(audioCtx) audioCtx.resume()">
+<body onclick="enableAudio()">
 
-    <video id="camera-stream" autoplay playsinline muted></video>
-    <div id="sonar-map"></div>
-    <div id="ar-canvas"></div>
+    <div id="map"></div>
+    <div id="camera-view"><video id="video" autoplay playsinline muted></video></div>
+    <div id="ar-overlay"></div>
 
-    <div class="hud top-left">
-        <h1 class="text-4xl font-black italic tracking-tighter" id="logo">IC-2026</h1>
-        <div class="text-[8px] tracking-[0.5em] opacity-30 uppercase mt-2">Varnsdorf Terminal // M.D.</div>
-    </div>
-
-    <div class="hud bottom-ctr">
-        <div class="flex gap-8 mb-10 pointer-events-auto">
-            <div onclick="setMode('personal')" id="m-p" class="w-2 h-2 rounded-full bg-white/20 transition-all cursor-pointer"></div>
-            <div onclick="setMode('business')" id="m-b" class="w-2 h-2 rounded-full bg-white/20 transition-all cursor-pointer"></div>
-            <div onclick="setMode('capsule')" id="m-c" class="w-2 h-2 rounded-full bg-white/20 transition-all cursor-pointer"></div>
-        </div>
-        <button onclick="openImprint()" class="main-btn">
-            <i class="fas fa-plus"></i>
-        </button>
-        <p class="mt-6 text-[7px] tracking-[0.6em] opacity-20 uppercase font-black">Dbl-tap to switch vision</p>
-    </div>
-
-    <div id="imprint-shield">
-        <input type="text" id="target-name" placeholder="ID HOLI" class="bg-transparent border-b border-white/20 text-4xl font-black text-center text-white outline-none mb-16 uppercase w-4/5">
-        <div class="flex gap-12 mb-16">
-            <button onclick="capture('img')" id="btn-cam" class="w-16 h-16 rounded-full border border-white/10 flex items-center justify-center"><i class="fas fa-camera"></i></button>
-            <button onclick="capture('aud')" id="btn-mic" class="w-16 h-16 rounded-full border border-white/10 flex items-center justify-center"><i class="fas fa-microphone"></i></button>
-        </div>
-        <div class="flex gap-6">
-            <button onclick="closeImprint()" class="px-8 py-3 text-[10px] font-bold opacity-30 uppercase">Zpět</button>
-            <button onclick="finalizeCane()" class="px-14 py-4 bg-white text-black font-black text-[11px] tracking-widest uppercase">Zapíchnout</button>
-        </div>
-    </div>
-
-    <div id="detail-view" onclick="this.style.display='none'">
-        <div class="detail-card" onclick="event.stopPropagation()">
-            <div id="detail-img-container" class="w-full aspect-square rounded-full border-2 border-accent mb-8 overflow-hidden"></div>
-            <h2 id="detail-title" class="text-3xl font-black italic uppercase tracking-tighter mb-2"></h2>
-            <p id="detail-meta" class="text-[10px] opacity-40 uppercase tracking-widest mb-10"></p>
-            <button id="detail-audio-btn" class="w-20 h-20 rounded-full border border-white/20 flex items-center justify-center mx-auto mb-10">
-                <i class="fas fa-play text-xl"></i>
+    <div class="ui-layer">
+        <div class="p-10 flex justify-between items-start">
+            <div>
+                <h1 id="main-logo" class="text-4xl font-black italic tracking-tighter">INVISIBLE-CANES</h1>
+                <p class="text-[8px] tracking-[0.5em] opacity-30 uppercase font-bold">Spatial Node // M.D.</p>
+            </div>
+            <button onclick="toggleVision()" class="pointer-all w-14 h-14 glass rounded-full flex items-center justify-center">
+                <i id="vision-icon" class="fas fa-expand text-cyan-400"></i>
             </button>
-            <button onclick="document.getElementById('detail-view').style.display='none'" class="text-[10px] font-black opacity-30 uppercase">Zavřít</button>
         </div>
+
+        <div class="absolute bottom-12 w-full flex flex-col items-center gap-8">
+            <div class="flex gap-8 pointer-all">
+                <div onclick="changeMode('personal')" id="btn-p" class="mode-btn active"></div>
+                <div onclick="changeMode('business')" id="btn-b" class="mode-btn"></div>
+                <div onclick="changeMode('capsule')" id="btn-c" class="mode-btn"></div>
+            </div>
+
+            <button onclick="openCreator()" class="pointer-all w-20 h-20 glass rounded-full flex items-center justify-center shadow-2xl border-white/20">
+                <i class="fas fa-plus text-2xl text-white"></i>
+            </button>
+            <p class="text-[7px] tracking-[0.4em] opacity-20 uppercase font-black">Hold to imprint memory</p>
+        </div>
+    </div>
+
+    <div id="creator" class="fixed inset-0 z-[1000] glass hidden flex flex-col items-center justify-center p-8">
+        <input type="text" id="cane-name" placeholder="NÁZEV HOLE" class="bg-transparent border-b-2 border-cyan-500 text-3xl font-black text-center text-white outline-none mb-12 w-full uppercase">
+        
+        <div class="flex gap-10 mb-20">
+            <button id="cam-trigger" onclick="takePic()" class="w-16 h-16 rounded-full border border-white/10 flex items-center justify-center"><i class="fas fa-camera text-xl"></i></button>
+            <button id="mic-trigger" onclick="recAudio()" class="w-16 h-16 rounded-full border border-white/10 flex items-center justify-center"><i class="fas fa-microphone text-xl"></i></button>
+        </div>
+
+        <div class="flex gap-4">
+            <button onclick="closeCreator()" class="px-8 py-4 text-[10px] font-bold opacity-30 uppercase">Zrušit</button>
+            <button onclick="zapichnoutHul()" class="px-12 py-4 bg-white text-black font-black text-[10px] tracking-widest uppercase">Zapíchnout hůl</button>
+        </div>
+    </div>
+
+    <div id="detail" class="fixed inset-0 z-[2000] glass hidden flex flex-col items-center justify-center p-8" onclick="this.classList.add('hidden')">
+        <div class="w-64 h-64 rounded-full border-4 border-cyan-500 overflow-hidden mb-8" id="detail-img"></div>
+        <h2 id="detail-title" class="text-4xl font-black italic mb-2"></h2>
+        <p id="detail-date" class="text-[10px] opacity-40 uppercase tracking-widest mb-10"></p>
+        <button id="play-btn" class="w-20 h-20 rounded-full bg-cyan-500 flex items-center justify-center text-black">
+            <i class="fas fa-play text-2xl"></i>
+        </button>
     </div>
 
     <script>
-        let map, canes = [], mode = 'personal', isAR = false;
-        let audioCtx, recorder, chunks = [], currentImg = null, currentAudio = null;
-        const config = { personal: '#00f2fe', business: '#ffca2c', capsule: '#bf5af2' };
+        let map, currentMode = 'personal', isAR = false;
+        let canes = [], mediaRecorder, audioChunks = [];
+        let tempImg = null, tempAudio = null;
+        const colors = { personal: '#00f2fe', business: '#ffca2c', capsule: '#bf5af2' };
 
+        // 1. START SYSTÉMU
         window.onload = () => {
-            map = L.map('sonar-map', { zoomControl: false, attributionControl: false }).setView([50.912, 14.619], 16);
+            map = L.map('map', { zoomControl: false, attributionControl: false }).setView([50.912, 14.619], 16);
             L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager_nolabels/{z}/{x}/{y}{r}.png').addTo(map);
             
-            setTimeout(() => { map.invalidateSize(); loadCanes(); }, 500);
-            document.body.addEventListener('dblclick', toggleAR);
-            setMode('personal');
+            // Oprava pro zobrazení mapy
+            setTimeout(() => { map.invalidateSize(); }, 500);
+            
+            loadCanes();
         };
 
-        function setMode(m) {
-            mode = m;
-            document.documentElement.style.setProperty('--accent', config[m]);
-            document.getElementById('logo').style.color = config[m];
-            ['p','b','c'].forEach(id => {
-                const el = document.getElementById('m-'+id);
-                el.style.background = (id === m[0]) ? config[m] : 'rgba(255,255,255,0.2)';
-            });
+        // 2. MODY
+        function changeMode(m) {
+            currentMode = m;
+            document.documentElement.style.setProperty('--accent', colors[m]);
+            document.getElementById('main-logo').style.color = colors[m];
+            ['p','b','c'].forEach(i => document.getElementById('btn-'+i).classList.remove('active'));
+            document.getElementById('btn-'+m[0]).classList.add('active');
         }
 
-        function toggleAR() {
+        // 3. PŘEPNUTÍ VIZE (AR / MAPA)
+        function toggleVision() {
             isAR = !isAR;
-            const cam = document.getElementById('camera-stream');
-            const mapEl = document.getElementById('sonar-map');
+            const camView = document.getElementById('camera-view');
+            const arOverlay = document.getElementById('ar-overlay');
+            const mapEl = document.getElementById('map');
+            const icon = document.getElementById('vision-icon');
+
             if(isAR) {
-                navigator.mediaDevices.getUserMedia({video: {facingMode:'environment'}})
-                .then(s => { cam.srcObject = s; cam.style.opacity = '1'; mapEl.style.opacity = '0'; renderAR(); });
+                navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } })
+                .then(stream => {
+                    document.getElementById('video').srcObject = stream;
+                    camView.style.opacity = '1';
+                    mapEl.style.opacity = '0';
+                    arOverlay.style.display = 'block';
+                    icon.className = 'fas fa-map';
+                    renderAR();
+                });
             } else {
-                cam.style.opacity = '0'; mapEl.style.opacity = '1';
-                if(cam.srcObject) cam.srcObject.getTracks().forEach(t => t.stop());
-                map.invalidateSize();
+                camView.style.opacity = '0';
+                mapEl.style.opacity = '1';
+                arOverlay.style.display = 'none';
+                icon.className = 'fas fa-expand';
+                const stream = document.getElementById('video').srcObject;
+                if(stream) stream.getTracks().forEach(t => t.stop());
+                setTimeout(() => { map.invalidateSize(); }, 200);
             }
         }
 
-        function openImprint() { document.getElementById('imprint-shield').style.display = 'flex'; }
-        function closeImprint() { document.getElementById('imprint-shield').style.display = 'none'; }
+        // 4. CREATOR LOGIC
+        function openCreator() { document.getElementById('creator').classList.remove('hidden'); }
+        function closeCreator() { document.getElementById('creator').classList.add('hidden'); }
 
-        function capture(type) {
-            if(type === 'img') {
-                const i = document.createElement('input'); i.type = 'file'; i.accept = 'image/*';
-                i.onchange = e => {
-                    const r = new FileReader(); r.onload = ev => { currentImg = ev.target.result; document.getElementById('btn-cam').classList.add('bg-white','text-black'); };
-                    r.readAsDataURL(e.target.files[0]);
-                };
-                i.click();
-            } else {
-                handleAudio();
-            }
-        }
-
-        async function handleAudio() {
-            const btn = document.getElementById('btn-mic');
-            if(!recorder || recorder.state === 'inactive') {
-                const s = await navigator.mediaDevices.getUserMedia({audio:true});
-                recorder = new MediaRecorder(s); chunks = [];
-                recorder.ondataavailable = e => chunks.push(e.data);
-                recorder.onstop = () => {
-                    const b = new Blob(chunks, {type:'audio/ogg'});
-                    const r = new FileReader(); r.onload = ev => { currentAudio = ev.target.result; btn.classList.add('bg-white','text-black'); };
-                    r.readAsDataURL(b);
-                };
-                recorder.start(); btn.classList.add('text-red-500','animate-pulse');
-            } else { recorder.stop(); btn.classList.remove('text-red-500','animate-pulse'); }
-        }
-
-        function finalizeCane() {
-            const pos = map.getCenter();
-            const cane = {
-                id: Date.now(), title: document.getElementById('target-name').value || 'ENTITY',
-                lat: pos.lat, lng: pos.lng, mode: mode, img: currentImg, audio: currentAudio, time: new Date().toLocaleString()
+        function takePic() {
+            const input = document.createElement('input'); input.type = 'file'; input.accept = 'image/*';
+            input.onchange = e => {
+                const reader = new FileReader();
+                reader.onload = ev => { tempImg = ev.target.result; document.getElementById('cam-trigger').style.color = '#00f2fe'; };
+                reader.readAsDataURL(e.target.files[0]);
             };
-            canes.push(cane);
-            saveData();
-            addMapMarker(cane);
-            closeImprint();
+            input.click();
+        }
+
+        async function recAudio() {
+            if(!mediaRecorder || mediaRecorder.state === 'inactive') {
+                const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                mediaRecorder = new MediaRecorder(stream);
+                audioChunks = [];
+                mediaRecorder.ondataavailable = e => audioChunks.push(e.data);
+                mediaRecorder.onstop = () => {
+                    const blob = new Blob(audioChunks, { type: 'audio/ogg' });
+                    const reader = new FileReader();
+                    reader.onload = ev => { tempAudio = ev.target.result; document.getElementById('mic-trigger').style.color = '#00f2fe'; };
+                    reader.readAsDataURL(blob);
+                };
+                mediaRecorder.start();
+                document.getElementById('mic-trigger').classList.add('animate-pulse', 'text-red-500');
+            } else {
+                mediaRecorder.stop();
+                document.getElementById('mic-trigger').classList.remove('animate-pulse', 'text-red-500');
+            }
+        }
+
+        // 5. ZAPÍCHNUTÍ HOLE
+        function zapichnoutHul() {
+            const center = map.getCenter();
+            const newCane = {
+                id: Date.now(),
+                title: document.getElementById('cane-name').value || "NEZNÁMÁ HŮL",
+                lat: center.lat,
+                lng: center.lng,
+                mode: currentMode,
+                img: tempImg,
+                audio: tempAudio,
+                date: new Date().toLocaleString()
+            };
+
+            canes.push(newCane);
+            saveCanes();
+            addMarkerToMap(newCane);
+            closeCreator();
+            
             // Reset
-            document.getElementById('target-name').value = ''; currentImg = null; currentAudio = null;
-            document.getElementById('btn-cam').className = document.getElementById('btn-mic').className = "w-16 h-16 rounded-full border border-white/10 flex items-center justify-center";
+            tempImg = null; tempAudio = null;
+            document.getElementById('cane-name').value = "";
+            document.getElementById('cam-trigger').style.color = "white";
+            document.getElementById('mic-trigger').style.color = "white";
         }
 
-        function addMapMarker(c) {
+        function addMarkerToMap(cane) {
             const icon = L.divIcon({
-                className: 'cane-marker',
-                html: `<div class="pulse-node" style="--accent: ${config[c.mode]}"></div>`,
-                iconSize: [12, 12]
+                className: 'custom-div-icon',
+                html: `<div class="cane-dot" style="--accent: ${colors[cane.mode]}"></div>`,
+                iconSize: [14, 14],
+                iconAnchor: [7, 7]
             });
-            L.marker([c.lat, c.lng], {icon}).addTo(map).on('click', () => showDetail(c));
+
+            L.marker([cane.lat, cane.lng], { icon }).addTo(map).on('click', () => openDetail(cane));
         }
 
-        function showDetail(c) {
-            document.getElementById('detail-view').style.display = 'flex';
-            document.getElementById('detail-title').innerText = c.title;
-            document.getElementById('detail-title').style.color = config[c.mode];
-            document.getElementById('detail-meta').innerText = `Uloženo: ${c.time}`;
-            document.getElementById('detail-img-container').innerHTML = c.img ? `<img src="${c.img}" class="w-full h-full object-cover">` : '<div class="w-full h-full bg-white/5 flex items-center justify-center"><i class="fas fa-atom text-4xl opacity-20"></i></div>';
-            document.getElementById('detail-audio-btn').onclick = () => { if(c.audio) new Audio(c.audio).play(); };
+        function openDetail(cane) {
+            const det = document.getElementById('detail');
+            document.getElementById('detail-title').innerText = cane.title;
+            document.getElementById('detail-title').style.color = colors[cane.mode];
+            document.getElementById('detail-date').innerText = cane.date;
+            document.getElementById('detail-img').innerHTML = cane.img ? `<img src="${cane.img}" class="w-full h-full object-cover">` : "";
+            document.getElementById('play-btn').onclick = (e) => { e.stopPropagation(); if(cane.audio) new Audio(cane.audio).play(); };
+            det.classList.remove('hidden');
         }
 
         function renderAR() {
-            const canvas = document.getElementById('ar-canvas'); canvas.innerHTML = '';
-            if(!isAR) return;
-            canes.forEach(c => {
-                const el = document.createElement('div');
-                el.className = 'cane-entity';
-                el.style.left = (Math.random()*70 + 15) + '%'; el.style.bottom = '10%';
-                el.innerHTML = `<div class="cane-shaft" style="--accent: ${config[c.mode]}"></div>
-                                <div class="cane-head" style="--accent: ${config[c.mode]}" onclick='showDetail(${JSON.stringify(c)})'>
-                                    ${c.img ? `<img src="${c.img}" class="w-full h-full object-cover">` : '<i class="fas fa-signature opacity-20"></i>'}
-                                </div>`;
-                canvas.appendChild(el);
+            const overlay = document.getElementById('ar-overlay');
+            overlay.innerHTML = "";
+            canes.forEach(cane => {
+                const div = document.createElement('div');
+                div.className = "ar-cane";
+                div.style.left = (20 + Math.random() * 60) + "%";
+                div.style.top = (30 + Math.random() * 30) + "%";
+                div.style.setProperty('--accent', colors[cane.mode]);
+                div.innerHTML = `
+                    <div class="ar-head" onclick="openDetail(${JSON.stringify(cane)})">
+                        ${cane.img ? `<img src="${cane.img}" class="w-full h-full object-cover">` : ""}
+                    </div>
+                    <div class="ar-line"></div>
+                    <div class="text-[10px] font-black mt-2 uppercase" style="color:${colors[cane.mode]}">${cane.title}</div>
+                `;
+                div.style.pointerEvents = "all";
+                overlay.appendChild(div);
             });
         }
 
-        function saveData() { localStorage.setItem('ic_core_42', JSON.stringify(canes)); }
+        function saveCanes() { localStorage.setItem('invisible_canes_v5', JSON.stringify(canes)); }
         function loadCanes() {
-            const s = localStorage.getItem('ic_core_42');
-            if(s) { canes = JSON.parse(s); canes.forEach(addMapMarker); }
+            const data = localStorage.getItem('invisible_canes_v5');
+            if(data) {
+                canes = JSON.parse(data);
+                canes.forEach(c => addMarkerToMap(c));
+            }
         }
+        function enableAudio() { if(!window.audioUnlocked) { const ctx = new AudioContext(); window.audioUnlocked = true; } }
     </script>
 </body>
 </html>
