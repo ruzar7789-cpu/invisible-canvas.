@@ -3,136 +3,123 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TADY - Tvůj digitální svět</title>
+    <title>TADY - Globální AR Síť</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <style>
         :root { --neon: #00e676; --gold: #ffd700; --bg: #000; }
-        body { background: var(--bg); color: #fff; font-family: 'Segoe UI', sans-serif; margin: 0; overflow-x: hidden; }
+        body { background: var(--bg); color: #fff; font-family: 'Segoe UI', sans-serif; margin: 0; overflow: hidden; }
         
-        /* ÚVODNÍ STRÁNKA */
+        /* LANDING PAGE */
         #landing-page {
             height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center;
-            text-align: center; transition: 0.8s ease-in-out;
+            background: radial-gradient(circle, #111 0%, #000 100%); transition: 0.8s; z-index: 2000; position: relative;
         }
         .logo-giant { font-size: 5rem; font-weight: 900; font-style: italic; text-shadow: 0 0 20px var(--neon); margin-bottom: 10px; }
-        .enter-btn { 
-            background: none; border: 2px solid var(--neon); color: var(--neon); padding: 15px 40px; 
-            font-size: 1.2rem; font-weight: bold; cursor: pointer; border-radius: 50px; transition: 0.3s;
-        }
-        .enter-btn:hover { background: var(--neon); color: #000; box-shadow: 0 0 30px var(--neon); }
+        .enter-btn { background: none; border: 2px solid var(--neon); color: var(--neon); padding: 15px 40px; font-size: 1.2rem; font-weight: bold; cursor: pointer; border-radius: 50px; transition: 0.3s; }
 
-        /* HLAVNÍ ROZHRANÍ (skryté na začátku) */
-        #main-app { display: none; padding: 20px; flex-direction: column; align-items: center; min-height: 100vh; }
-        
-        /* PŘEPÍNAČ SEKCÍ */
-        .tabs { display: flex; gap: 10px; margin-bottom: 20px; flex-wrap: wrap; justify-content: center; }
-        .tab-btn { background: #111; border: 1px solid #333; color: #888; padding: 10px 20px; border-radius: 10px; cursor: pointer; }
-        .tab-btn.active { border-color: var(--neon); color: var(--neon); background: rgba(0,230,118,0.1); }
-        .tab-btn.gold { border-color: var(--gold); color: var(--gold); }
+        /* HLAVNÍ APLIKACE */
+        #main-app { display: none; height: 100vh; flex-direction: column; }
+        #map { flex-grow: 1; width: 100%; }
 
-        .form-container { 
-            background: #111; padding: 25px; border-radius: 25px; width: 100%; max-width: 400px; 
-            border: 1px solid #222; box-shadow: 0 10px 40px rgba(0,0,0,0.5);
-        }
-        textarea, input[type="file"] { 
-            width: 100%; background: #050505; border: 1px solid #333; color: #fff; 
-            padding: 15px; border-radius: 12px; margin-bottom: 15px; box-sizing: border-box;
-        }
+        /* INTERFACE */
+        .ui-overlay { background: rgba(10, 10, 10, 0.95); padding: 20px; border-radius: 30px 30px 0 0; margin-top: -30px; z-index: 1000; }
+        .tabs { display: flex; gap: 10px; margin-bottom: 15px; justify-content: center; }
+        .tab-btn { background: #222; border: 1px solid #333; color: #666; padding: 8px 15px; border-radius: 10px; cursor: pointer; }
+        .tab-btn.active { border-color: var(--neon); color: var(--neon); }
         
-        .id-scanner {
-            width: 80px; height: 80px; border: 2px solid var(--neon); border-radius: 50%;
-            margin: 20px auto; display: flex; align-items: center; justify-content: center; cursor: pointer;
-        }
-        .id-scanner img { width: 40px; filter: invert(1); }
-        
-        #status { font-size: 0.8rem; color: var(--neon); text-align: center; }
+        textarea { width: 100%; background: #000; border: 1px solid #333; color: #fff; padding: 12px; border-radius: 12px; margin-bottom: 10px; box-sizing: border-box; }
+        .id-scanner { width: 60px; height: 60px; border: 2px solid var(--neon); border-radius: 50%; margin: 0 auto; display: flex; align-items: center; justify-content: center; cursor: pointer; }
+        .id-scanner img { width: 30px; filter: invert(1); }
+
+        /* POPUP STYLE */
+        .like-btn { background: var(--neon); color: #000; border: none; padding: 5px 10px; border-radius: 5px; cursor: pointer; font-weight: bold; margin-top: 5px; }
     </style>
 </head>
 <body>
 
     <div id="landing-page">
         <div class="logo-giant">TADY</div>
-        <p style="color: #666; letter-spacing: 5px; margin-bottom: 40px;">VŠECHNO DŮLEŽITÉ JE TADY</p>
         <button class="enter-btn" onclick="vstoupit()">VSTOUPIT DO PROSTORU</button>
     </div>
 
     <div id="main-app">
-        <div class="logo-giant" style="font-size: 2rem;">TADY</div>
-        
-        <div class="tabs">
-            <button class="tab-btn active" onclick="setMode('Vzkaz', this)">VZKAZ</button>
-            <button class="tab-btn gold" onclick="setMode('Reklama', this)">REKLAMA</button>
-            <button class="tab-btn" onclick="setMode('Vzpomínka', this)">VZPOMÍNKA / FOTO</button>
-        </div>
-
-        <div class="form-container">
-            <div id="mode-title" style="margin-bottom: 15px; font-weight: bold; color: var(--neon);">REŽIM: VZKAZ</div>
-            
-            <textarea id="content" placeholder="Napiš vzkaz, menu restaurace nebo vzpomínku..."></textarea>
-            
-            <div id="photo-section" style="display: none;">
-                <p style="font-size: 0.8rem; color: #888;">Nahrát fotografii místa:</p>
-                <input type="file" id="photo-input" accept="image/*">
+        <div id="map"></div>
+        <div class="ui-overlay">
+            <div class="tabs">
+                <button class="tab-btn active" onclick="setMode('Vzkaz', this)">VZKAZ</button>
+                <button class="tab-btn" onclick="setMode('Reklama', this)">REKLAMA</button>
+                <button class="tab-btn" onclick="setMode('Vzpomínka', this)">VZPOMÍNKA</button>
             </div>
-
+            <textarea id="content" placeholder="Zanech stopu v prostoru..."></textarea>
             <div class="id-scanner" onclick="ulozitStopu()">
-                <img src="https://cdn-icons-png.flaticon.com/512/2618/2618254.png" alt="ID">
+                <img src="https://cdn-icons-png.flaticon.com/512/2618/2618254.png">
             </div>
-            <p style="text-align: center; font-size: 0.7rem; color: #444; letter-spacing: 2px;">IDENTIFY M.D.</p>
-            
-            <div id="status">SYSTÉM PŘIPRAVEN</div>
+            <div id="status" style="text-align:center; font-size:0.7rem; color:var(--neon); margin-top:5px;">IDENTIFY M.D.</div>
         </div>
     </div>
 
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script>
-        let currentMode = "Vzkaz";
+        let currentMode = "Vzkaz", map, userMarker, tracesLayer = L.layerGroup();
 
         function vstoupit() {
             document.getElementById('landing-page').style.opacity = '0';
             setTimeout(() => {
                 document.getElementById('landing-page').style.display = 'none';
                 document.getElementById('main-app').style.display = 'flex';
+                initApp();
             }, 800);
+        }
+
+        function initApp() {
+            map = L.map('map', { zoomControl: false }).setView([50, 14], 15);
+            L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png').addTo(map);
+            tracesLayer.addTo(map);
+            navigator.geolocation.watchPosition(pos => {
+                const latlng = [pos.coords.latitude, pos.coords.longitude];
+                if (!userMarker) { userMarker = L.circleMarker(latlng, { color: '#00e676', radius: 8 }).addTo(map); map.setView(latlng, 17); }
+                else { userMarker.setLatLng(latlng); }
+                nactiStopy();
+            });
+        }
+
+        async function nactiStopy() {
+            const res = await fetch('/api/get-traces');
+            const data = await res.json();
+            tracesLayer.clearLayers();
+            data.forEach(stopa => {
+                const color = stopa.content.includes('[Reklama]') ? '#ffd700' : '#00e676';
+                const marker = L.circleMarker([stopa.lat, stopa.lng], { color: color, radius: 6 });
+                marker.bindPopup(`
+                    <b>${stopa.content}</b><br>
+                    ❤️ <span id="likes-${stopa.id}">${stopa.likes || 0}</span><br>
+                    <button class="like-btn" onclick="likeStopa(${stopa.id})">PODPOŘIT</button>
+                `).addTo(tracesLayer);
+            });
+        }
+
+        async function likeStopa(id) {
+            await fetch('/api/like-trace', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id }) });
+            nactiStopy();
         }
 
         function setMode(mode, btn) {
             currentMode = mode;
             document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
             btn.classList.add('active');
-            document.getElementById('mode-title').innerText = "REŽIM: " + mode.toUpperCase();
-            
-            // Zobrazit nahrávání fotky jen pro Vzpomínku nebo Reklamu
-            document.getElementById('photo-section').style.display = (mode === 'Vzkaz') ? 'none' : 'block';
         }
 
         async function ulozitStopu() {
-            const status = document.getElementById('status');
-            const content = document.getElementById('content').value;
-            status.innerText = "🛰️ UKOTVUJI " + currentMode.toUpperCase() + "...";
-
+            const txt = document.getElementById('content').value;
+            if (!txt) return;
             navigator.geolocation.getCurrentPosition(async (pos) => {
-                const payload = {
-                    lat: pos.coords.latitude,
-                    lng: pos.coords.longitude,
-                    content: `[${currentMode}] ${content}`,
-                    media: currentMode === 'Vzpomínka' ? 'IMAGE_ATTACHED' : 'TEXT_ONLY'
-                };
-
-                try {
-                    const response = await fetch('/api/save-trace', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify(payload)
-                    });
-
-                    if (response.ok) {
-                        status.innerHTML = "✅ STOPA BYLA ZANECHÁNA V PROSTORU";
-                        document.getElementById('content').value = "";
-                    } else {
-                        status.innerText = "❌ CHYBA UKOTVENÍ";
-                    }
-                } catch (err) {
-                    status.innerText = "❌ CHYBA PŘIPOJENÍ";
-                }
+                await fetch('/api/save-trace', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ lat: pos.coords.latitude, lng: pos.coords.longitude, content: `[${currentMode}] ${txt}` })
+                });
+                document.getElementById('content').value = "";
+                nactiStopy();
             });
         }
     </script>
