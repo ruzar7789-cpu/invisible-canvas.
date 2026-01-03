@@ -1,26 +1,30 @@
 import { neon } from '@neondatabase/serverless';
 
 export default async function handler(req, res) {
-  // Připojení k Neonu pomocí tvé proměnné DATABASE_URL
-  const sql = neon(process.env.DATABASE_URL);
-  
-  if (req.method === 'POST') {
-    try {
-      const { lat, lng, content, media } = JSON.parse(req.body);
-      // Vkládáme do tabulky "traces" (vytvořil jsi ji v Neonu?)
-      await sql('INSERT INTO traces (lat, lng, content, media) VALUES ($1, $2, $3, $4)', [lat, lng, content, media]);
-      return res.status(200).json({ success: true });
-    } catch (error) {
-      return res.status(500).json({ error: error.message });
+    // Kontrola, zda máme adresu databáze
+    if (!process.env.DATABASE_URL) {
+        return res.status(500).json({ error: "Chybí DATABASE_URL ve Vercelu" });
     }
-  } else {
-    try {
-      // Načtení vzkazů pro mapu
-      const data = await sql('SELECT * FROM traces ORDER BY id DESC LIMIT 100');
-      return res.status(200).json(data);
-    } catch (error) {
-      return res.status(500).json({ error: error.message });
+
+    const sql = neon(process.env.DATABASE_URL);
+
+    if (req.method === 'POST') {
+        try {
+            const { lat, lng, content, media } = JSON.parse(req.body);
+            await sql('INSERT INTO traces (lat, lng, content, media) VALUES ($1, $2, $3, $4)', [lat, lng, content, media]);
+            return res.status(200).json({ success: true });
+        } catch (error) {
+            console.error(error);
+            return res.status(500).json({ error: "Chyba při zápisu: " + error.message });
+        }
+    } else {
+        try {
+            const data = await sql('SELECT * FROM traces ORDER BY id DESC LIMIT 100');
+            return res.status(200).json(data);
+        } catch (error) {
+            console.error(error);
+            // Tohle nám řekne, jestli tabulka existuje
+            return res.status(500).json({ error: "Chyba při čtení: " + error.message });
+        }
     }
-  }
-      }
-      
+}
