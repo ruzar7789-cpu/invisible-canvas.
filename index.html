@@ -3,269 +3,286 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>TADY // SYNAPSE 2.1 // M.D.</title>
+    <title>TADY // NEURAL-SYNC 2.2 // M.D.</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@200;400;800&display=swap');
-        :root { --p-glow: #00f2fe; --b-glow: #ffca2c; --c-glow: #bf5af2; --active-color: #00f2fe; }
         
-        body, html { font-family: 'Plus Jakarta Sans', sans-serif; background: #000; color: white; margin: 0; padding: 0; overflow: hidden; height: 100vh; width: 100vw; }
-
-        .neural-glass { background: rgba(255, 255, 255, 0.03); backdrop-filter: blur(40px) saturate(180%); border: 1px solid rgba(255,255,255,0.1); }
+        :root { 
+            --active-color: #00f2fe; 
+            --p-glow: #00f2fe; 
+            --b-glow: #ffca2c; 
+            --c-glow: #bf5af2; 
+        }
         
-        /* THE VOID */
-        #landing-page { position: fixed; inset: 0; z-index: 99999; background: #000; display: flex; flex-direction: column; justify-content: center; align-items: center; transition: 1.2s cubic-bezier(0.8, 0, 0.2, 1); }
-        .logo-vibration { font-size: 6rem; font-weight: 800; letter-spacing: -6px; font-style: italic; filter: drop-shadow(0 0 15px var(--active-color)); animation: vibe 4s infinite; }
-        @keyframes vibe { 0%, 100% { opacity: 1; transform: scale(1); } 50% { opacity: 0.7; transform: scale(0.98); filter: blur(2px); } }
+        body, html { 
+            font-family: 'Plus Jakarta Sans', sans-serif; 
+            background: #000; color: white; margin: 0; padding: 0; 
+            overflow: hidden; height: 100vh; width: 100vw; 
+        }
 
-        /* HUD */
-        #app-interface { display: none; height: 100vh; width: 100vw; flex-direction: column; position: relative; opacity: 0; transition: 1s; }
-        #map-bg { height: 100%; width: 100%; position: absolute; inset: 0; z-index: 10; filter: invert(100%) hue-rotate(180deg) brightness(0.3) contrast(1.5); }
-        #ar-video { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; z-index: 5; }
-        #ar-world { position: absolute; inset: 0; z-index: 20; pointer-events: none; perspective: 1200px; }
+        /* NEURAL GLASS UI */
+        .neural-glass { 
+            background: rgba(10, 10, 10, 0.7); 
+            backdrop-filter: blur(25px) saturate(150%); 
+            border: 1px solid rgba(255,255,255,0.1); 
+            box-shadow: 0 10px 40px rgba(0,0,0,0.5);
+        }
 
-        /* ENTITIES */
-        .ghost-entity { position: absolute; pointer-events: all; transform-style: preserve-3d; }
-        .core-orb { width: 40px; height: 40px; border-radius: 50%; background: var(--active-color); filter: blur(10px); opacity: 0.5; position: absolute; animation: pulse-core 3s infinite; }
-        .shared-aura { border: 2px solid white; animation: pulse-shared 1.5s infinite; }
-        
-        @keyframes pulse-core { 0%, 100% { transform: scale(1); opacity: 0.4; } 50% { transform: scale(1.5); opacity: 0.7; } }
-        @keyframes pulse-shared { 0% { transform: scale(1); opacity: 0.8; } 100% { transform: scale(2.5); opacity: 0; } }
+        /* MAP DARK MODE FILTER */
+        #map-bg { 
+            height: 100%; width: 100%; position: absolute; inset: 0; z-index: 10; 
+            filter: invert(100%) hue-rotate(180deg) brightness(0.4) contrast(1.2); 
+            background: #000;
+        }
 
-        .data-fragment { padding: 15px; border-radius: 24px; border: 1px solid rgba(255,255,255,0.1); background: rgba(0,0,0,0.6); backdrop-filter: blur(15px); min-width: 140px; }
+        #ar-video { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; z-index: 5; background: #000; }
+        #ar-world { position: absolute; inset: 0; z-index: 20; pointer-events: none; }
 
-        /* CONTROLS */
-        .control-ring { position: absolute; bottom: 40px; left: 50%; transform: translateX(-50%); z-index: 6000; width: 90%; max-width: 450px; }
-        .m-chip { width: 55px; height: 55px; border-radius: 20px; border: 1px solid rgba(255,255,255,0.1); display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 800; background: rgba(255,255,255,0.05); }
-        .active-p { border-color: var(--p-glow); color: var(--p-glow); box-shadow: 0 0 25px rgba(0,242,254,0.3); }
+        /* AR ENTITY DESIGN */
+        .ghost-entity { 
+            position: absolute; pointer-events: all; 
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); 
+        }
+        .core-orb { 
+            width: 50px; height: 50px; border-radius: 50%; 
+            background: var(--active-color); filter: blur(12px); 
+            opacity: 0.6; animation: pulse-core 2.5s infinite; 
+        }
+        @keyframes pulse-core { 0%, 100% { transform: scale(1); opacity: 0.4; } 50% { transform: scale(1.4); opacity: 0.8; } }
 
-        .hidden { display: none !important; }
+        /* BUTTONS & CHIPS */
+        .m-chip { 
+            width: 65px; height: 45px; border-radius: 15px; 
+            border: 1px solid rgba(255,255,255,0.15); 
+            display: flex; align-items: center; justify-content: center; 
+            font-size: 10px; font-weight: 800; background: rgba(255,255,255,0.05);
+            transition: 0.3s; color: rgba(255,255,255,0.3);
+        }
+        .m-chip.active { color: white; border-color: var(--active-color); box-shadow: 0 0 15px var(--active-color); background: rgba(0,0,0,0.4); }
+
+        /* BOOT SCREEN */
+        #boot-screen {
+            position: fixed; inset: 0; z-index: 99999; background: #000;
+            display: flex; flex-direction: column; justify-content: center; align-items: center;
+        }
     </style>
 </head>
-<body onclick="resumeAudioContext()">
+<body onclick="if(audioCtx) audioCtx.resume()">
 
-    <div id="landing-page">
-        <div class="logo-vibration">TADY</div>
-        <div onclick="bootApp()" class="mt-20 flex flex-col items-center cursor-pointer group relative z-[100000]">
-            <div class="w-32 h-32 neural-glass rounded-full flex items-center justify-center relative transition-transform group-active:scale-95">
-                <i class="fas fa-satellite-dish text-4xl text-cyan-400 animate-pulse"></i>
-            </div>
-            <div class="mt-8 text-[10px] tracking-[0.8em] font-black opacity-30 uppercase text-center">Synchronizing Reality...</div>
-        </div>
+    <div id="boot-screen">
+        <div class="text-6xl font-black italic tracking-tighter animate-pulse mb-10">TADY</div>
+        <button onclick="initializeSystem()" class="neural-glass px-10 py-5 rounded-full border border-cyan-500/30 text-cyan-400 font-black tracking-widest text-[10px] uppercase">
+            Initialize Vision 2026
+        </button>
     </div>
 
-    <div id="app-interface">
-        <div id="viewer-container" class="h-full w-full relative">
-            <div id="map-bg"></div>
-            <video id="ar-video" autoplay playsinline muted class="hidden"></video>
-            <div id="ar-world"></div>
-        </div>
+    <div id="app-interface" class="hidden h-screen w-screen relative flex flex-col">
+        
+        <div id="map-bg"></div>
+        <video id="ar-video" autoplay playsinline muted class="hidden"></video>
+        <div id="ar-world"></div>
 
-        <div class="absolute top-8 left-8 z-[5000] flex gap-4 items-start">
-            <div class="neural-glass p-6 rounded-[35px]">
-                <div class="text-3xl font-black italic tracking-tighter leading-none">TADY</div>
-                <div class="flex items-center gap-2 mt-2">
-                    <div id="sync-indicator" class="w-2 h-2 rounded-full bg-green-500"></div>
-                    <span id="node-count" class="text-[9px] font-black tracking-widest opacity-60 uppercase">Nodes: 0</span>
+        <div class="absolute top-6 left-6 z-[5000] flex gap-4 w-[calc(100%-48px)] justify-between items-start pointer-events-none">
+            <div class="neural-glass p-5 rounded-[25px] pointer-events-auto">
+                <div class="text-2xl font-black italic tracking-tighter leading-none" id="main-logo">TADY</div>
+                <div class="flex items-center gap-2 mt-1">
+                    <div class="w-2 h-2 rounded-full bg-green-500"></div>
+                    <span id="node-info" class="text-[8px] font-black tracking-widest opacity-50 uppercase">Nodes: 0 // VRNSDRF</span>
                 </div>
             </div>
+            
+            <div class="flex flex-col gap-3 pointer-events-auto">
+                <button onclick="switchView()" class="w-14 h-14 neural-glass rounded-full flex items-center justify-center text-xl transition active:scale-90">
+                    <i id="view-icon" class="fas fa-map-marked-alt"></i>
+                </button>
+            </div>
         </div>
 
-        <div class="absolute top-8 right-8 z-[5000] flex flex-col gap-3">
-            <button onclick="toggleView()" class="w-16 h-16 neural-glass rounded-full flex items-center justify-center shadow-2xl active:scale-90 transition">
-                <i id="view-icon" class="fas fa-globe-europe text-xl"></i>
-            </button>
-            <div id="img-slot" class="w-16 h-16 neural-glass rounded-full hidden bg-cover bg-center border-2 border-cyan-400"></div>
-        </div>
-
-        <div class="control-ring">
-            <div class="flex justify-center gap-3 mb-6">
-                <button onclick="setMode('personal')" id="btn-p" class="m-chip active-p">PERS</button>
-                <button onclick="setMode('business')" id="btn-b" class="m-chip text-white/20">BIZ</button>
-                <button onclick="setMode('capsule')" id="btn-c" class="m-chip text-white/20">CAPS</button>
+        <div class="absolute bottom-8 left-1/2 -translate-x-1/2 z-[6000] w-[92%] max-width[400px]">
+            <div class="flex justify-center gap-2 mb-4">
+                <button onclick="changeMode('personal')" id="mode-p" class="m-chip active">PERS</button>
+                <button onclick="changeMode('business')" id="mode-b" class="m-chip">BIZ</button>
+                <button onclick="changeMode('capsule')" id="mode-c" class="m-chip">CAPS</button>
             </div>
 
-            <div class="neural-glass p-8 rounded-[45px] space-y-6">
-                <input type="text" id="t-title" class="w-full bg-transparent text-2xl font-black outline-none placeholder:opacity-10 uppercase tracking-tighter" placeholder="SYSTEM_TITLE">
-                <textarea id="t-desc" class="w-full bg-transparent text-[14px] h-12 outline-none placeholder:opacity-10 resize-none font-medium" placeholder="Broadcast your memory to this location..."></textarea>
+            <div class="neural-glass p-6 rounded-[35px] border-t border-white/20">
+                <input type="text" id="trace-title" placeholder="NÁZEV VZKAZU" class="w-full bg-transparent text-xl font-extrabold outline-none placeholder:opacity-20 uppercase tracking-tighter mb-1">
+                <textarea id="trace-desc" placeholder="Zanechte stopu v prostoru..." class="w-full bg-transparent text-sm h-10 outline-none placeholder:opacity-20 resize-none font-medium text-white/70"></textarea>
 
-                <div class="flex items-center justify-between gap-6 pt-4 border-t border-white/5">
-                    <div class="flex gap-4">
-                        <button onclick="document.getElementById('t-img').click()" class="w-14 h-14 rounded-2xl bg-white/5 flex items-center justify-center hover:bg-white/10 transition"><i class="fas fa-camera-retro"></i></button>
-                        <button onclick="toggleAudio()" id="mic-btn" class="w-14 h-14 rounded-2xl bg-white/5 flex items-center justify-center transition-all"><i class="fas fa-microphone-alt"></i></button>
+                <div class="flex items-center justify-between mt-4 pt-4 border-t border-white/5">
+                    <div class="flex gap-3">
+                        <button onclick="document.getElementById('img-upload').click()" class="w-12 h-12 rounded-xl bg-white/5 flex items-center justify-center transition active:bg-white/20">
+                            <i class="fas fa-camera"></i>
+                        </button>
+                        <button id="mic-btn" onclick="handleAudio()" class="w-12 h-12 rounded-xl bg-white/5 flex items-center justify-center transition active:bg-white/20">
+                            <i class="fas fa-microphone"></i>
+                        </button>
                     </div>
-                    <button onclick="confirmTrace()" class="bg-white text-black px-12 py-5 rounded-2xl font-black text-[12px] uppercase tracking-widest hover:scale-105 active:scale-95 transition-all shadow-[0_0_30px_rgba(255,255,255,0.2)]">
-                        Broadcast
+                    
+                    <button onclick="createImprint()" class="bg-white text-black px-10 py-4 rounded-2xl font-black text-[11px] uppercase tracking-widest hover:scale-105 active:scale-95 transition-all shadow-xl">
+                        Imprint
                     </button>
                 </div>
             </div>
         </div>
-        <input type="file" id="t-img" class="hidden" accept="image/*" onchange="previewImage(this)">
+        <input type="file" id="img-upload" class="hidden" accept="image/*" onchange="processImage(this)">
     </div>
 
     <script>
-        let map, traces = [], currentMode = 'personal', isAR = false, deviceYaw = 0;
-        let audioCtx, mediaRecorder, chunks = [], currentAudio = null, isRecording = false, currentImg = null;
-        const config = { personal:{c:'#00f2fe'}, business:{c:'#ffca2c'}, capsule:{c:'#bf5af2'} };
+        let map, traces = [], currentMode = 'personal', isAR = false;
+        let audioCtx, mediaRecorder, chunks = [], currentAudio = null, currentImg = null;
 
-        function resumeAudioContext() { if(audioCtx && audioCtx.state === 'suspended') audioCtx.resume(); }
+        const theme = {
+            personal: { color: '#00f2fe', label: 'PERS' },
+            business: { color: '#ffca2c', label: 'BIZ' },
+            capsule: { color: '#bf5af2', label: 'CAPS' }
+        };
 
-        async function bootApp() {
-            document.getElementById('landing-page').style.opacity = '0';
-            setTimeout(() => {
-                document.getElementById('landing-page').style.display = 'none';
-                document.getElementById('app-interface').style.display = 'flex';
-                setTimeout(() => document.getElementById('app-interface').style.opacity = '1', 50);
-                initMap();
-                startGlobalSync(); // Spustí synchronizaci
-            }, 1000);
-            window.addEventListener('deviceorientation', e => { if(e.alpha !== null) deviceYaw = e.alpha; renderAR(); });
-        }
-
-        function initMap() {
-            map = L.map('map-bg', { zoomControl: false, attributionControl: false }).setView([50.912, 14.619], 18);
+        function initializeSystem() {
+            document.getElementById('boot-screen').style.display = 'none';
+            document.getElementById('app-interface').style.display = 'block';
+            
+            // Inicializace mapy s opravou pro černé zobrazení
+            map = L.map('map-bg', { zoomControl: false, attributionControl: false }).setView([50.912, 14.619], 16);
             L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager_nolabels/{z}/{x}/{y}{r}.png').addTo(map);
-            setTimeout(() => { map.invalidateSize(); loadLocalTraces(); }, 500);
+            
+            setTimeout(() => {
+                map.invalidateSize();
+                loadStoredTraces();
+            }, 300);
+
+            // Sledování orientace pro AR
+            window.addEventListener('deviceorientation', () => { if(isAR) renderAR(); });
         }
 
-        // PROTOKOL: SYNCHRONIZACE S REALITOU
-        function startGlobalSync() {
-            // Simulace real-time databáze (zde by bylo volání API)
-            setInterval(() => {
-                const indicator = document.getElementById('sync-indicator');
-                indicator.style.opacity = '0.3';
-                setTimeout(() => {
-                    indicator.style.opacity = '1';
-                    // Náhodně simulujeme "nalezení" cizí stopy v okolí pro ukázku
-                    if(Math.random() > 0.8 && traces.length < 15) {
-                        injectForeignNode();
-                    }
-                }, 500);
-            }, 10000);
-        }
-
-        function injectForeignNode() {
-            const pos = map.getCenter();
-            const foreignTrace = {
-                id: 'shared-' + Date.now(),
-                title: 'EXTERNAL NODE',
-                desc: 'Tato stopa byla zachycena v síti TADY.',
-                coords: [pos.lat + (Math.random()-0.5)*0.002, pos.lng + (Math.random()-0.5)*0.002],
-                mode: 'business',
-                isShared: true 
-            };
-            traces.push(foreignTrace);
-            document.getElementById('node-count').innerText = `Nodes: ${traces.length}`;
-            renderAR();
-        }
-
-        function setMode(m) {
+        function changeMode(m) {
             currentMode = m;
-            document.documentElement.style.setProperty('--active-color', config[m].c);
-            document.querySelectorAll('.m-chip').forEach(b => b.classList.remove('active-p', 'active-b', 'active-c'));
-            document.getElementById(`btn-${m[0]}`).classList.add(`active-${m[0]}`);
+            document.documentElement.style.setProperty('--active-color', theme[m].color);
+            document.getElementById('main-logo').style.color = theme[m].color;
+            
+            // UI Update
+            document.querySelectorAll('.m-chip').forEach(btn => btn.classList.remove('active'));
+            document.getElementById(`mode-${m[0]}`).classList.add('active');
         }
 
-        function previewImage(input) {
+        function switchView() {
+            isAR = !isAR;
+            const video = document.getElementById('ar-video');
+            const mapEl = document.getElementById('map-bg');
+            const icon = document.getElementById('view-icon');
+
+            if(isAR) {
+                navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } })
+                    .then(stream => {
+                        video.srcObject = stream;
+                        video.classList.remove('hidden');
+                        mapEl.style.opacity = '0';
+                        icon.className = 'fas fa-map';
+                        renderAR();
+                    });
+            } else {
+                video.classList.add('hidden');
+                mapEl.style.opacity = '1';
+                icon.className = 'fas fa-map-marked-alt';
+                if(video.srcObject) video.srcObject.getTracks().forEach(t => t.stop());
+                map.invalidateSize();
+            }
+        }
+
+        function processImage(input) {
             if (input.files && input.files[0]) {
                 const reader = new FileReader();
-                reader.onload = e => {
-                    currentImg = e.target.result;
-                    const slot = document.getElementById('img-slot');
-                    slot.style.backgroundImage = `url(${currentImg})`;
-                    slot.classList.remove('hidden');
-                };
+                reader.onload = e => currentImg = e.target.result;
                 reader.readAsDataURL(input.files[0]);
+                alert("Foto připraveno k otisku");
             }
         }
 
-        function toggleView() {
-            isAR = !isAR;
-            const v = document.getElementById('ar-video'), m = document.getElementById('map-bg'), icon = document.getElementById('view-icon');
-            if(isAR) {
-                navigator.mediaDevices.getUserMedia({video:{facingMode:'environment'}}).then(s => {
-                    v.srcObject = s; v.classList.remove('hidden'); m.style.opacity = "0";
-                    icon.className = 'fas fa-map-marked-alt';
-                });
+        async function handleAudio() {
+            const btn = document.getElementById('mic-btn');
+            if(!mediaRecorder || mediaRecorder.state === 'inactive') {
+                const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                mediaRecorder = new MediaRecorder(stream);
+                chunks = [];
+                mediaRecorder.ondataavailable = e => chunks.push(e.data);
+                mediaRecorder.onstop = () => {
+                    const blob = new Blob(chunks, { type: 'audio/ogg' });
+                    const r = new FileReader(); r.onload = e => currentAudio = e.target.result; r.readAsDataURL(blob);
+                };
+                mediaRecorder.start();
+                btn.classList.add('text-red-500', 'animate-pulse');
             } else {
-                v.classList.add('hidden'); m.style.opacity = "1";
-                icon.className = 'fas fa-globe-europe';
-                if(v.srcObject) v.srcObject.getTracks().forEach(t => t.stop());
-                setTimeout(() => map.invalidateSize(), 100);
+                mediaRecorder.stop();
+                btn.classList.remove('text-red-500', 'animate-pulse');
             }
         }
 
-        async function toggleAudio() {
-            if(!isRecording) {
-                try {
-                    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-                    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-                    mediaRecorder = new MediaRecorder(stream); chunks = [];
-                    mediaRecorder.ondataavailable = e => chunks.push(e.data);
-                    mediaRecorder.onstop = () => {
-                        const blob = new Blob(chunks, { type: 'audio/ogg' });
-                        const r = new FileReader(); r.onload = e => currentAudio = e.target.result; r.readAsDataURL(blob);
-                    };
-                    mediaRecorder.start(); isRecording = true;
-                    document.getElementById('mic-btn').classList.add('text-red-500');
-                } catch(e) { console.error(e); }
-            } else {
-                isRecording = false; mediaRecorder.stop();
-                document.getElementById('mic-btn').classList.remove('text-red-500');
-            }
-        }
-
-        function confirmTrace() {
+        function createImprint() {
             const pos = map.getCenter();
-            const data = {
-                id: Date.now(), title: document.getElementById('t-title').value || 'Broadcast',
-                desc: document.getElementById('t-desc').value || '', coords: [pos.lat, pos.lng],
-                mode: currentMode, audio: currentAudio, img: currentImg, isShared: false
+            const newTrace = {
+                id: Date.now(),
+                title: document.getElementById('trace-title').value || 'NO_NAME',
+                desc: document.getElementById('trace-desc').value || '',
+                coords: [pos.lat, pos.lng],
+                mode: currentMode,
+                img: currentImg,
+                audio: currentAudio,
+                timestamp: new Date().toLocaleTimeString()
             };
-            traces.push(data);
-            localStorage.setItem('md_traces_v2.1', JSON.stringify(traces.filter(t => !t.isShared)));
-            document.getElementById('node-count').innerText = `Nodes: ${traces.length}`;
-            renderAR();
-            // Reset
-            document.getElementById('t-title').value = ''; document.getElementById('t-desc').value = '';
-            currentAudio = null; currentImg = null; document.getElementById('img-slot').classList.add('hidden');
+
+            traces.push(newTrace);
+            saveTraces();
+            
+            // Reset UI
+            document.getElementById('trace-title').value = '';
+            document.getElementById('trace-desc').value = '';
+            currentImg = null; currentAudio = null;
+            
+            document.getElementById('node-info').innerText = `Nodes: ${traces.length} // VRNSDRF`;
+            if(isAR) renderAR();
+            alert("Vzkaz byl úspěšně přenesen do prostoru!");
         }
 
         function renderAR() {
-            const world = document.getElementById('ar-world'); world.innerHTML = '';
+            const world = document.getElementById('ar-world');
+            world.innerHTML = '';
             if(!isAR) return;
-            const center = map.getCenter();
+
             traces.forEach(t => {
-                const latDiff = t.coords[0] - center.lat;
-                const lngDiff = t.coords[1] - center.lng;
-                const distance = Math.sqrt(latDiff**2 + lngDiff**2);
-                if(distance < 0.006) {
-                    const x = 50 + (lngDiff * 160000) + ((deviceYaw % 360) * 3);
-                    const y = 50 - (latDiff * 160000);
-                    const ghost = document.createElement('div');
-                    ghost.className = 'ghost-entity';
-                    ghost.style.left = `${x}%`; ghost.style.top = `${y}%`;
-                    ghost.style.transform = `translate(-50%, -50%) scale(${Math.max(0.4, 1 - distance*150)})`;
-                    
-                    ghost.innerHTML = `
-                        <div class="core-orb ${t.isShared ? 'shared-aura' : ''}" style="background:${config[t.mode].c}"></div>
-                        <div class="data-fragment neural-glass" onclick="if('${t.audio}') new Audio('${t.audio}').play()">
-                            <div class="text-[12px] font-black uppercase italic" style="color:${config[t.mode].c}">${t.title}</div>
-                            ${t.img ? `<img src="${t.img}" class="w-24 h-24 object-cover mt-3 rounded-2xl border border-white/10">` : ''}
-                            <div class="text-[7px] mt-2 opacity-30 font-bold uppercase tracking-widest">${t.isShared ? 'Shared Node' : 'Your Trace'}</div>
-                        </div>`;
-                    world.appendChild(ghost);
-                }
+                const ghost = document.createElement('div');
+                ghost.className = 'ghost-entity';
+                // Simulace náhodného rozptylu pro demo vizi v prostoru
+                const left = 20 + Math.random() * 60;
+                const top = 20 + Math.random() * 40;
+                
+                ghost.style.left = `${left}%`;
+                ghost.style.top = `${top}%`;
+                
+                ghost.innerHTML = `
+                    <div class="core-orb" style="background:${theme[t.mode].color}"></div>
+                    <div class="neural-glass p-4 rounded-2xl min-w-[120px] mt-2 translate-x-[-25%]">
+                        <div class="text-[10px] font-black italic" style="color:${theme[t.mode].color}">${t.title}</div>
+                        ${t.img ? `<img src="${t.img}" class="w-full h-20 object-cover rounded-lg mt-2">` : ''}
+                        <div class="text-[8px] opacity-40 mt-1 uppercase">${t.timestamp}</div>
+                    </div>
+                `;
+                
+                ghost.onclick = () => { if(t.audio) new Audio(t.audio).play(); };
+                world.appendChild(ghost);
             });
         }
 
-        function loadLocalTraces() {
-            const raw = JSON.parse(localStorage.getItem('md_traces_v2.1') || '[]');
-            traces = raw;
-            document.getElementById('node-count').innerText = `Nodes: ${traces.length}`;
+        function saveTraces() { localStorage.setItem('tady_2026_data', JSON.stringify(traces)); }
+        function loadStoredTraces() {
+            const data = localStorage.getItem('tady_2026_data');
+            if(data) {
+                traces = JSON.parse(data);
+                document.getElementById('node-info').innerText = `Nodes: ${traces.length} // VRNSDRF`;
+            }
         }
     </script>
 </body>
