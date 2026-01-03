@@ -2,102 +2,47 @@
 <html lang="cs">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>TADY // MESH GLOBAL</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <title>Invisible Canes - Tracker</title>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@200;400;600;800&display=swap');
-        body, html { font-family: 'Plus Jakarta Sans', sans-serif; background: #000; color: white; margin: 0; padding: 0; overflow: hidden; height: 100vh; }
-        #map { position: fixed; inset: 0; z-index: 10; filter: grayscale(1) invert(0.9) contrast(1.1); }
-        .glass { background: rgba(0, 0, 0, 0.85); backdrop-filter: blur(20px); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 30px; }
-        .status-pill { position: fixed; top: 20px; left: 50%; transform: translateX(-50%); z-index: 1000; font-size: 8px; font-weight: 900; letter-spacing: 2px; text-transform: uppercase; white-space: nowrap; }
+        body { font-family: sans-serif; text-align: center; padding: 50px; background: #121212; color: white; }
+        button { padding: 20px; font-size: 1.2rem; cursor: pointer; background: #00e676; border: none; border-radius: 10px; }
     </style>
 </head>
 <body>
-    <div id="status" class="status-pill glass px-6 py-2 flex items-center gap-3">
-        <div id="status-dot" class="w-2 h-2 rounded-full bg-yellow-500 animate-pulse"></div>
-        <span id="status-text">SYSTEM REBOOT...</span>
-    </div>
-
-    <div id="map"></div>
-
-    <div class="fixed inset-0 z-[100] pointer-events-none p-6 flex flex-col justify-between">
-        <div class="glass p-6 pointer-events-auto border-l-4 border-cyan-400 w-fit">
-            <h1 class="text-3xl font-black italic tracking-tighter leading-none italic">TADY</h1>
-        </div>
-
-        <div id="editor" class="hidden pointer-events-auto w-full max-w-md mx-auto glass p-8 shadow-2xl mb-20">
-            <input type="text" id="trace-input" placeholder="Napiš vzkaz do mapy..." class="w-full bg-white/5 p-4 rounded-xl mb-6 border border-white/10 outline-none text-sm font-bold text-white uppercase italic">
-            <div class="flex gap-4">
-                <button onclick="closeEditor()" class="flex-1 py-4 text-[9px] font-black uppercase opacity-30 text-white">Zavřít</button>
-                <button onclick="pushToNeon()" class="flex-[2] bg-white text-black py-4 rounded-xl font-black text-[9px] uppercase tracking-widest text-center">Odeslat</button>
-            </div>
-        </div>
-
-        <div id="hud" class="w-full max-w-sm mx-auto pointer-events-auto flex flex-col items-center">
-            <button onclick="openEditor()" class="w-20 h-20 bg-white text-black rounded-full shadow-2xl flex items-center justify-center text-3xl mb-8 active:scale-95 transition-all"><i class="fas fa-plus"></i></button>
-        </div>
-    </div>
+    <h1>Projekt Invisible Canes</h1>
+    <button onclick="odeslatData()">Odeslat moji polohu</button>
+    <p id="status"></p>
 
     <script>
-        let map;
-        function initSystem() {
-            map = L.map('map', { zoomControl: false, attributionControl: false }).setView([50.912, 14.619], 16);
-            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
-            map.locate({setView: true, maxZoom: 16});
-            fetchData();
-        }
+        async function odeslatData() {
+            const status = document.getElementById('status');
+            status.innerText = "Získávám polohu...";
 
-        async function fetchData() {
-            try {
-                const res = await fetch('/api/save-trace');
-                const data = await res.json();
-                if (res.ok) {
-                    if (Array.isArray(data)) {
-                        data.forEach(renderMarker);
+            navigator.geolocation.getCurrentPosition(async (pos) => {
+                const data = {
+                    lat: pos.coords.latitude,
+                    lng: pos.coords.longitude,
+                    content: "Záznam z aplikace",
+                    media: ""
+                };
+
+                try {
+                    const response = await fetch('/api/save-trace', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(data)
+                    });
+                    
+                    if (response.ok) {
+                        status.innerText = "✅ Úspěšně uloženo do Neonu!";
+                    } else {
+                        status.innerText = "❌ Chyba serveru (500).";
                     }
-                    updateStatus('NEON ONLINE', '#00ffa3');
-                } else { updateStatus('SERVER ERROR', 'red'); }
-            } catch(e) { updateStatus('NEON OFFLINE', 'orange'); }
+                } catch (err) {
+                    status.innerText = "❌ Selhalo připojení.";
+                }
+            });
         }
-
-        async function pushToNeon() {
-            const msg = document.getElementById('trace-input').value || "TADY";
-            const pos = map.getCenter();
-            updateStatus('SAVING...', '#00f2fe');
-            try {
-                const res = await fetch('/api/save-trace', { 
-                    method: 'POST', 
-                    body: JSON.stringify({ lat: pos.lat, lng: pos.lng, content: msg, media: null }) 
-                });
-                if(res.ok) { 
-                    closeEditor(); 
-                    document.getElementById('trace-input').value = "";
-                    fetchData(); 
-                } else { updateStatus('DATABASE ERROR', 'red'); }
-            } catch(e) { updateStatus('NETWORK ERROR', 'red'); }
-        }
-
-        function renderMarker(t) {
-            const icon = L.divIcon({ className: '', html: `<div style="width:12px; height:12px; background:#00ffa3; border-radius:50%; box-shadow:0 0 15px #00ffa3"></div>` });
-            L.marker([t.lat, t.lng], {icon}).addTo(map).bindPopup(`<div class="text-black font-bold p-2">${t.content}</div>`);
-        }
-
-        function openEditor() { document.getElementById('editor').classList.remove('hidden'); document.getElementById('hud').classList.add('hidden'); }
-        function closeEditor() { document.getElementById('editor').classList.add('hidden'); document.getElementById('hud').classList.remove('hidden'); }
-        function updateStatus(txt, col) { 
-            const dot = document.getElementById('status-dot');
-            document.getElementById('status-text').innerText = txt; 
-            dot.style.backgroundColor = col; 
-            if(col === '#00ffa3') dot.classList.remove('animate-pulse');
-            else dot.classList.add('animate-pulse');
-        }
-        
-        window.onload = initSystem;
     </script>
 </body>
-    </html>
-    
+</html>
