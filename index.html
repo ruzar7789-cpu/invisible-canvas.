@@ -27,34 +27,32 @@
         
         /* ZAMĚŘOVAČ */
         #crosshair { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 2000; pointer-events: none; }
-        .ch-dot { width: 4px; height: 4px; background: white; border-radius: 50%; box-shadow: 0 0 15px var(--active-color); transition: 0.3s; }
+        .ch-dot { width: 4px; height: 4px; background: white; border-radius: 50%; box-shadow: 0 0 15px var(--active-color); }
 
         /* AR KARTA */
         .ar-card {
             position: absolute; padding: 12px; border-radius: 15px; border: 2px solid var(--active-color);
             background: rgba(0,0,0,0.85); backdrop-filter: blur(10px); color: white; min-width: 160px;
-            transform-style: preserve-3d; transition: transform 0.2s ease-out, opacity 0.3s; display: flex; flex-direction: column; align-items: center;
+            transform-style: preserve-3d; transition: transform 0.1s linear, opacity 0.3s; display: flex; flex-direction: column; align-items: center;
         }
-        .ar-ghost { opacity: 0.7; border-style: dashed; z-index: 2001; pointer-events: none; }
+        
+        /* GHOST ANIMACE */
+        @keyframes float { 0%, 100% { transform: translate(-50%, -55%); } 50% { transform: translate(-50%, -45%); } }
+        .ar-ghost { opacity: 0.7; border-style: dashed; z-index: 2001; animation: float 3s ease-in-out infinite; }
+        
         .ar-img-preview { width: 100%; height: 80px; object-fit: cover; border-radius: 8px; margin-bottom: 8px; display: none; }
 
-        /* UI PRVKY */
+        /* UI */
         .active-p { border-color: var(--p-color) !important; color: var(--p-color) !important; background: rgba(0,242,254,0.1); }
         .active-b { border-color: var(--b-color) !important; color: var(--b-color) !important; background: rgba(255,202,44,0.1); }
         .active-c { border-color: var(--c-color) !important; color: var(--c-color) !important; background: rgba(191,90,242,0.1); }
-        
         .wave-bar { width: 4px; height: 5px; background: var(--active-color); border-radius: 10px; transition: height 0.1s; }
         
-        #radar-panel { position: absolute; bottom: 0; left: 0; right: 0; background: rgba(0,0,0,0.95); z-index: 5000; transition: 0.5s cubic-bezier(0.4, 0, 0.2, 1); transform: translateY(calc(100% - 80px)); border-radius: 40px 40px 0 0; border-top: 1px solid rgba(255,255,255,0.1); }
+        #radar-panel { position: absolute; bottom: 0; left: 0; right: 0; background: rgba(0,0,0,0.95); z-index: 5000; transition: 0.5s; transform: translateY(calc(100% - 80px)); border-radius: 40px 40px 0 0; border-top: 1px solid rgba(255,255,255,0.1); }
         #radar-panel.open { transform: translateY(0); }
-
-        /* Animace pro potvrzení */
-        @keyframes pulse-confirm {
-            0% { transform: scale(1); box-shadow: 0 0 0 0px var(--active-color); }
-            50% { transform: scale(0.95); box-shadow: 0 0 20px 5px var(--active-color); }
-            100% { transform: scale(1); box-shadow: 0 0 0 0px var(--active-color); }
-        }
+        
         .pulse-active { animation: pulse-confirm 0.4s ease-out; }
+        @keyframes pulse-confirm { 0% { scale: 1; } 50% { scale: 0.95; box-shadow: 0 0 30px var(--active-color); } 100% { scale: 1; } }
     </style>
 </head>
 <body>
@@ -96,14 +94,14 @@
                 <div id="viz-container" class="flex justify-center items-end gap-1 h-6">
                     <div class="wave-bar"></div><div class="wave-bar"></div><div class="wave-bar"></div><div class="wave-bar"></div><div class="wave-bar"></div>
                 </div>
-                <button onclick="confirmTrace()" id="main-action-btn" class="w-full bg-cyan-400 text-black py-5 rounded-[30px] font-black text-[11px] uppercase tracking-[0.2em] transition-all">PŘIŠPENDLIT V PROSTORU</button>
+                <button onclick="confirmTrace()" id="main-action-btn" class="w-full bg-cyan-400 text-black py-5 rounded-[30px] font-black text-[11px] uppercase tracking-[0.2em]">PŘIŠPENDLIT V PROSTORU</button>
             </div>
         </aside>
 
         <main class="flex-1 relative bg-black">
             <video id="ar-video" autoplay playsinline muted></video>
             <div id="map-bg"></div>
-            <button onclick="toggleCam()" class="absolute top-6 right-6 z-[6000] w-12 h-12 rounded-xl bg-white text-black flex items-center justify-center shadow-2xl transition-transform active:scale-90"><i class="fas fa-expand-alt"></i></button>
+            <button onclick="toggleCam()" class="absolute top-6 right-6 z-[6000] w-12 h-12 rounded-xl bg-white text-black flex items-center justify-center shadow-2xl"><i class="fas fa-expand-alt"></i></button>
             
             <div id="radar-panel">
                 <div class="h-[80px] flex flex-col items-center justify-center cursor-pointer" onclick="document.getElementById('radar-panel').classList.toggle('open')">
@@ -116,7 +114,7 @@
     </div>
 
     <script>
-        // STARS BACKGROUND
+        // STARS
         const canvas = document.getElementById('stars-canvas');
         const ctx = canvas.getContext('2d');
         let stars = [];
@@ -131,8 +129,10 @@
         }
         window.onload = () => { initStars(); draw(); };
 
-        // CORE LOGIC
-        let map, audioCtx, isAudioActive=false, currentMode='personal', traces = [], currentImgData = null;
+        // CORE
+        let map, audioCtx, mediaRecorder, audioChunks = [], currentAudioData = null, isAudioActive=false, currentMode='personal', traces = [], currentImgData = null;
+        let deviceYaw = 0; // Pro gyroskop
+
         const config = { 
             personal: { color: '#00f2fe', price: 29, activeClass: 'active-p' }, 
             business: { color: '#ffca2c', price: 199, activeClass: 'active-b' }, 
@@ -140,6 +140,11 @@
         };
 
         function bootApp() {
+            if (typeof DeviceOrientationEvent.requestPermission === 'function') {
+                DeviceOrientationEvent.requestPermission().catch(e => console.error(e));
+            }
+            window.addEventListener('deviceorientation', handleOrientation);
+            
             document.getElementById('landing-page').style.opacity = '0';
             setTimeout(() => {
                 document.getElementById('landing-page').style.display='none';
@@ -149,6 +154,11 @@
                 traces.forEach(addUI);
                 renderAR();
             }, 800);
+        }
+
+        function handleOrientation(e) {
+            if (e.alpha !== null) deviceYaw = e.alpha;
+            renderAR();
         }
 
         function initMap() {
@@ -161,8 +171,7 @@
             currentMode = m;
             document.documentElement.style.setProperty('--active-color', config[m].color);
             document.querySelectorAll('aside button').forEach(b => b.className = b.className.replace(/active-[pbc]/, '').replace('text-white', 'text-white/20'));
-            const targetBtn = document.getElementById(`btn-${m[0]}`);
-            if(targetBtn) targetBtn.classList.add(config[m].activeClass);
+            document.getElementById(`btn-${m[0]}`).classList.add(config[m].activeClass);
             document.getElementById('main-action-btn').style.backgroundColor = config[m].color;
             updateGhost();
         }
@@ -189,12 +198,12 @@
             
             ghost.style.borderColor = config[currentMode].color;
             ghost.style.left = '50%'; ghost.style.top = '50%';
-            ghost.style.transform = 'translate(-50%, -50%)';
             
             ghost.innerHTML = `
                 ${currentImgData ? `<img src="${currentImgData}" class="ar-img-preview" style="display:block">` : ''}
                 <div class="text-[10px] font-black italic uppercase" style="color:${config[currentMode].color}">${title}</div>
                 <div class="text-[8px] opacity-70 text-center">${desc}</div>
+                ${currentAudioData ? '<i class="fas fa-volume-up mt-2 text-[8px] animate-pulse"></i>' : ''}
             `;
         }
 
@@ -207,20 +216,18 @@
             const d = { 
                 id: Date.now(), title: document.getElementById('t-title').value || 'ZÁZNAM', 
                 desc: document.getElementById('t-desc').value || '',
-                img: currentImgData, coords: [center.lat, center.lng], 
+                img: currentImgData, audio: currentAudioData, 
+                coords: [center.lat, center.lng], 
                 mode: currentMode, price: config[currentMode].price 
             };
-            
             traces.push(d);
             localStorage.setItem('md_traces', JSON.stringify(traces));
             addUI(d);
             
-            // Vyčištění a zavření panelu
-            currentImgData = null; 
-            document.getElementById('t-title').value = ''; 
-            document.getElementById('t-desc').value = '';
+            // RESET
+            currentImgData = null; currentAudioData = null;
+            document.getElementById('t-title').value = ''; document.getElementById('t-desc').value = '';
             document.getElementById('radar-panel').classList.remove('open');
-            
             renderAR();
         }
 
@@ -228,8 +235,8 @@
             const color = config[d.mode].color;
             L.circleMarker(d.coords, { radius: 10, color: color, fillColor: color, fillOpacity: 0.8 }).addTo(map);
             const item = document.createElement('div');
-            item.className = 'p-4 bg-white/5 rounded-2xl border border-white/10 flex justify-between items-center transition-all hover:bg-white/10';
-            item.innerHTML = `<div><div class="text-[11px] font-black text-white italic uppercase">${d.title}</div><div class="text-[8px] font-bold" style="color:${color}">${d.mode.toUpperCase()}</div></div><div class="text-[10px] opacity-40">${d.price} Kč</div>`;
+            item.className = 'p-4 bg-white/5 rounded-2xl border border-white/10 flex justify-between items-center';
+            item.innerHTML = `<div><div class="text-[11px] font-black text-white italic uppercase">${d.title}</div><div class="text-[8px] font-bold" style="color:${color}">${d.mode.toUpperCase()} ${d.audio ? '🔊' : ''}</div></div><div class="text-[10px] opacity-40">${d.price} Kč</div>`;
             document.getElementById('radar-list').prepend(item);
             let total = traces.reduce((a, b) => a + b.price, 0);
             document.getElementById('total-price-display').innerText = `${total} Kč CELKEM`;
@@ -238,44 +245,30 @@
         function renderAR() {
             const world = document.getElementById('ar-world');
             const ghost = document.querySelector('.ar-ghost');
-            // Vymažeme staré karty kromě náhledu (ghost)
             Array.from(world.children).forEach(child => { if(child !== ghost) child.remove(); });
 
             if (document.getElementById('ar-video').style.display !== 'block') return;
 
             const center = map.getCenter();
-            
-            // Seřazení traces podle vzdálenosti (bližší nakonec = vyšší z-index)
-            const sortedTraces = [...traces].sort((a, b) => {
-                const distA = Math.hypot(a.coords[0]-center.lat, a.coords[1]-center.lng);
-                const distB = Math.hypot(b.coords[0]-center.lat, b.coords[1]-center.lng);
-                return distB - distA;
-            });
-
-            sortedTraces.forEach(t => {
+            traces.forEach(t => {
                 const latDiff = t.coords[0] - center.lat;
                 const lngDiff = t.coords[1] - center.lng;
                 
-                // Koeficienty pro rozprostření v prostoru
-                const x = 50 + (lngDiff * 65000); 
+                // Přidání vlivu gyroskopu na X pozici
+                const gyroOffset = (deviceYaw % 360) * 2; 
+                const x = 50 + (lngDiff * 65000) + gyroOffset; 
                 const y = 50 - (latDiff * 65000);
                 const dist = Math.sqrt(latDiff*latDiff + lngDiff*lngDiff);
 
-                if (dist < 0.008) { // Dosah viditelnosti v AR
+                if (dist < 0.008) {
                     const card = document.createElement('div');
                     card.className = 'ar-card';
-                    
                     const scale = 1 / (1 + dist * 1000);
-                    const blur = dist * 200; // Vzdálenější věci jsou rozmazané
-                    const opacity = Math.max(0, 1 - dist * 150);
-
-                    card.style.left = `${x}%`; 
-                    card.style.top = `${y}%`;
+                    card.style.left = `${x}%`; card.style.top = `${y}%`;
                     card.style.borderColor = config[t.mode].color;
-                    card.style.opacity = opacity;
-                    card.style.filter = `blur(${blur}px)`;
-                    card.style.transform = `translate(-50%, -50%) scale(${scale}) translateZ(${scale * 100}px)`;
-                    
+                    card.style.opacity = Math.max(0, 1 - dist * 150);
+                    card.style.filter = `blur(${dist * 150}px)`;
+                    card.style.transform = `translate(-50%, -50%) scale(${scale})`;
                     card.innerHTML = `
                         ${t.img ? `<img src="${t.img}" class="ar-img-preview" style="display:block">` : ''}
                         <div class="text-[10px] font-black italic uppercase" style="color:${config[t.mode].color}">${t.title}</div>
@@ -291,44 +284,43 @@
             if(v.style.display !== 'block') {
                 navigator.mediaDevices.getUserMedia({video:{facingMode:'environment'}}).then(s => {
                     v.srcObject = s; v.style.display = 'block'; m.style.opacity = '0.2'; renderAR();
-                }).catch(err => alert("Chyba kamery: " + err));
-            } else { 
-                v.style.display = 'none'; m.style.opacity = '1'; 
-                if(v.srcObject) v.srcObject.getTracks().forEach(track => track.stop());
-                renderAR(); 
-            }
+                });
+            } else { v.style.display = 'none'; m.style.opacity = '1'; renderAR(); }
         }
 
         async function toggleAudio() {
             const bars = document.querySelectorAll('.wave-bar');
             if(!isAudioActive) {
                 try {
-                    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
                     const s = await navigator.mediaDevices.getUserMedia({ audio: true });
+                    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
                     const src = audioCtx.createMediaStreamSource(s);
                     const ana = audioCtx.createAnalyser(); ana.fftSize=32; src.connect(ana);
                     const data = new Uint8Array(ana.frequencyBinCount);
-                    isAudioActive=true; 
-                    document.getElementById('mic-btn').style.background="#ff3b30";
                     
-                    function vis() { 
-                        if(!isAudioActive) return; 
-                        ana.getByteFrequencyData(data); 
-                        bars.forEach((b,i) => {
-                            const val = (data[i] / 255) * 30; // Lepší rozsah pro vizualizaci
-                            b.style.height = (5 + val) + 'px';
-                        }); 
-                        requestAnimationFrame(vis); 
-                    }
+                    // Nahrávání
+                    mediaRecorder = new MediaRecorder(s);
+                    audioChunks = [];
+                    mediaRecorder.ondataavailable = e => audioChunks.push(e.data);
+                    mediaRecorder.onstop = () => {
+                        const blob = new Blob(audioChunks, { type: 'audio/ogg; codecs=opus' });
+                        const reader = new FileReader();
+                        reader.onload = e => { currentAudioData = e.target.result; updateGhost(); };
+                        reader.readAsDataURL(blob);
+                    };
+                    mediaRecorder.start();
+
+                    isAudioActive=true; document.getElementById('mic-btn').style.background="#ff3b30";
+                    function vis() { if(!isAudioActive) return; ana.getByteFrequencyData(data); bars.forEach((b,i)=>b.style.height=(5 + data[i]/10)+'px'); requestAnimationFrame(vis); }
                     vis();
                 } catch(e) { alert("Povolte mikrofon."); }
             } else { 
                 isAudioActive=false; 
                 document.getElementById('mic-btn').style.background="rgba(255,255,255,0.1)"; 
-                bars.forEach(b => b.style.height='5px'); 
+                bars.forEach(b=>b.style.height='5px');
+                if(mediaRecorder) mediaRecorder.stop();
             }
         }
     </script>
 </body>
-    </html>
-    
+</html>
