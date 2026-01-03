@@ -3,56 +3,64 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>TADY // AR-GHOST-PIN // M.D.</title>
+    <title>TADY // VISION 2026 // M.D.</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@200;500;800&display=swap');
-        :root { --p-color: #00f2fe; --b-color: #ffca2c; --c-color: #bf5af2; --active-color: #00f2fe; }
-        body, html { font-family: 'Plus Jakarta Sans', sans-serif; background: #000; color: white; margin: 0; padding: 0; overflow: hidden; height: 100%; width: 100%; }
-
-        /* DESIGN SYSTEM */
-        .glass { background: rgba(10, 10, 10, 0.8); backdrop-filter: blur(25px); border: 1px solid rgba(255,255,255,0.08); }
-        .mode-chip { padding: 10px 18px; border-radius: 20px; font-size: 10px; font-weight: 800; text-transform: uppercase; transition: 0.3s; border: 1px solid rgba(255,255,255,0.05); color: rgba(255,255,255,0.3); }
-        .active-p { background: rgba(0,242,254,0.15); color: var(--p-color); border-color: var(--p-color); box-shadow: 0 0 15px rgba(0,242,254,0.2); }
-        .active-b { background: rgba(255,202,44,0.15); color: var(--b-color); border-color: var(--b-color); box-shadow: 0 0 15px rgba(255,202,44,0.2); }
-        .active-c { background: rgba(191,90,242,0.15); color: var(--c-color); border-color: var(--c-color); box-shadow: 0 0 15px rgba(191,90,242,0.2); }
-
-        /* LANDING PAGE - FIX */
-        #landing-page { position: fixed; inset: 0; z-index: 99999; background: #000; display: flex; flex-direction: column; justify-content: center; align-items: center; transition: 0.6s cubic-bezier(0.4, 0, 0.2, 1); pointer-events: all; }
-        #stars-canvas { position: absolute; inset: 0; z-index: 1; pointer-events: none; }
-        .logo-text { font-size: 5rem; font-weight: 800; letter-spacing: -4px; z-index: 10; font-style: italic; }
-
-        /* VIEWPORT */
-        #app-interface { display: none; height: 100vh; width: 100vw; flex-direction: column; position: relative; opacity: 0; transition: 1s; }
-        #map-bg { height: 100%; width: 100%; position: absolute; inset: 0; z-index: 10; filter: invert(100%) hue-rotate(180deg) brightness(0.7) contrast(1.2); }
-        #ar-video { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; z-index: 5; background: #000; }
-        #ar-world { position: absolute; inset: 0; z-index: 20; pointer-events: none; }
-
-        /* UI OVERLAYS */
-        .top-nav { position: absolute; top: 20px; left: 20px; right: 20px; z-index: 5000; display: flex; justify-content: space-between; align-items: flex-start; }
-        .side-panel { position: absolute; left: 20px; top: 100px; z-index: 4500; width: 300px; display: flex; flex-direction: column; gap: 15px; }
-        .bottom-bar { position: absolute; bottom: 30px; left: 50%; transform: translateX(-50%); width: 92%; max-width: 500px; z-index: 6000; padding: 10px 20px; border-radius: 40px; display: flex; align-items: center; gap: 15px; }
+        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@200;400;800&display=swap');
+        :root { --p-glow: #00f2fe; --b-glow: #ffca2c; --c-glow: #bf5af2; --active-color: #00f2fe; }
         
-        #radar-panel { position: absolute; right: 20px; top: 100px; bottom: 120px; width: 200px; z-index: 4000; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; pointer-events: none; }
-        .radar-item { pointer-events: all; padding: 10px; border-radius: 15px; font-size: 8px; font-weight: 800; border-left: 3px solid var(--active-color); }
+        body, html { font-family: 'Plus Jakarta Sans', sans-serif; background: #000; color: white; margin: 0; padding: 0; overflow: hidden; height: 100vh; width: 100vw; }
 
-        .wave-bar { width: 4px; border-radius: 2px; background: var(--active-color); transition: height 0.1s; }
+        /* NEURAL GLASS DESIGN */
+        .neural-glass { background: rgba(255, 255, 255, 0.03); backdrop-filter: blur(40px) saturate(180%); border: 1px solid rgba(255,255,255,0.1); box-shadow: 0 8px 32px 0 rgba(0,0,0,0.8); }
+        
+        /* LANDING - THE VOID */
+        #landing-page { position: fixed; inset: 0; z-index: 99999; background: #000; display: flex; flex-direction: column; justify-content: center; align-items: center; transition: 1.2s cubic-bezier(0.8, 0, 0.2, 1); }
+        .logo-vibration { font-size: 6rem; font-weight: 800; letter-spacing: -6px; font-style: italic; filter: drop-shadow(0 0 15px var(--active-color)); animation: vibe 4s infinite; }
+        @keyframes vibe { 0%, 100% { opacity: 1; transform: scale(1); } 50% { opacity: 0.7; transform: scale(0.98); filter: blur(2px); } }
+
+        /* HUD ELEMENTS */
+        #app-interface { display: none; height: 100vh; width: 100vw; flex-direction: column; position: relative; opacity: 0; transition: 1s; }
+        #map-bg { height: 100%; width: 100%; position: absolute; inset: 0; z-index: 10; filter: invert(100%) hue-rotate(180deg) brightness(0.4) contrast(1.5); transition: 0.5s; }
+        #ar-video { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; z-index: 5; }
+        #ar-world { position: absolute; inset: 0; z-index: 20; pointer-events: none; perspective: 1000px; }
+
+        /* GHOST ENTITY (AR PIN) */
+        .ghost-entity { position: absolute; pointer-events: all; transition: transform 0.2s cubic-bezier(0,0,0.2,1); }
+        .core-orb { width: 60px; height: 60px; border-radius: 50%; background: var(--active-color); filter: blur(15px); opacity: 0.4; position: absolute; animation: pulse-core 2s infinite; }
+        .data-fragment { padding: 15px; border-radius: 24px; border: 1px solid rgba(255,255,255,0.2); background: rgba(0,0,0,0.4); backdrop-filter: blur(10px); min-width: 140px; transform-style: preserve-3d; }
+
+        @keyframes pulse-core { 0% { transform: scale(0.8); opacity: 0.3; } 50% { transform: scale(1.3); opacity: 0.6; } 100% { transform: scale(0.8); opacity: 0.3; } }
+
+        /* OVERLAYS */
+        .top-status { position: absolute; top: 30px; left: 30px; z-index: 5000; }
+        .control-ring { position: absolute; bottom: 40px; left: 50%; transform: translateX(-50%); z-index: 6000; width: 90%; max-width: 450px; }
+        .mode-selector { display: flex; justify-content: center; gap: 8px; margin-bottom: 20px; }
+        .m-chip { width: 50px; height: 50px; border-radius: 18px; border: 1px solid rgba(255,255,255,0.1); display: flex; items-center justify-center; transition: 0.4s; font-size: 10px; font-weight: 800; background: rgba(255,255,255,0.05); }
+        .active-p { border-color: var(--p-glow); color: var(--p-glow); box-shadow: 0 0 20px rgba(0,242,254,0.3); background: rgba(0,242,254,0.1); }
+        .active-b { border-color: var(--b-glow); color: var(--b-glow); box-shadow: 0 0 20px rgba(255,202,44,0.3); background: rgba(255,202,44,0.1); }
+        .active-c { border-color: var(--c-glow); color: var(--c-glow); box-shadow: 0 0 20px rgba(191,90,242,0.3); background: rgba(191,90,242,0.1); }
+
+        /* WAVEFORM */
+        .wave-container { display: flex; align-items: center; gap: 3px; height: 20px; }
+        .w-bar { width: 3px; height: 100%; background: var(--active-color); border-radius: 2px; transition: 0.1s; }
+
         .hidden { display: none !important; }
     </style>
 </head>
 <body onclick="resumeAudioContext()">
 
     <div id="landing-page">
-        <canvas id="stars-canvas"></canvas>
-        <div class="logo-text">TADY</div>
-        <div onclick="bootApp()" class="mt-20 cursor-pointer flex flex-col items-center group relative z-[100000]">
-            <div class="w-24 h-24 rounded-full border border-white/20 flex items-center justify-center bg-white/5 backdrop-blur-2xl group-active:scale-90 transition-all duration-300">
-                <i class="fas fa-fingerprint text-4xl text-cyan-400"></i>
+        <div class="logo-vibration">TADY</div>
+        <div onclick="bootApp()" class="mt-20 flex flex-col items-center cursor-pointer group">
+            <div class="w-28 h-28 neural-glass rounded-full flex items-center justify-center relative transition-transform group-active:scale-95">
+                <div class="absolute inset-0 rounded-full border border-white/10 animate-ping opacity-20"></div>
+                <i class="fas fa-fingerprint text-5xl text-white/30"></i>
             </div>
-            <div class="text-[9px] tracking-[0.5em] mt-6 text-white/40 uppercase font-black">ENTER SYSTEM M.D.</div>
+            <div class="mt-8 text-[10px] tracking-[0.8em] font-black opacity-30 uppercase">Initiate Trace v.2026</div>
         </div>
     </div>
 
@@ -63,95 +71,96 @@
             <div id="ar-world"></div>
         </div>
 
-        <nav class="top-nav">
-            <div class="glass p-5 rounded-[30px]">
+        <div class="top-status flex w-full justify-between pr-14 pointer-events-none">
+            <div class="neural-glass p-5 rounded-[30px] pointer-events-auto">
                 <div class="text-2xl font-black italic tracking-tighter leading-none">TADY</div>
-                <div class="text-[8px] font-black text-cyan-400 tracking-widest mt-1 uppercase">Varnsdorf Core</div>
-            </div>
-            <div class="flex gap-3">
-                <div id="img-slot" class="w-14 h-14 glass rounded-full hidden bg-cover bg-center border-2 border-cyan-400 shadow-lg"></div>
-                <button onclick="toggleView()" class="w-14 h-14 glass rounded-full flex items-center justify-center text-white text-xl active:scale-90 transition"><i id="view-icon" class="fas fa-camera"></i></button>
-            </div>
-        </nav>
-
-        <div class="side-panel">
-            <div class="glass p-5 rounded-[35px] space-y-4">
-                <div class="flex justify-between gap-1">
-                    <button onclick="setMode('personal')" id="btn-p" class="mode-chip active-p">29 Kč</button>
-                    <button onclick="setMode('business')" id="btn-b" class="mode-chip">199 Kč</button>
-                    <button onclick="setMode('capsule')" id="btn-c" class="mode-chip">49 Kč</button>
+                <div class="flex items-center gap-2 mt-2">
+                    <div class="w-2 h-2 rounded-full bg-cyan-400 animate-pulse"></div>
+                    <span class="text-[8px] font-black tracking-widest opacity-60 uppercase">Varnsdorf Node</span>
                 </div>
-                <input type="text" id="t-title" class="w-full bg-white/5 p-4 rounded-2xl text-[11px] font-bold outline-none border border-white/10" placeholder="Název zprávy">
-                <textarea id="t-desc" class="w-full bg-white/5 p-4 rounded-2xl text-[11px] h-20 outline-none border border-white/10" placeholder="Vepište digitální stopu..."></textarea>
-                <div id="capsule-settings" class="hidden text-center">
-                    <input type="range" id="c-timer" min="1" max="24" value="24" class="w-full accent-fuchsia-500">
-                    <div class="text-[8px] font-black text-fuchsia-400 mt-2 uppercase">Doba trvání: <span id="c-val">24h</span></div>
-                </div>
+            </div>
+            <div class="flex flex-col gap-3 pointer-events-auto">
+                <button onclick="toggleView()" class="w-16 h-16 neural-glass rounded-full flex items-center justify-center shadow-2xl active:scale-90 transition">
+                    <i id="view-icon" class="fas fa-expand-arrows-alt text-xl"></i>
+                </button>
+                <div id="img-slot" class="w-16 h-16 neural-glass rounded-full hidden bg-cover bg-center border-2 border-cyan-400"></div>
             </div>
         </div>
 
-        <div id="radar-panel"></div>
-
-        <div class="bottom-bar glass">
-            <button onclick="document.getElementById('t-img').click()" class="w-12 h-12 flex items-center justify-center text-white/50 hover:text-white transition"><i class="fas fa-image text-xl"></i></button>
-            <input type="file" id="t-img" class="hidden" accept="image/*" onchange="previewImage(this)">
-            
-            <button onclick="toggleAudio()" id="mic-btn" class="w-12 h-12 flex items-center justify-center text-white/50 transition-all"><i class="fas fa-microphone text-xl"></i></button>
-            
-            <div id="viz" class="flex-1 flex gap-1 h-6 items-center justify-center opacity-30">
-                <div class="wave-bar h-2"></div><div class="wave-bar h-4"></div><div class="wave-bar h-2"></div><div class="wave-bar h-5"></div>
+        <div class="control-ring">
+            <div class="mode-selector">
+                <button onclick="setMode('personal')" id="btn-p" class="m-chip active-p">P</button>
+                <button onclick="setMode('business')" id="btn-b" class="m-chip">B</button>
+                <button onclick="setMode('capsule')" id="btn-c" class="m-chip">C</button>
             </div>
 
-            <button onclick="confirmTrace()" class="bg-cyan-400 text-black px-10 py-4 rounded-full font-black text-[11px] uppercase tracking-wider active:scale-95 transition-all shadow-xl shadow-cyan-900/20">Uložit Stopu</button>
+            <div class="neural-glass p-6 rounded-[40px] space-y-5">
+                <div class="flex gap-4">
+                    <div class="flex-1 space-y-3">
+                        <input type="text" id="t-title" class="w-full bg-transparent text-xl font-black outline-none placeholder:opacity-20" placeholder="HEADLINE">
+                        <textarea id="t-desc" class="w-full bg-transparent text-[12px] h-12 outline-none placeholder:opacity-20 resize-none" placeholder="Digitální stopa v prostoru..."></textarea>
+                    </div>
+                </div>
+
+                <div id="capsule-settings" class="hidden pb-4">
+                    <input type="range" id="c-timer" min="1" max="24" value="24" class="w-full accent-fuchsia-500 opacity-50">
+                    <div class="text-[9px] font-black text-fuchsia-400 mt-2 text-center uppercase tracking-widest">Decay Rate: <span id="c-val">24h</span></div>
+                </div>
+
+                <div class="flex items-center justify-between gap-4 border-t border-white/5 pt-5">
+                    <div class="flex gap-4">
+                        <button onclick="document.getElementById('t-img').click()" class="w-12 h-12 rounded-2xl bg-white/5 flex items-center justify-center hover:bg-white/10 transition">
+                            <i class="fas fa-camera-retro text-lg"></i>
+                        </button>
+                        <button onclick="toggleAudio()" id="mic-btn" class="w-12 h-12 rounded-2xl bg-white/5 flex items-center justify-center transition-all">
+                            <i class="fas fa-microphone-alt text-lg"></i>
+                        </button>
+                    </div>
+                    
+                    <div id="viz" class="wave-container opacity-0 transition-opacity">
+                        <div class="w-bar" style="height: 40%"></div><div class="w-bar" style="height: 80%"></div><div class="w-bar" style="height: 50%"></div>
+                    </div>
+
+                    <button onclick="confirmTrace()" class="bg-white text-black px-10 py-4 rounded-[20px] font-black text-[11px] uppercase tracking-tighter hover:scale-105 active:scale-95 transition-all">
+                        Imprint
+                    </button>
+                </div>
+            </div>
         </div>
+        <input type="file" id="t-img" class="hidden" accept="image/*" onchange="previewImage(this)">
     </div>
 
     <script>
-        // STARS
-        const canvas = document.getElementById('stars-canvas');
-        const ctx = canvas.getContext('2d');
-        let stars = [];
-        function initStars() { canvas.width = window.innerWidth; canvas.height = window.innerHeight; stars = []; for(let i=0; i<60; i++) stars.push({x:Math.random()*canvas.width, y:Math.random()*canvas.height, s:Math.random()*1.5, sp:Math.random()*0.3}); }
-        function drawStars() { ctx.fillStyle="#000"; ctx.fillRect(0,0,canvas.width,canvas.height); ctx.fillStyle="#fff"; stars.forEach(s=>{ ctx.beginPath(); ctx.arc(s.x,s.y,s.s,0,Math.PI*2); ctx.fill(); s.y+=s.sp; if(s.y>canvas.height) s.y=0; }); requestAnimationFrame(drawStars); }
-        initStars(); drawStars();
-
-        // CORE LOGIC
         let map, traces = [], currentMode = 'personal', isAR = false, deviceYaw = 0;
         let audioCtx, mediaRecorder, chunks = [], currentAudio = null, isRecording = false, currentImg = null;
-        const config = { personal:{c:'#00f2fe', p:29}, business:{c:'#ffca2c', p:199}, capsule:{c:'#bf5af2', p:49} };
+        const config = { personal:{c:'#00f2fe'}, business:{c:'#ffca2c'}, capsule:{c:'#bf5af2'} };
 
         function resumeAudioContext() { if(audioCtx && audioCtx.state === 'suspended') audioCtx.resume(); }
 
         async function bootApp() {
             const landing = document.getElementById('landing-page');
             const app = document.getElementById('app-interface');
-            
+            landing.style.transform = 'scale(2) rotate(10deg)';
             landing.style.opacity = '0';
-            landing.style.pointerEvents = 'none'; // Umožní klikat pod to
-            
             setTimeout(() => {
                 landing.style.display = 'none';
                 app.style.display = 'flex';
-                setTimeout(() => { app.style.opacity = '1'; }, 50);
+                setTimeout(() => app.style.opacity = '1', 50);
                 initMap();
-            }, 600);
-            
-            if (window.DeviceOrientationEvent && typeof DeviceOrientationEvent.requestPermission === 'function') {
-                try { await DeviceOrientationEvent.requestPermission(); } catch(e){}
-            }
+            }, 800);
             window.addEventListener('deviceorientation', e => { if(e.alpha !== null) deviceYaw = e.alpha; renderAR(); });
         }
 
         function initMap() {
-            map = L.map('map-bg', { zoomControl: false, attributionControl: false }).setView([50.912, 14.619], 17);
-            L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager_labels_under/{z}/{x}/{y}{r}.png').addTo(map);
-            setTimeout(() => { map.invalidateSize(); loadTraces(); }, 400);
+            map = L.map('map-bg', { zoomControl: false, attributionControl: false }).setView([50.912, 14.619], 18);
+            L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager_nolabels/{z}/{x}/{y}{r}.png').addTo(map);
+            setTimeout(() => { map.invalidateSize(); loadTraces(); }, 500);
         }
 
         function setMode(m) {
             currentMode = m;
             document.documentElement.style.setProperty('--active-color', config[m].c);
-            document.querySelectorAll('.mode-chip').forEach(b => b.classList.remove('active-p', 'active-b', 'active-c'));
+            document.querySelectorAll('.m-chip').forEach(b => b.classList.remove('active-p', 'active-b', 'active-c'));
             document.getElementById(`btn-${m[0]}`).classList.add(`active-${m[0]}`);
             document.getElementById('capsule-settings').classList.toggle('hidden', m !== 'capsule');
         }
@@ -164,7 +173,7 @@
                     const slot = document.getElementById('img-slot');
                     slot.style.backgroundImage = `url(${currentImg})`;
                     slot.classList.remove('hidden');
-                }
+                };
                 reader.readAsDataURL(input.files[0]);
             }
         }
@@ -174,19 +183,20 @@
             const v = document.getElementById('ar-video'), m = document.getElementById('map-bg'), icon = document.getElementById('view-icon');
             if(isAR) {
                 navigator.mediaDevices.getUserMedia({video:{facingMode:'environment'}}).then(s => {
-                    v.srcObject = s; v.classList.remove('hidden'); m.classList.add('hidden');
-                    icon.className = 'fas fa-map';
+                    v.srcObject = s; v.classList.remove('hidden'); m.style.opacity = "0";
+                    icon.className = 'fas fa-map-marked-alt';
                 });
             } else {
-                v.classList.add('hidden'); m.classList.remove('hidden');
-                icon.className = 'fas fa-camera';
+                v.classList.add('hidden'); m.style.opacity = "1";
+                icon.className = 'fas fa-expand-arrows-alt';
                 if(v.srcObject) v.srcObject.getTracks().forEach(t => t.stop());
                 setTimeout(() => map.invalidateSize(), 100);
             }
         }
 
         async function toggleAudio() {
-            const bars = document.querySelectorAll('.wave-bar');
+            const bars = document.querySelectorAll('.w-bar');
+            const viz = document.getElementById('viz');
             if(!isRecording) {
                 try {
                     const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
@@ -195,21 +205,19 @@
                     const analyser = audioCtx.createAnalyser();
                     analyser.fftSize = 32; source.connect(analyser);
                     const dataArray = new Uint8Array(analyser.frequencyBinCount);
-                    mediaRecorder = new MediaRecorder(stream);
-                    chunks = [];
+                    mediaRecorder = new MediaRecorder(stream); chunks = [];
                     mediaRecorder.ondataavailable = e => chunks.push(e.data);
                     mediaRecorder.onstop = () => {
                         const blob = new Blob(chunks, { type: 'audio/ogg' });
                         const r = new FileReader(); r.onload = e => currentAudio = e.target.result; r.readAsDataURL(blob);
                     };
-                    mediaRecorder.start();
-                    isRecording = true;
+                    mediaRecorder.start(); isRecording = true; viz.style.opacity = '1';
                     document.getElementById('mic-btn').classList.add('text-red-500');
-                    function anim() { if(!isRecording) return; analyser.getByteFrequencyData(dataArray); bars.forEach((b, i) => b.style.height = (4 + dataArray[i]/5) + 'px'); requestAnimationFrame(anim); }
+                    function anim() { if(!isRecording) return; analyser.getByteFrequencyData(dataArray); bars.forEach((b, i) => b.style.height = (20 + dataArray[i]/4) + '%'); requestAnimationFrame(anim); }
                     anim();
-                } catch(e) { alert("Mic Error"); }
+                } catch(e) { console.error(e); }
             } else {
-                isRecording = false; mediaRecorder.stop();
+                isRecording = false; mediaRecorder.stop(); viz.style.opacity = '0';
                 document.getElementById('mic-btn').classList.remove('text-red-500');
             }
         }
@@ -217,27 +225,17 @@
         function confirmTrace() {
             const pos = map.getCenter();
             const data = {
-                id: Date.now(), title: document.getElementById('t-title').value || 'Stopa M.D.',
+                id: Date.now(), title: document.getElementById('t-title').value || 'Entity',
                 desc: document.getElementById('t-desc').value || '', coords: [pos.lat, pos.lng],
                 mode: currentMode, audio: currentAudio, img: currentImg,
                 expiry: currentMode === 'capsule' ? Date.now() + (document.getElementById('c-timer').value * 3600000) : null
             };
             traces.push(data);
-            localStorage.setItem('md_traces', JSON.stringify(traces));
-            addRadarItem(data);
+            localStorage.setItem('md_traces_v2', JSON.stringify(traces));
             renderAR();
-            // Reset
+            // Reset UI
             document.getElementById('t-title').value = ''; document.getElementById('t-desc').value = '';
             currentAudio = null; currentImg = null; document.getElementById('img-slot').classList.add('hidden');
-        }
-
-        function addRadarItem(d) {
-            const el = document.createElement('div');
-            el.className = 'radar-item glass';
-            el.style.borderColor = config[d.mode].c;
-            el.innerHTML = `<div style="color:${config[d.mode].c}">${d.title}</div><div class="opacity-40">${d.mode.toUpperCase()}</div>`;
-            el.onclick = () => { if(d.audio) new Audio(d.audio).play(); map.setView(d.coords, 18); };
-            document.getElementById('radar-panel').prepend(el);
         }
 
         function renderAR() {
@@ -247,30 +245,37 @@
             traces.forEach(t => {
                 const latDiff = t.coords[0] - center.lat;
                 const lngDiff = t.coords[1] - center.lng;
-                const x = 50 + (lngDiff * 140000) + ((deviceYaw % 360) * 2.5);
-                const y = 50 - (latDiff * 140000);
-                const dist = Math.sqrt(latDiff*latDiff + lngDiff*lngDiff);
-                if(dist < 0.003) {
-                    const pin = document.createElement('div');
-                    pin.style.cssText = `position:absolute; left:${x}%; top:${y}%; transform:translate(-50%,-50%); pointer-events:all;`;
-                    pin.innerHTML = `
-                        <div class="glass p-3 rounded-2xl border border-[${config[t.mode].c}] min-w-[80px] shadow-2xl">
-                            <div class="text-[9px] font-black" style="color:${config[t.mode].c}">${t.title}</div>
-                            ${t.img ? `<img src="${t.img}" class="w-16 h-16 object-cover mt-2 rounded-lg">` : ''}
+                
+                // 2026 Spatial Projection
+                const distance = Math.sqrt(latDiff**2 + lngDiff**2);
+                if(distance < 0.005) {
+                    const x = 50 + (lngDiff * 150000) + ((deviceYaw % 360) * 3);
+                    const y = 50 - (latDiff * 150000);
+                    const scale = Math.max(0.5, 1 - (distance * 200));
+                    const blur = distance * 1000;
+
+                    const ghost = document.createElement('div');
+                    ghost.className = 'ghost-entity';
+                    ghost.style.left = `${x}%`; ghost.style.top = `${y}%`;
+                    ghost.style.transform = `translate(-50%, -50%) scale(${scale})`;
+                    ghost.style.filter = `blur(${blur}px)`;
+                    
+                    ghost.innerHTML = `
+                        <div class="core-orb" style="background:${config[t.mode].c}"></div>
+                        <div class="data-fragment neural-glass" onclick="if('${t.audio}') new Audio('${t.audio}').play()">
+                            <div class="text-[12px] font-black uppercase italic" style="color:${config[t.mode].c}">${t.title}</div>
+                            ${t.img ? `<img src="${t.img}" class="w-24 h-24 object-cover mt-3 rounded-2xl border border-white/10">` : ''}
+                            <div class="text-[8px] mt-2 opacity-40 uppercase tracking-tighter">${t.desc.substring(0,30)}...</div>
                         </div>`;
-                    pin.onclick = () => { if(t.audio) new Audio(t.audio).play(); };
-                    world.appendChild(pin);
+                    world.appendChild(ghost);
                 }
             });
         }
 
         function loadTraces() {
-            const raw = JSON.parse(localStorage.getItem('md_traces') || '[]');
+            const raw = JSON.parse(localStorage.getItem('md_traces_v2') || '[]');
             traces = raw.filter(t => !t.expiry || t.expiry > Date.now());
-            document.getElementById('radar-panel').innerHTML = '';
-            traces.forEach(addRadarItem);
         }
     </script>
 </body>
 </html>
-    
