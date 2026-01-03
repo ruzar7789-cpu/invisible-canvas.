@@ -1,32 +1,25 @@
 import { neon } from '@neondatabase/serverless';
 
 export default async function handler(req, res) {
-  // Základní nastavení pro prohlížeč
-  res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+    // Podpora pro volání z mobilu
+    res.setHeader('Access-Control-Allow-Origin', '*');
+    res.setHeader('Access-Control-Allow-Methods', 'POST');
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
 
-  if (req.method === 'OPTIONS') return res.status(200).end();
+    if (req.method !== 'POST') return res.status(405).json({ error: 'Pouze POST' });
 
-  // Kontrola, zda máme adresu databáze
-  if (!process.env.DATABASE_URL) {
-    console.error("CHYBA: Chybí DATABASE_URL v nastavení Vercelu!");
-    return res.status(500).json({ error: "Konfigurace databáze chybí." });
-  }
+    try {
+        // Tady kód použije tu proměnnou, kterou právě opravuješ ve Vercelu
+        const sql = neon(process.env.DATABASE_URL);
+        const { lat, lng, content } = req.body;
 
-  try {
-    const sql = neon(process.env.DATABASE_URL);
-    const { lat, lng, content, media } = req.body;
+        await sql`
+            INSERT INTO traces (lat, lng, content, media)
+            VALUES (${lat}, ${lng}, ${content}, '')
+        `;
 
-    // Zápis do tabulky traces, kterou máš na snímku
-    await sql`
-      INSERT INTO traces (lat, lng, content, media)
-      VALUES (${lat}, ${lng}, ${content}, ${media})
-    `;
-
-    return res.status(200).json({ success: true, message: "Uloženo!" });
-  } catch (error) {
-    console.error("Detail chyby:", error);
-    return res.status(500).json({ error: "Databáze odmítla zápis: " + error.message });
-  }
+        return res.status(200).json({ success: true });
+    } catch (err) {
+        return res.status(500).json({ error: err.message });
+    }
 }
