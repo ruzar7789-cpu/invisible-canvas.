@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>TADY // NEON CONNECTED</title>
+    <title>TADY // MESH GLOBAL</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
@@ -12,145 +12,106 @@
         @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@200;400;600;800&display=swap');
         :root { --p: #00f2fe; --neon: #00ffa3; }
         body, html { font-family: 'Plus Jakarta Sans', sans-serif; background: #000; color: white; margin: 0; padding: 0; overflow: hidden; height: 100vh; }
-
-        /* INTRO */
         #intro { position: fixed; inset: 0; z-index: 10000; background: #000; display: flex; flex-direction: column; align-items: center; justify-content: center; transition: 1s; }
-        .logo { font-size: 5rem; font-weight: 800; font-style: italic; letter-spacing: -5px; animation: glow 2s infinite; }
-        @keyframes glow { 0%, 100% { text-shadow: 0 0 20px var(--p); } 50% { text-shadow: 0 0 40px var(--neon); } }
-
+        .logo-glow { font-size: 5rem; font-weight: 800; font-style: italic; letter-spacing: -6px; animation: breathe 3s infinite; }
+        @keyframes breathe { 0%, 100% { text-shadow: 0 0 20px var(--p); transform: scale(1); } 50% { text-shadow: 0 0 50px var(--neon); transform: scale(1.05); } }
         #map { position: fixed; inset: 0; z-index: 10; }
-        .glass { background: rgba(0,0,0,0.8); backdrop-filter: blur(20px); border: 1px solid rgba(255,255,255,0.1); border-radius: 30px; }
-        
-        /* STATUS INDICATOR */
-        #db-status { position: fixed; top: 20px; left: 50%; transform: translateX(-50%); z-index: 1000; font-size: 8px; font-weight: 800; text-transform: uppercase; letter-spacing: 2px; }
+        #camera-preview { position: fixed; inset: 0; width: 100%; height: 100%; object-fit: cover; z-index: 5; opacity: 0; pointer-events: none; transition: 0.5s; }
+        .glass { background: rgba(0, 0, 0, 0.85); backdrop-filter: blur(20px); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 30px; }
+        .status-pill { position: fixed; top: 20px; left: 50%; transform: translateX(-50%); z-index: 1000; font-size: 8px; font-weight: 900; letter-spacing: 2px; text-transform: uppercase; }
     </style>
 </head>
 <body onclick="initAudio()">
-
     <div id="intro">
-        <div class="logo">TADY</div>
-        <div class="text-[8px] tracking-[1em] opacity-30 uppercase mt-4">Database: NEON.TECH</div>
-        <button onclick="launch()" class="mt-12 px-10 py-3 border border-white/20 rounded-full text-[10px] font-bold tracking-[0.3em] uppercase">Initialize Link</button>
+        <div class="logo-glow">TADY</div>
+        <button onclick="launchApp()" class="mt-12 px-12 py-4 border border-white/20 rounded-full font-black text-[10px] tracking-[0.4em] uppercase">Connect to Mesh</button>
     </div>
 
-    <div id="db-status" class="glass px-4 py-2 flex items-center gap-2">
+    <div id="status" class="status-pill glass px-6 py-2 flex items-center gap-3">
         <div id="status-dot" class="w-2 h-2 rounded-full bg-yellow-500 animate-pulse"></div>
-        <span id="status-text">Neon Sync: Standby</span>
+        <span id="status-text">Connecting...</span>
     </div>
 
+    <video id="camera-preview" autoplay playsinline muted></video>
     <div id="map"></div>
 
-    <div class="fixed inset-0 z-[100] pointer-events-none p-6 flex flex-col justify-end">
-        <div class="w-full max-w-md mx-auto pointer-events-auto">
-            <div class="glass p-6 mb-4">
-                <input type="text" id="trace-input" placeholder="Zanech stopu v databázi..." class="w-full bg-white/5 p-4 rounded-xl mb-4 outline-none border border-white/10 focus:border-cyan-400 font-bold">
-                <button onclick="saveToNeon()" class="w-full bg-white text-black py-5 rounded-2xl font-black text-[10px] tracking-[0.4em] uppercase">Odeslat do světa</button>
+    <div class="fixed inset-0 z-[100] pointer-events-none p-6 flex flex-col justify-between">
+        <div class="flex justify-between items-start">
+            <div class="glass p-6 pointer-events-auto border-l-4 border-cyan-400">
+                <h1 class="text-3xl font-black italic tracking-tighter leading-none text-white">TADY</h1>
             </div>
+            <button onclick="toggleCamera()" class="w-14 h-14 glass pointer-events-auto flex items-center justify-center text-cyan-400 text-xl"><i class="fas fa-expand"></i></button>
+        </div>
+
+        <div id="editor" class="hidden pointer-events-auto w-full max-w-md mx-auto glass p-8 shadow-2xl">
+            <div class="w-full h-40 bg-white/5 rounded-2xl mb-6 overflow-hidden relative border border-white/10">
+                <img id="render-img" class="w-full h-full object-cover hidden">
+                <div id="p-hint" class="absolute inset-0 flex flex-col items-center justify-center opacity-20"><i class="fas fa-camera text-3xl mb-2"></i></div>
+            </div>
+            
+            <div class="flex justify-center gap-4 mb-6">
+                <label class="w-12 h-12 rounded-xl bg-white/10 flex items-center justify-center cursor-pointer"><i class="fas fa-camera"></i><input type="file" accept="image/*" capture="environment" class="hidden" onchange="handleFile(this)"></label>
+                <label class="w-12 h-12 rounded-xl bg-white/10 flex items-center justify-center cursor-pointer"><i class="fas fa-image"></i><input type="file" accept="image/*" class="hidden" onchange="handleFile(this)"></label>
+                <button id="mic-btn" onclick="toggleMic()" class="w-12 h-12 rounded-xl bg-white/10 flex items-center justify-center"><i class="fas fa-microphone"></i></button>
+            </div>
+
+            <input type="text" id="trace-input" placeholder="Zanech stopu..." class="w-full bg-white/5 p-4 rounded-xl mb-6 border border-white/10 outline-none text-sm font-bold text-white">
+            <div class="flex gap-4">
+                <button onclick="closeEditor()" class="flex-1 py-4 text-[9px] font-black uppercase opacity-30 text-white">Zrušit</button>
+                <button onclick="pushToNeon()" class="flex-[2] bg-white text-black py-4 rounded-xl font-black text-[9px] uppercase tracking-widest">Odeslat</button>
+            </div>
+        </div>
+
+        <div id="hud" class="w-full max-w-sm mx-auto pointer-events-auto flex flex-col items-center">
+            <button onclick="openEditor()" class="w-20 h-20 bg-white text-black rounded-full shadow-2xl flex items-center justify-center text-3xl mb-8 active:scale-95 transition-all"><i class="fas fa-plus"></i></button>
         </div>
     </div>
 
     <script>
-        let map, traces = [], audioCtx;
-
-        function launch() {
-            document.getElementById('intro').style.opacity = '0';
-            setTimeout(() => {
-                document.getElementById('intro').style.display = 'none';
-                initApp();
-            }, 1000);
-        }
-
-        function initApp() {
+        let map, audioCtx, activeMedia = null, isCam = false;
+        function launchApp() { document.getElementById('intro').style.opacity = '0'; setTimeout(() => { document.getElementById('intro').style.display = 'none'; initSystem(); }, 1000); }
+        function initSystem() {
             map = L.map('map', { zoomControl: false, attributionControl: false }).setView([50.912, 14.619], 16);
             L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
-            
-            // NAČTENÍ DAT
-            fetchTraces();
+            map.locate({setView: true, maxZoom: 16});
+            fetchData();
         }
-
-        // TATO FUNKCE BUDE VOLAT TVŮJ VERCEL BACKEND
-        async function fetchTraces() {
-            setStatus('Synchronizing...', 'yellow');
+        async function toggleCamera() {
+            isCam = !isCam; const cam = document.getElementById('camera-preview');
+            if(isCam) { try { const s = await navigator.mediaDevices.getUserMedia({video:{facingMode:'environment'}}); cam.srcObject = s; cam.style.opacity = '1'; } catch(e) { alert("Chyba kamery"); } }
+            else { cam.style.opacity = '0'; if(cam.srcObject) cam.srcObject.getTracks().forEach(t => t.stop()); }
+        }
+        function handleFile(input) {
+            const f = input.files[0]; if(!f) return;
+            const r = new FileReader();
+            r.onload = (e) => { activeMedia = e.target.result; document.getElementById('render-img').src = activeMedia; document.getElementById('render-img').style.display = 'block'; document.getElementById('p-hint').style.display = 'none'; };
+            r.readAsDataURL(f);
+        }
+        async function fetchData() {
             try {
-                // Tady bude URL tvé Vercel funkce, např: /api/get-traces
-                const response = await fetch('/api/traces'); 
-                if(response.ok) {
-                    const data = await response.json();
-                    data.forEach(renderMarker);
-                    setStatus('Neon Online', '#00ffa3');
-                } else {
-                    // Pokud ještě nemáš API, načteme aspoň lokální pro test
-                    loadLocal();
-                    setStatus('Neon Offline (Local Mode)', 'orange');
-                }
-            } catch(e) {
-                loadLocal();
-                setStatus('Neon Offline (Local Mode)', 'orange');
-            }
+                const res = await fetch('/api/save-trace');
+                const data = await res.json();
+                if (Array.isArray(data)) data.forEach(renderMarker);
+                updateStatus('Neon Online', '#00ffa3');
+            } catch(e) { updateStatus('Neon Offline', 'orange'); }
         }
-
-        async function saveToNeon() {
-            const text = document.getElementById('trace-input').value;
+        async function pushToNeon() {
+            const msg = document.getElementById('trace-input').value || "TADY";
             const pos = map.getCenter();
-            
-            const newTrace = {
-                lat: pos.lat,
-                lng: pos.lng,
-                content: text,
-                timestamp: new Date().toISOString()
-            };
-
-            setStatus('Uploading...', 'blue');
-
+            const trace = { lat: pos.lat, lng: pos.lng, content: msg, media: activeMedia };
+            updateStatus('Odesílám...', '#00f2fe');
             try {
-                // Tady bude volání tvého API pro zápis do Neonu
-                const response = await fetch('/api/save-trace', {
-                    method: 'POST',
-                    body: JSON.stringify(newTrace)
-                });
-
-                if(response.ok) {
-                    renderMarker(newTrace);
-                    setStatus('Neon Updated', '#00ffa3');
-                } else {
-                    throw new Error();
-                }
-            } catch(e) {
-                // Nouzové uložení lokálně, když nejede API
-                saveLocal(newTrace);
-                renderMarker(newTrace);
-                setStatus('Saved Locally', 'orange');
-            }
-            
-            document.getElementById('trace-input').value = '';
+                const res = await fetch('/api/save-trace', { method: 'POST', body: JSON.stringify(trace) });
+                if(res.ok) { renderMarker(trace); closeEditor(); updateStatus('Neon Online', '#00ffa3'); }
+            } catch(e) { updateStatus('Chyba', 'red'); }
         }
-
         function renderMarker(t) {
-            const icon = L.divIcon({
-                className: '',
-                html: `<div style="width:20px; height:20px; background:#00ffa3; border-radius:50%; border:3px solid white; box-shadow:0 0 15px rgba(0,255,163,0.5)"></div>`,
-                iconSize: [20, 20]
-            });
-            L.marker([t.lat, t.lng], {icon}).addTo(map).bindPopup(`<b style="color:black">${t.content}</b>`);
+            const icon = L.divIcon({ className: '', html: `<div style="width:20px; height:20px; background:#00ffa3; border-radius:50%; border:2px solid #fff; box-shadow:0 0 10px #00ffa3"></div>` });
+            L.marker([t.lat, t.lng], {icon}).addTo(map).bindPopup(`${t.media ? `<img src="${t.media}" width="150"><br>` : ''}${t.content}`);
         }
-
-        function setStatus(txt, color) {
-            document.getElementById('status-text').innerText = 'Neon: ' + txt;
-            document.getElementById('status-dot').style.backgroundColor = color;
-        }
-
-        function saveLocal(t) {
-            traces.push(t);
-            localStorage.setItem('tady_neon_fallback', JSON.stringify(traces));
-        }
-
-        function loadLocal() {
-            const data = localStorage.getItem('tady_neon_fallback');
-            if(data) {
-                JSON.parse(data).forEach(renderMarker);
-            }
-        }
-
+        function openEditor() { document.getElementById('editor').classList.remove('hidden'); document.getElementById('hud').classList.add('hidden'); }
+        function closeEditor() { document.getElementById('editor').classList.add('hidden'); document.getElementById('hud').classList.remove('hidden'); }
+        function updateStatus(txt, col) { document.getElementById('status-text').innerText = txt; document.getElementById('status-dot').style.backgroundColor = col; }
         function initAudio() { if(!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)(); }
     </script>
 </body>
