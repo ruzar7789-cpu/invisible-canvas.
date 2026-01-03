@@ -8,32 +8,47 @@
     <style>
         :root { --neon: #00e676; --gold: #ffd700; --bg: #000; }
         body { background: var(--bg); color: #fff; font-family: 'Segoe UI', sans-serif; margin: 0; overflow: hidden; }
+        
+        /* ÚVODNÍ STRANA */
         #landing-page { height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center; background: radial-gradient(circle, #111 0%, #000 100%); transition: 0.8s; z-index: 2000; position: relative; }
         .logo-giant { font-size: 5rem; font-weight: 900; font-style: italic; text-shadow: 0 0 20px var(--neon); margin-bottom: 10px; }
         .enter-btn { background: none; border: 2px solid var(--neon); color: var(--neon); padding: 15px 40px; font-size: 1.2rem; font-weight: bold; cursor: pointer; border-radius: 50px; }
+
+        /* APLIKACE */
         #main-app { display: none; height: 100vh; flex-direction: column; position: relative; }
         #map { flex-grow: 1; width: 100%; z-index: 1; }
-        #ar-mode-btn { position: absolute; top: 20px; right: 20px; z-index: 2000; background: var(--neon); color: #000; border: none; padding: 12px 25px; border-radius: 50px; font-weight: bold; cursor: pointer; }
-        .ui-overlay { background: rgba(10, 10, 10, 0.98); padding: 20px; border-radius: 30px 30px 0 0; margin-top: -30px; z-index: 1000; }
+
+        /* AR TLAČÍTKO */
+        #ar-mode-btn { position: absolute; top: 20px; right: 20px; z-index: 2000; background: var(--neon); color: #000; border: none; padding: 12px 25px; border-radius: 50px; font-weight: bold; cursor: pointer; box-shadow: 0 0 20px rgba(0, 230, 118, 0.5); }
+
+        /* OVLÁDACÍ PANEL */
+        .ui-overlay { background: rgba(10, 10, 10, 0.98); padding: 20px; border-radius: 30px 30px 0 0; margin-top: -30px; z-index: 1000; box-shadow: 0 -10px 30px rgba(0,0,0,0.8); }
         .type-selector { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 15px; }
-        .type-btn { background: #1a1a1a; border: 1px solid #333; color: #888; padding: 10px; border-radius: 12px; cursor: pointer; font-size: 0.75rem; }
+        .type-btn { background: #1a1a1a; border: 1px solid #333; color: #888; padding: 10px; border-radius: 12px; cursor: pointer; font-size: 0.75rem; transition: 0.3s; }
         .type-btn.active[data-type*="public-msg"] { border-color: var(--neon); color: var(--neon); }
         .type-btn.active[data-type*="public-ad"] { border-color: var(--gold); color: var(--gold); }
+
         .photo-trigger { background: #222; border: 1px solid #444; color: #fff; padding: 10px; border-radius: 12px; margin-bottom: 10px; width: 100%; cursor: pointer; font-size: 0.8rem; display: flex; align-items: center; justify-content: center; gap: 10px; }
         #photo-preview { display: none; width: 100%; height: 100px; object-fit: cover; border-radius: 10px; margin-bottom: 10px; border: 1px solid var(--neon); }
         textarea { width: 100%; background: #050505; border: 1px solid #222; color: #fff; padding: 15px; border-radius: 15px; margin-bottom: 10px; box-sizing: border-box; resize: none; outline: none; }
+        
+        /* TLAČÍTKO ODESLAT */
         .send-container { text-align: center; }
-        .send-btn { width: 75px; height: 75px; border: 3px solid var(--neon); border-radius: 50%; background: none; cursor: pointer; display: flex; flex-direction: column; align-items: center; justify-content: center; margin: 0 auto; }
-        .send-btn span { color: var(--neon); font-size: 0.7rem; font-weight: 900; }
+        .send-btn { width: 75px; height: 75px; border: 3px solid var(--neon); border-radius: 50%; background: none; cursor: pointer; display: flex; flex-direction: column; align-items: center; justify-content: center; margin: 0 auto; transition: 0.2s; }
+        .send-btn:active { transform: scale(0.9); background: rgba(0, 230, 118, 0.2); }
+        .send-btn span { color: var(--neon); font-size: 0.75rem; font-weight: 900; letter-spacing: 1px; }
+        
         #status { font-size: 0.6rem; color: #555; text-align: center; margin-top: 8px; letter-spacing: 2px; }
         .popup-img { width: 100%; border-radius: 8px; margin-top: 8px; }
     </style>
 </head>
 <body>
+
     <div id="landing-page">
         <div class="logo-giant">TADY</div>
         <button class="enter-btn" onclick="vstoupit()">VSTOUPIT DO PROSTORU</button>
     </div>
+
     <div id="main-app">
         <button id="ar-mode-btn" onclick="window.location.href='/ar.html'">✨ AR POHLED</button>
         <div id="map"></div>
@@ -47,66 +62,104 @@
             <img id="photo-preview">
             <textarea id="content" rows="2" placeholder="Zanech stopu..."></textarea>
             <div class="send-container">
-                <button class="send-btn" onclick="ulozitStopu()"><span>ODESLAT</span></button>
+                <button class="send-btn" onclick="ulozitStopu()">
+                    <span>ODESLAT</span>
+                </button>
             </div>
             <div id="status">IDENTIFY M.D. - READY</div>
         </div>
     </div>
+
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script>
         let currentType = "public-msg", map, userMarker, tracesLayer = L.layerGroup(), base64Image = "";
-        function vstoupit() { document.getElementById('landing-page').style.display = 'none'; document.getElementById('main-app').style.display = 'flex'; initApp(); }
-        function setType(type, btn) { currentType = type; document.querySelectorAll('.type-btn').forEach(b => b.classList.remove('active')); btn.classList.add('active'); }
+
+        function vstoupit() {
+            document.getElementById('landing-page').style.display = 'none';
+            document.getElementById('main-app').style.display = 'flex';
+            initApp();
+        }
+
+        function setType(type, btn) {
+            currentType = type;
+            document.querySelectorAll('.type-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+        }
+
         function previewPhoto(input) {
             const file = input.files[0];
             if (file) {
                 const reader = new FileReader();
-                reader.onload = e => { base64Image = e.target.result; const img = document.getElementById('photo-preview'); img.src = base64Image; img.style.display = 'block'; };
+                reader.onload = e => {
+                    base64Image = e.target.result;
+                    const img = document.getElementById('photo-preview');
+                    img.src = base64Image;
+                    img.style.display = 'block';
+                };
                 reader.readAsDataURL(file);
             }
         }
+
         function initApp() {
             map = L.map('map', { zoomControl: false }).setView([50.08, 14.43], 15);
             L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png').addTo(map);
             tracesLayer.addTo(map);
             navigator.geolocation.watchPosition(pos => {
                 const latlng = [pos.coords.latitude, pos.coords.longitude];
-                if (!userMarker) { userMarker = L.circleMarker(latlng, { color: '#fff', radius: 8 }).addTo(map); map.setView(latlng, 17); } 
-                else { userMarker.setLatLng(latlng); }
+                if (!userMarker) { 
+                    userMarker = L.circleMarker(latlng, { color: '#fff', radius: 8 }).addTo(map); 
+                    map.setView(latlng, 17); 
+                } else { userMarker.setLatLng(latlng); }
                 nactiStopy();
             });
         }
+
         async function nactiStopy() {
             const res = await fetch('/api/get-traces');
             const data = await res.json();
             tracesLayer.clearLayers();
             data.forEach(stopa => {
-                const marker = L.circleMarker([stopa.lat, stopa.lng], { color: stopa.content.includes('public-ad') ? '#ffd700' : '#00e676', radius: 7 });
+                const marker = L.circleMarker([stopa.lat, stopa.lng], { 
+                    color: stopa.content.includes('public-ad') ? '#ffd700' : '#00e676', 
+                    radius: 7 
+                });
                 let pop = `<b>${stopa.content.split('] ')[1] || stopa.content}</b>`;
                 if (stopa.image_url) pop += `<img src="${stopa.image_url}" class="popup-img">`;
                 marker.bindPopup(pop).addTo(tracesLayer);
             });
         }
+
         async function ulozitStopu() {
             const txt = document.getElementById('content').value;
             const status = document.getElementById('status');
-            status.innerText = "ODESÍLÁM...";
+            status.innerText = "UKOTVUJI V PROSTORU...";
+
             navigator.geolocation.getCurrentPosition(async (pos) => {
                 try {
                     const res = await fetch('/api/save-trace', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ lat: pos.coords.latitude, lng: pos.coords.longitude, content: `[${currentType}] ${txt}`, image_url: base64Image })
+                        body: JSON.stringify({ 
+                            lat: pos.coords.latitude, 
+                            lng: pos.coords.longitude, 
+                            content: `[${currentType}] ${txt}`,
+                            image_url: base64Image 
+                        })
                     });
+
                     if (res.ok) {
-                        // TADY JE TA DŮLEŽITÁ ČÁST: Vyčištění po úspěchu
+                        status.innerText = "✅ STOPA ULOŽENA";
+                        // VYMAZÁNÍ POLÍ PO ÚSPĚCHU
                         document.getElementById('content').value = "";
                         document.getElementById('photo-preview').style.display = 'none';
                         base64Image = "";
-                        status.innerText = "✅ HOTOVO";
                         nactiStopy();
-                    } else { status.innerText = "❌ CHYBA SERVERU"; }
-                } catch (e) { status.innerText = "❌ CHYBA PŘIPOJENÍ"; }
+                    } else {
+                        status.innerText = "❌ CHYBA UKLÁDÁNÍ";
+                    }
+                } catch (e) {
+                    status.innerText = "❌ CHYBA PŘIPOJENÍ";
+                }
             });
         }
     </script>
