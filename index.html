@@ -3,66 +3,46 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TADY - Globální AR Síť</title>
+    <title>TADY - Globální AR Síť s Fotem</title>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <style>
         :root { --neon: #00e676; --gold: #ffd700; --private: #bb86fc; --bg: #000; }
         body { background: var(--bg); color: #fff; font-family: 'Segoe UI', sans-serif; margin: 0; overflow: hidden; }
         
-        /* LANDING PAGE */
-        #landing-page {
-            height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center;
-            background: radial-gradient(circle, #111 0%, #000 100%); transition: 0.8s; z-index: 2000; position: relative;
-        }
+        #landing-page { height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center; background: radial-gradient(circle, #111 0%, #000 100%); transition: 0.8s; z-index: 2000; position: relative; }
         .logo-giant { font-size: 5rem; font-weight: 900; font-style: italic; text-shadow: 0 0 20px var(--neon); margin-bottom: 10px; }
         .enter-btn { background: none; border: 2px solid var(--neon); color: var(--neon); padding: 15px 40px; font-size: 1.2rem; font-weight: bold; cursor: pointer; border-radius: 50px; transition: 0.3s; }
 
-        /* MAIN APP INTERFACE */
         #main-app { display: none; height: 100vh; flex-direction: column; }
         #map { flex-grow: 1; width: 100%; z-index: 1; }
 
-        .ui-overlay { 
-            background: rgba(10, 10, 10, 0.98); padding: 20px; 
-            border-radius: 30px 30px 0 0; margin-top: -30px; z-index: 1000;
-            box-shadow: 0 -10px 30px rgba(0,0,0,0.8);
-        }
+        .ui-overlay { background: rgba(10, 10, 10, 0.98); padding: 20px; border-radius: 30px 30px 0 0; margin-top: -30px; z-index: 1000; }
 
-        /* VOLBA TYPU STOPY */
         .type-selector { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 15px; }
-        .type-btn { 
-            background: #1a1a1a; border: 1px solid #333; color: #888; padding: 10px; 
-            border-radius: 12px; cursor: pointer; font-size: 0.75rem; transition: 0.3s;
-        }
-        .type-btn.active[data-type="public-msg"] { border-color: var(--neon); color: var(--neon); }
-        .type-btn.active[data-type="private-msg"] { border-color: var(--private); color: var(--private); }
-        .type-btn.active[data-type="public-ad"] { border-color: var(--gold); color: var(--gold); }
-        .type-btn.active[data-type="private-mem"] { border-color: #03a9f4; color: #03a9f4; }
+        .type-btn { background: #1a1a1a; border: 1px solid #333; color: #888; padding: 10px; border-radius: 12px; cursor: pointer; font-size: 0.75rem; }
+        .type-btn.active[data-type*="public-msg"] { border-color: var(--neon); color: var(--neon); }
+        .type-btn.active[data-type*="public-ad"] { border-color: var(--gold); color: var(--gold); }
 
-        textarea { 
-            width: 100%; background: #050505; border: 1px solid #222; color: #fff; 
-            padding: 15px; border-radius: 15px; margin-bottom: 10px; box-sizing: border-box; resize: none;
-        }
+        .input-group { position: relative; }
+        textarea { width: 100%; background: #050505; border: 1px solid #222; color: #fff; padding: 15px; border-radius: 15px; margin-bottom: 10px; box-sizing: border-box; resize: none; }
+        
+        /* FOTO TLAČÍTKO */
+        .photo-trigger { background: #222; border: 1px solid #444; color: #fff; padding: 10px; border-radius: 12px; margin-bottom: 10px; width: 100%; cursor: pointer; font-size: 0.8rem; display: flex; align-items: center; justify-content: center; gap: 10px; }
+        #photo-preview { display: none; width: 100%; height: 100px; object-fit: cover; border-radius: 10px; margin-bottom: 10px; border: 1px solid var(--neon); }
 
-        .id-scanner { 
-            width: 70px; height: 70px; border: 2px solid var(--neon); border-radius: 50%; 
-            margin: 0 auto; display: flex; align-items: center; justify-content: center; cursor: pointer;
-            transition: 0.3s;
-        }
-        .id-scanner:active { transform: scale(0.9); box-shadow: 0 0 20px var(--neon); }
+        .id-scanner { width: 70px; height: 70px; border: 2px solid var(--neon); border-radius: 50%; margin: 0 auto; display: flex; align-items: center; justify-content: center; cursor: pointer; }
         .id-scanner img { width: 35px; filter: invert(1); }
-
         #status { font-size: 0.65rem; color: #555; text-align: center; margin-top: 8px; letter-spacing: 2px; }
 
-        /* MAP POPUPS */
-        .leaflet-popup-content-wrapper { background: #111; color: #fff; border-radius: 12px; padding: 5px; }
-        .like-btn { background: var(--neon); color: #000; border: none; padding: 5px 12px; border-radius: 5px; cursor: pointer; font-weight: bold; margin-top: 8px; width: 100%; }
+        /* POPUP S FOTKOU */
+        .popup-img { width: 100%; border-radius: 8px; margin-top: 10px; display: block; border: 1px solid #333; }
+        .leaflet-popup-content-wrapper { background: #111; color: #fff; border-radius: 15px; }
     </style>
 </head>
 <body>
 
     <div id="landing-page">
         <div class="logo-giant">TADY</div>
-        <p style="color:#555; margin-bottom:30px; letter-spacing:3px;">PROJEKT INVISIBLE CANES</p>
         <button class="enter-btn" onclick="vstoupit()">VSTOUPIT DO PROSTORU</button>
     </div>
 
@@ -70,13 +50,17 @@
         <div id="map"></div>
         <div class="ui-overlay">
             <div class="type-selector">
-                <button class="type-btn active" data-type="public-msg" onclick="setType('public-msg', this)">VEŘEJNÝ VZKAZ</button>
-                <button class="type-btn" data-type="private-msg" onclick="setType('private-msg', this)">SOUKROMÝ VZKAZ</button>
-                <button class="type-btn" data-type="public-ad" onclick="setType('public-ad', this)">VEŘEJNÁ REKLAMA</button>
-                <button class="type-btn" data-type="private-mem" onclick="setType('private-mem', this)">SOUKROMÁ VZPOMÍNKA</button>
+                <button class="type-btn active" data-type="public-msg" onclick="setType('public-msg', this)">VZKAZ</button>
+                <button class="type-btn" data-type="public-ad" onclick="setType('public-ad', this)">REKLAMA</button>
             </div>
 
-            <textarea id="content" rows="3" placeholder="Co zde chceš zanechat?"></textarea>
+            <input type="file" id="file-input" accept="image/*" capture="environment" style="display:none" onchange="previewPhoto(this)">
+            <button class="photo-trigger" onclick="document.getElementById('file-input').click()">
+                📷 PŘIDAT FOTKU MÍSTA
+            </button>
+            <img id="photo-preview">
+
+            <textarea id="content" rows="2" placeholder="Napiš vzkaz nebo nabídku..."></textarea>
             
             <div class="id-scanner" onclick="ulozitStopu()">
                 <img src="https://cdn-icons-png.flaticon.com/512/2618/2618254.png">
@@ -87,7 +71,7 @@
 
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script>
-        let currentType = "public-msg", map, userMarker, tracesLayer = L.layerGroup();
+        let currentType = "public-msg", map, userMarker, tracesLayer = L.layerGroup(), base64Image = "";
 
         function vstoupit() {
             document.getElementById('landing-page').style.opacity = '0';
@@ -98,15 +82,18 @@
             }, 800);
         }
 
-        function setType(type, btn) {
-            currentType = type;
-            document.querySelectorAll('.type-btn').forEach(b => b.classList.remove('active'));
-            btn.classList.add('active');
-            const scanner = document.querySelector('.id-scanner');
-            // Změna barvy skeneru podle typu
-            if(type.includes('public-ad')) scanner.style.borderColor = 'var(--gold)';
-            else if(type.includes('private')) scanner.style.borderColor = 'var(--private)';
-            else scanner.style.borderColor = 'var(--neon)';
+        function previewPhoto(input) {
+            const file = input.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    base64Image = e.target.result;
+                    const img = document.getElementById('photo-preview');
+                    img.src = base64Image;
+                    img.style.display = 'block';
+                };
+                reader.readAsDataURL(file);
+            }
         }
 
         function initApp() {
@@ -125,59 +112,51 @@
         }
 
         async function nactiStopy() {
-            try {
-                const res = await fetch('/api/get-traces');
-                const data = await res.json();
-                tracesLayer.clearLayers();
-                data.forEach(stopa => {
-                    let color = '#00e676';
-                    if (stopa.content.includes('[public-ad]')) color = '#ffd700';
-                    if (stopa.content.includes('private')) color = '#bb86fc';
+            const res = await fetch('/api/get-traces');
+            const data = await res.json();
+            tracesLayer.clearLayers();
+            data.forEach(stopa => {
+                const color = stopa.content.includes('public-ad') ? '#ffd700' : '#00e676';
+                const marker = L.circleMarker([stopa.lat, stopa.lng], { color: color, radius: 7 });
+                
+                let popupContent = `<div style="text-align:center; min-width:150px">
+                    <b>${stopa.content.split('] ')[1] || stopa.content}</b>`;
+                
+                if (stopa.image_url) {
+                    popupContent += `<img src="${stopa.image_url}" class="popup-img">`;
+                }
+                
+                popupContent += `<br><span style="color:var(--neon)">❤️ ${stopa.likes || 0}</span>
+                    <button class="like-btn" style="background:var(--neon); border:none; width:100%; border-radius:5px; margin-top:5px; font-weight:bold" onclick="likeStopa(${stopa.id})">PODPOŘIT</button>
+                </div>`;
 
-                    const marker = L.circleMarker([stopa.lat, stopa.lng], { color: color, radius: 7, fillOpacity: 0.6 });
-                    marker.bindPopup(`
-                        <div style="text-align:center">
-                            <p style="margin:5px 0"><b>${stopa.content.split('] ')[1] || stopa.content}</b></p>
-                            <small style="color:#888">${stopa.content.split(']')[0].replace('[', '')}</small><br>
-                            <span style="color:var(--neon)">❤️ ${stopa.likes || 0}</span>
-                            <button class="like-btn" onclick="likeStopa(${stopa.id})">PODPOŘIT</button>
-                        </div>
-                    `).addTo(tracesLayer);
-                });
-            } catch (e) { console.log("Refresh dat..."); }
-        }
-
-        async function likeStopa(id) {
-            await fetch('/api/like-trace', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id }) });
-            nactiStopy();
+                marker.bindPopup(popupContent).addTo(tracesLayer);
+            });
         }
 
         async function ulozitStopu() {
             const txt = document.getElementById('content').value;
             if (!txt) return;
-            const status = document.getElementById('status');
-            status.innerText = "PROPOJUJI S PROSTOREM...";
+            document.getElementById('status').innerText = "UKOTVUJI S FOTOGRAFIÍ...";
 
             navigator.geolocation.getCurrentPosition(async (pos) => {
-                const payload = {
-                    lat: pos.coords.latitude,
-                    lng: pos.coords.longitude,
-                    content: `[${currentType}] ${txt}`
-                };
-
-                const res = await fetch('/api/save-trace', {
+                await fetch('/api/save-trace', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(payload)
+                    body: JSON.stringify({ 
+                        lat: pos.coords.latitude, 
+                        lng: pos.coords.longitude, 
+                        content: `[${currentType}] ${txt}`,
+                        image_url: base64Image 
+                    })
                 });
-
-                if (res.ok) {
-                    status.innerText = "✅ STOPA UKOTVENA";
-                    document.getElementById('content').value = "";
-                    nactiStopy();
-                }
+                document.getElementById('content').value = "";
+                document.getElementById('photo-preview').style.display = 'none';
+                base64Image = "";
+                nactiStopy();
             });
         }
     </script>
 </body>
-</html>
+        </html>
+    
