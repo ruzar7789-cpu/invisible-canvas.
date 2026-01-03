@@ -11,15 +11,14 @@
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@200;400;600;800&display=swap');
         body, html { font-family: 'Plus Jakarta Sans', sans-serif; background: #000; color: white; margin: 0; padding: 0; overflow: hidden; height: 100vh; }
-        #map { position: fixed; inset: 0; z-index: 10; }
+        #map { position: fixed; inset: 0; z-index: 10; filter: grayscale(1) invert(0.9) contrast(1.1); }
         .glass { background: rgba(0, 0, 0, 0.85); backdrop-filter: blur(20px); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 30px; }
-        .status-pill { position: fixed; top: 20px; left: 50%; transform: translateX(-50%); z-index: 1000; font-size: 8px; font-weight: 900; letter-spacing: 2px; text-transform: uppercase; }
-        .leaflet-popup-content-wrapper { background: black; color: white; border: 1px solid #00ffa3; border-radius: 15px; }
+        .status-pill { position: fixed; top: 20px; left: 50%; transform: translateX(-50%); z-index: 1000; font-size: 8px; font-weight: 900; letter-spacing: 2px; text-transform: uppercase; white-space: nowrap; }
     </style>
 </head>
 <body>
     <div id="status" class="status-pill glass px-6 py-2 flex items-center gap-3">
-        <div id="status-dot" class="w-2 h-2 rounded-full bg-yellow-500"></div>
+        <div id="status-dot" class="w-2 h-2 rounded-full bg-yellow-500 animate-pulse"></div>
         <span id="status-text">CONNECTING...</span>
     </div>
 
@@ -31,10 +30,10 @@
         </div>
 
         <div id="editor" class="hidden pointer-events-auto w-full max-w-md mx-auto glass p-8 shadow-2xl mb-20">
-            <input type="text" id="trace-input" placeholder="Zanech stopu v databázi..." class="w-full bg-white/5 p-4 rounded-xl mb-6 border border-white/10 outline-none text-sm font-bold text-white">
+            <input type="text" id="trace-input" placeholder="Napiš vzkaz do mapy..." class="w-full bg-white/5 p-4 rounded-xl mb-6 border border-white/10 outline-none text-sm font-bold text-white">
             <div class="flex gap-4">
                 <button onclick="closeEditor()" class="flex-1 py-4 text-[9px] font-black uppercase opacity-30 text-white">Zrušit</button>
-                <button onclick="pushToNeon()" class="flex-[2] bg-white text-black py-4 rounded-xl font-black text-[9px] uppercase tracking-widest text-center">Odeslat</button>
+                <button onclick="pushToNeon()" class="flex-[2] bg-white text-black py-4 rounded-xl font-black text-[9px] uppercase tracking-widest text-center">Odeslat do světa</button>
             </div>
         </div>
 
@@ -59,7 +58,7 @@
                 if (res.ok) {
                     if (Array.isArray(data)) data.forEach(renderMarker);
                     updateStatus('NEON ONLINE', '#00ffa3');
-                } else { updateStatus('SERVER ERROR', 'red'); }
+                } else { updateStatus('SERVER ERROR (SQL?)', 'red'); }
             } catch(e) { updateStatus('NEON OFFLINE', 'orange'); }
         }
 
@@ -68,19 +67,31 @@
             const pos = map.getCenter();
             updateStatus('SENDING...', '#00f2fe');
             try {
-                const res = await fetch('/api/save-trace', { method: 'POST', body: JSON.stringify({ lat: pos.lat, lng: pos.lng, content: msg }) });
+                const res = await fetch('/api/save-trace', { 
+                    method: 'POST', 
+                    body: JSON.stringify({ lat: pos.lat, lng: pos.lng, content: msg, media: null }) 
+                });
                 if(res.ok) { closeEditor(); fetchData(); }
-            } catch(e) { updateStatus('ERROR', 'red'); }
+                else { 
+                    const err = await res.json();
+                    alert("Chyba: " + err.error);
+                    updateStatus('DATABASE ERROR', 'red'); 
+                }
+            } catch(e) { updateStatus('NETWORK ERROR', 'red'); }
         }
 
         function renderMarker(t) {
             const icon = L.divIcon({ className: '', html: `<div style="width:12px; height:12px; background:#00ffa3; border-radius:50%; box-shadow:0 0 15px #00ffa3"></div>` });
-            L.marker([t.lat, t.lng], {icon}).addTo(map).bindPopup(t.content);
+            L.marker([t.lat, t.lng], {icon}).addTo(map).bindPopup(`<div class="text-black font-bold p-2">${t.content}</div>`);
         }
 
         function openEditor() { document.getElementById('editor').classList.remove('hidden'); document.getElementById('hud').classList.add('hidden'); }
         function closeEditor() { document.getElementById('editor').classList.add('hidden'); document.getElementById('hud').classList.remove('hidden'); }
-        function updateStatus(txt, col) { document.getElementById('status-text').innerText = txt; document.getElementById('status-dot').style.backgroundColor = col; }
+        function updateStatus(txt, col) { 
+            const dot = document.getElementById('status-dot');
+            document.getElementById('status-text').innerText = txt; 
+            dot.style.backgroundColor = col; 
+        }
         
         window.onload = initSystem;
     </script>
