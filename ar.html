@@ -1,80 +1,32 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <meta charset="UTF-8">
-    <title>TADY - AR Navigace</title>
+    <title>TADY - AR Prostor</title>
     <script src="https://aframe.io/releases/1.3.0/aframe.min.js"></script>
     <script src="https://raw.githack.com/AR-js-org/AR.js/master/aframe/build/aframe-ar-nft.js"></script>
-    <script src="https://unpkg.com/aframe-look-at-component@0.8.0/dist/aframe-look-at-component.min.js"></script>
-    <style>
-        .back-btn { position: absolute; bottom: 30px; left: 50%; transform: translateX(-50%); z-index: 9999; background: #000; color: #00e676; border: 2px solid #00e676; padding: 15px 30px; border-radius: 50px; font-weight: bold; text-decoration: none; font-family: sans-serif; box-shadow: 0 0 20px rgba(0,230,118,0.5); }
-        #ar-info { position: absolute; top: 10px; left: 10px; color: #00e676; font-family: sans-serif; font-size: 12px; z-index: 9999; background: rgba(0,0,0,0.5); padding: 5px; border-radius: 5px; }
-    </style>
 </head>
 <body style="margin: 0; overflow: hidden;">
-    <div id="ar-info">Hledám stopy v okolí...</div>
-    <a href="/" class="back-btn">ZPĚT NA MAPU</a>
-
-    <a-scene vr-mode-ui="enabled: false" embedded arjs="sourceType: webcam; debugUIEnabled: false; videoTexture: true;">
+    <a-scene vr-mode-ui="enabled: false" embedded arjs="sourceType: webcam; debugUIEnabled: false;">
         <a-camera gps-camera rotation-reader></a-camera>
     </a-scene>
 
     <script>
         window.onload = async () => {
-            const infoBox = document.getElementById('ar-info');
-            try {
-                const res = await fetch('/api/get-traces');
-                const data = await res.json();
-                const scene = document.querySelector('a-scene');
-                
-                infoBox.innerText = `Nalezeno stop: ${data.length}`;
+            const res = await fetch('/api/get-traces');
+            const data = await res.json();
+            const scene = document.querySelector('a-scene');
 
-                data.forEach(stopa => {
-                    if (stopa.lat && stopa.lng) {
-                        // Hlavní kontejner stopy
-                        const container = document.createElement('a-entity');
-                        container.setAttribute('gps-entity-place', `latitude: ${stopa.lat}; longitude: ${stopa.lng};`);
-                        container.setAttribute('look-at', '[gps-camera]');
-
-                        // 1. OBRÁZEK (Fotka nebo Ikona)
-                        const img = document.createElement('a-image');
-                        const imgSource = stopa.image_url ? stopa.image_url : 'https://cdn-icons-png.flaticon.com/512/2618/2618254.png';
-                        img.setAttribute('src', imgSource);
-                        img.setAttribute('scale', '8 8 8');
-                        img.setAttribute('position', '0 3 0');
-                        container.appendChild(img);
-
-                        // 2. TEXTOVÝ POPISEK (Neonově zelený)
-                        const text = document.createElement('a-text');
-                        const cistyText = stopa.content.includes('] ') ? stopa.content.split('] ')[1] : stopa.content;
-                        text.setAttribute('value', cistyText);
-                        text.setAttribute('align', 'center');
-                        text.setAttribute('color', '#00e676');
-                        text.setAttribute('scale', '5 5 5');
-                        text.setAttribute('position', '0 -1 0');
-                        container.appendChild(text);
-
-                        // 3. VZDÁLENOST (Aktualizuje se podle GPS)
-                        const distText = document.createElement('a-text');
-                        distText.setAttribute('value', 'Vypocitavam...');
-                        distText.setAttribute('align', 'center');
-                        distText.setAttribute('color', '#ffd700'); // Zlatá pro vzdálenost
-                        distText.setAttribute('scale', '4 4 4');
-                        distText.setAttribute('position', '0 -3 0');
-                        
-                        // Funkce pro výpočet vzdálenosti v reálném čase
-                        container.addEventListener('gps-entity-place-update-positon', (event) => {
-                            distText.setAttribute('value', `${event.detail.distance.toFixed(1)} m`);
-                        });
-                        
-                        container.appendChild(distText);
-                        scene.appendChild(container);
-                    }
-                });
-            } catch (err) {
-                infoBox.innerText = "Chyba při načítání stop.";
-                console.error(err);
-            }
+            data.forEach(stopa => {
+                if (stopa.image_url) {
+                    const entity = document.createElement('a-image');
+                    entity.setAttribute('gps-entity-place', `latitude: ${stopa.lat}; longitude: ${stopa.lng};`);
+                    entity.setAttribute('src', stopa.image_url);
+                    entity.setAttribute('scale', '10 10 10');
+                    entity.setAttribute('look-at', '[gps-camera]');
+                    entity.setAttribute('position', '0 5 0'); // Zvedneme do vzduchu
+                    scene.appendChild(entity);
+                }
+            });
         };
     </script>
 </body>
