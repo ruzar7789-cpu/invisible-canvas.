@@ -21,31 +21,40 @@
 
         /* AR & MAPA */
         #app-interface { display: none; height: 100vh; width: 100vw; flex-direction: column; }
-        #ar-world { position: absolute; inset: 0; z-index: 5; pointer-events: none; perspective: 1000px; overflow: hidden; }
+        #ar-world { position: absolute; inset: 0; z-index: 5; pointer-events: none; perspective: 1200px; overflow: hidden; }
         #ar-video { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; display: none; z-index: 0; }
         #map-bg { position: absolute; inset: 0; z-index: 1; filter: contrast(1.1) brightness(0.4); transition: 0.4s; }
         
         /* ZAMĚŘOVAČ */
         #crosshair { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 2000; pointer-events: none; }
-        .ch-dot { width: 4px; height: 4px; background: white; border-radius: 50%; box-shadow: 0 0 15px var(--active-color); }
+        .ch-dot { width: 4px; height: 4px; background: white; border-radius: 50%; box-shadow: 0 0 15px var(--active-color); transition: 0.3s; }
 
-        /* AR KARTA (TRVALÁ I NÁHLED) */
+        /* AR KARTA */
         .ar-card {
             position: absolute; padding: 12px; border-radius: 15px; border: 2px solid var(--active-color);
             background: rgba(0,0,0,0.85); backdrop-filter: blur(10px); color: white; min-width: 160px;
-            transform-style: preserve-3d; transition: transform 0.1s linear; display: flex; flex-direction: column; align-items: center;
+            transform-style: preserve-3d; transition: transform 0.2s ease-out, opacity 0.3s; display: flex; flex-direction: column; align-items: center;
         }
-        .ar-ghost { opacity: 0.7; border-style: dashed; z-index: 2001; }
+        .ar-ghost { opacity: 0.7; border-style: dashed; z-index: 2001; pointer-events: none; }
         .ar-img-preview { width: 100%; height: 80px; object-fit: cover; border-radius: 8px; margin-bottom: 8px; display: none; }
 
-        /* UI */
+        /* UI PRVKY */
         .active-p { border-color: var(--p-color) !important; color: var(--p-color) !important; background: rgba(0,242,254,0.1); }
         .active-b { border-color: var(--b-color) !important; color: var(--b-color) !important; background: rgba(255,202,44,0.1); }
         .active-c { border-color: var(--c-color) !important; color: var(--c-color) !important; background: rgba(191,90,242,0.1); }
+        
         .wave-bar { width: 4px; height: 5px; background: var(--active-color); border-radius: 10px; transition: height 0.1s; }
         
-        #radar-panel { position: absolute; bottom: 0; left: 0; right: 0; background: rgba(0,0,0,0.95); z-index: 5000; transition: 0.5s; transform: translateY(calc(100% - 80px)); border-radius: 40px 40px 0 0; border-top: 1px solid rgba(255,255,255,0.1); }
+        #radar-panel { position: absolute; bottom: 0; left: 0; right: 0; background: rgba(0,0,0,0.95); z-index: 5000; transition: 0.5s cubic-bezier(0.4, 0, 0.2, 1); transform: translateY(calc(100% - 80px)); border-radius: 40px 40px 0 0; border-top: 1px solid rgba(255,255,255,0.1); }
         #radar-panel.open { transform: translateY(0); }
+
+        /* Animace pro potvrzení */
+        @keyframes pulse-confirm {
+            0% { transform: scale(1); box-shadow: 0 0 0 0px var(--active-color); }
+            50% { transform: scale(0.95); box-shadow: 0 0 20px 5px var(--active-color); }
+            100% { transform: scale(1); box-shadow: 0 0 0 0px var(--active-color); }
+        }
+        .pulse-active { animation: pulse-confirm 0.4s ease-out; }
     </style>
 </head>
 <body>
@@ -87,14 +96,14 @@
                 <div id="viz-container" class="flex justify-center items-end gap-1 h-6">
                     <div class="wave-bar"></div><div class="wave-bar"></div><div class="wave-bar"></div><div class="wave-bar"></div><div class="wave-bar"></div>
                 </div>
-                <button onclick="confirmTrace()" id="main-action-btn" class="w-full bg-cyan-400 text-black py-5 rounded-[30px] font-black text-[11px] uppercase tracking-[0.2em]">PŘIŠPENDLIT V PROSTORU</button>
+                <button onclick="confirmTrace()" id="main-action-btn" class="w-full bg-cyan-400 text-black py-5 rounded-[30px] font-black text-[11px] uppercase tracking-[0.2em] transition-all">PŘIŠPENDLIT V PROSTORU</button>
             </div>
         </aside>
 
         <main class="flex-1 relative bg-black">
             <video id="ar-video" autoplay playsinline muted></video>
             <div id="map-bg"></div>
-            <button onclick="toggleCam()" class="absolute top-6 right-6 z-[6000] w-12 h-12 rounded-xl bg-white text-black flex items-center justify-center shadow-2xl"><i class="fas fa-expand-alt"></i></button>
+            <button onclick="toggleCam()" class="absolute top-6 right-6 z-[6000] w-12 h-12 rounded-xl bg-white text-black flex items-center justify-center shadow-2xl transition-transform active:scale-90"><i class="fas fa-expand-alt"></i></button>
             
             <div id="radar-panel">
                 <div class="h-[80px] flex flex-col items-center justify-center cursor-pointer" onclick="document.getElementById('radar-panel').classList.toggle('open')">
@@ -107,7 +116,7 @@
     </div>
 
     <script>
-        // STARS
+        // STARS BACKGROUND
         const canvas = document.getElementById('stars-canvas');
         const ctx = canvas.getContext('2d');
         let stars = [];
@@ -122,7 +131,7 @@
         }
         window.onload = () => { initStars(); draw(); };
 
-        // CORE
+        // CORE LOGIC
         let map, audioCtx, isAudioActive=false, currentMode='personal', traces = [], currentImgData = null;
         const config = { 
             personal: { color: '#00f2fe', price: 29, activeClass: 'active-p' }, 
@@ -152,7 +161,8 @@
             currentMode = m;
             document.documentElement.style.setProperty('--active-color', config[m].color);
             document.querySelectorAll('aside button').forEach(b => b.className = b.className.replace(/active-[pbc]/, '').replace('text-white', 'text-white/20'));
-            document.getElementById(`btn-${m[0]}`).classList.add(config[m].activeClass);
+            const targetBtn = document.getElementById(`btn-${m[0]}`);
+            if(targetBtn) targetBtn.classList.add(config[m].activeClass);
             document.getElementById('main-action-btn').style.backgroundColor = config[m].color;
             updateGhost();
         }
@@ -189,6 +199,10 @@
         }
 
         function confirmTrace() {
+            const btn = document.getElementById('main-action-btn');
+            btn.classList.add('pulse-active');
+            setTimeout(() => btn.classList.remove('pulse-active'), 400);
+
             const center = map.getCenter();
             const d = { 
                 id: Date.now(), title: document.getElementById('t-title').value || 'ZÁZNAM', 
@@ -196,10 +210,17 @@
                 img: currentImgData, coords: [center.lat, center.lng], 
                 mode: currentMode, price: config[currentMode].price 
             };
+            
             traces.push(d);
             localStorage.setItem('md_traces', JSON.stringify(traces));
             addUI(d);
-            currentImgData = null; document.getElementById('t-title').value = ''; document.getElementById('t-desc').value = '';
+            
+            // Vyčištění a zavření panelu
+            currentImgData = null; 
+            document.getElementById('t-title').value = ''; 
+            document.getElementById('t-desc').value = '';
+            document.getElementById('radar-panel').classList.remove('open');
+            
             renderAR();
         }
 
@@ -207,7 +228,7 @@
             const color = config[d.mode].color;
             L.circleMarker(d.coords, { radius: 10, color: color, fillColor: color, fillOpacity: 0.8 }).addTo(map);
             const item = document.createElement('div');
-            item.className = 'p-4 bg-white/5 rounded-2xl border border-white/10 flex justify-between items-center';
+            item.className = 'p-4 bg-white/5 rounded-2xl border border-white/10 flex justify-between items-center transition-all hover:bg-white/10';
             item.innerHTML = `<div><div class="text-[11px] font-black text-white italic uppercase">${d.title}</div><div class="text-[8px] font-bold" style="color:${color}">${d.mode.toUpperCase()}</div></div><div class="text-[10px] opacity-40">${d.price} Kč</div>`;
             document.getElementById('radar-list').prepend(item);
             let total = traces.reduce((a, b) => a + b.price, 0);
@@ -217,25 +238,44 @@
         function renderAR() {
             const world = document.getElementById('ar-world');
             const ghost = document.querySelector('.ar-ghost');
-            // Vymažeme vše kromě "ducha"
+            // Vymažeme staré karty kromě náhledu (ghost)
             Array.from(world.children).forEach(child => { if(child !== ghost) child.remove(); });
 
             if (document.getElementById('ar-video').style.display !== 'block') return;
 
             const center = map.getCenter();
-            traces.forEach(t => {
+            
+            // Seřazení traces podle vzdálenosti (bližší nakonec = vyšší z-index)
+            const sortedTraces = [...traces].sort((a, b) => {
+                const distA = Math.hypot(a.coords[0]-center.lat, a.coords[1]-center.lng);
+                const distB = Math.hypot(b.coords[0]-center.lat, b.coords[1]-center.lng);
+                return distB - distA;
+            });
+
+            sortedTraces.forEach(t => {
                 const latDiff = t.coords[0] - center.lat;
                 const lngDiff = t.coords[1] - center.lng;
-                const x = 50 + (lngDiff * 60000); 
-                const y = 50 - (latDiff * 60000);
+                
+                // Koeficienty pro rozprostření v prostoru
+                const x = 50 + (lngDiff * 65000); 
+                const y = 50 - (latDiff * 65000);
                 const dist = Math.sqrt(latDiff*latDiff + lngDiff*lngDiff);
 
-                if (dist < 0.005) {
+                if (dist < 0.008) { // Dosah viditelnosti v AR
                     const card = document.createElement('div');
                     card.className = 'ar-card';
-                    card.style.left = `${x}%`; card.style.top = `${y}%`;
+                    
+                    const scale = 1 / (1 + dist * 1000);
+                    const blur = dist * 200; // Vzdálenější věci jsou rozmazané
+                    const opacity = Math.max(0, 1 - dist * 150);
+
+                    card.style.left = `${x}%`; 
+                    card.style.top = `${y}%`;
                     card.style.borderColor = config[t.mode].color;
-                    card.style.transform = `translate(-50%, -50%) scale(${1 / (1 + dist * 800)})`;
+                    card.style.opacity = opacity;
+                    card.style.filter = `blur(${blur}px)`;
+                    card.style.transform = `translate(-50%, -50%) scale(${scale}) translateZ(${scale * 100}px)`;
+                    
                     card.innerHTML = `
                         ${t.img ? `<img src="${t.img}" class="ar-img-preview" style="display:block">` : ''}
                         <div class="text-[10px] font-black italic uppercase" style="color:${config[t.mode].color}">${t.title}</div>
@@ -251,8 +291,12 @@
             if(v.style.display !== 'block') {
                 navigator.mediaDevices.getUserMedia({video:{facingMode:'environment'}}).then(s => {
                     v.srcObject = s; v.style.display = 'block'; m.style.opacity = '0.2'; renderAR();
-                });
-            } else { v.style.display = 'none'; m.style.opacity = '1'; renderAR(); }
+                }).catch(err => alert("Chyba kamery: " + err));
+            } else { 
+                v.style.display = 'none'; m.style.opacity = '1'; 
+                if(v.srcObject) v.srcObject.getTracks().forEach(track => track.stop());
+                renderAR(); 
+            }
         }
 
         async function toggleAudio() {
@@ -264,11 +308,25 @@
                     const src = audioCtx.createMediaStreamSource(s);
                     const ana = audioCtx.createAnalyser(); ana.fftSize=32; src.connect(ana);
                     const data = new Uint8Array(ana.frequencyBinCount);
-                    isAudioActive=true; document.getElementById('mic-btn').style.background="#ff3b30";
-                    function vis() { if(!isAudioActive) return; ana.getByteFrequencyData(data); bars.forEach((b,i)=>b.style.height=(data[i]/5)+'px'); requestAnimationFrame(vis); }
+                    isAudioActive=true; 
+                    document.getElementById('mic-btn').style.background="#ff3b30";
+                    
+                    function vis() { 
+                        if(!isAudioActive) return; 
+                        ana.getByteFrequencyData(data); 
+                        bars.forEach((b,i) => {
+                            const val = (data[i] / 255) * 30; // Lepší rozsah pro vizualizaci
+                            b.style.height = (5 + val) + 'px';
+                        }); 
+                        requestAnimationFrame(vis); 
+                    }
                     vis();
                 } catch(e) { alert("Povolte mikrofon."); }
-            } else { isAudioActive=false; document.getElementById('mic-btn').style.background="rgba(255,255,255,0.1)"; bars.forEach(b=>b.style.height='5px'); }
+            } else { 
+                isAudioActive=false; 
+                document.getElementById('mic-btn').style.background="rgba(255,255,255,0.1)"; 
+                bars.forEach(b => b.style.height='5px'); 
+            }
         }
     </script>
 </body>
