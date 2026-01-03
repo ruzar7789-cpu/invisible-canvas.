@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>TADY - AR Prostor</title>
+    <script src="https://aframe.io/releases/1.3.0/aframe.min.js"></script>
+    <script src="https://raw.githack.com/AR-js-org/AR.js/master/aframe/build/aframe-ar-nft.js"></script>
+    <style>
+        .back-btn { position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%); z-index: 10; background: #000; color: #00e676; border: 2px solid #00e676; padding: 15px 30px; border-radius: 50px; font-weight: bold; text-decoration: none; }
+    </style>
+</head>
+<body style="margin: 0; overflow: hidden;">
+    <a href="/" class="back-btn">ZPĚT NA MAPU</a>
+
+    <a-scene vr-mode-ui="enabled: false" embedded arjs="sourceType: webcam; debugUIEnabled: false;">
+        <a-camera gps-camera rotation-reader></a-camera>
+    </a-scene>
+
+    <script>
+        window.onload = async () => {
+            const res = await fetch('/api/get-traces');
+            const data = await res.json();
+            const scene = document.querySelector('a-scene');
+
+            data.forEach(stopa => {
+                // Pro každou stopu vytvoříme v AR "plachtu" s textem nebo fotkou
+                const entity = document.createElement('a-image');
+                entity.setAttribute('gps-entity-place', `latitude: ${stopa.lat}; longitude: ${stopa.lng};`);
+                
+                // Pokud má stopa fotku, zobrazíme ji, jinak dáme ikonu vzkazu
+                const src = stopa.image_url ? stopa.image_url : 'https://cdn-icons-png.flaticon.com/512/2618/2618254.png';
+                entity.setAttribute('src', src);
+                entity.setAttribute('scale', '5 5 5'); // Velikost v prostoru
+                entity.setAttribute('look-at', '[gps-camera]'); // Otočí se vždy k uživateli
+
+                scene.appendChild(entity);
+            });
+        };
+    </script>
+</body>
+</html>
