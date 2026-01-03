@@ -3,115 +3,121 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TADY - Všechno důležité je tady</title>
+    <title>TADY - Tvůj digitální svět</title>
     <style>
-        /* VIZUÁLNÍ IDENTITA TADY */
-        body { 
-            background: #000; 
-            color: #fff; 
-            font-family: 'Segoe UI', system-ui, sans-serif; 
-            margin: 0; 
-            display: flex; 
-            flex-direction: column; 
-            align-items: center; 
-            justify-content: center; 
-            height: 100vh;
+        :root { --neon: #00e676; --gold: #ffd700; --bg: #000; }
+        body { background: var(--bg); color: #fff; font-family: 'Segoe UI', sans-serif; margin: 0; overflow-x: hidden; }
+        
+        /* ÚVODNÍ STRÁNKA */
+        #landing-page {
+            height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center;
+            text-align: center; transition: 0.8s ease-in-out;
         }
-
-        .logo-tady { 
-            font-size: 4rem; 
-            font-weight: 900; 
-            font-style: italic; 
-            color: #fff; 
-            text-shadow: 0 0 15px rgba(0, 255, 255, 0.6); 
-            margin-bottom: 20px;
+        .logo-giant { font-size: 5rem; font-weight: 900; font-style: italic; text-shadow: 0 0 20px var(--neon); margin-bottom: 10px; }
+        .enter-btn { 
+            background: none; border: 2px solid var(--neon); color: var(--neon); padding: 15px 40px; 
+            font-size: 1.2rem; font-weight: bold; cursor: pointer; border-radius: 50px; transition: 0.3s;
         }
+        .enter-btn:hover { background: var(--neon); color: #000; box-shadow: 0 0 30px var(--neon); }
 
-        .slogan { color: #888; font-size: 0.9rem; letter-spacing: 2px; margin-bottom: 40px; text-transform: uppercase; }
+        /* HLAVNÍ ROZHRANÍ (skryté na začátku) */
+        #main-app { display: none; padding: 20px; flex-direction: column; align-items: center; min-height: 100vh; }
+        
+        /* PŘEPÍNAČ SEKCÍ */
+        .tabs { display: flex; gap: 10px; margin-bottom: 20px; flex-wrap: wrap; justify-content: center; }
+        .tab-btn { background: #111; border: 1px solid #333; color: #888; padding: 10px 20px; border-radius: 10px; cursor: pointer; }
+        .tab-btn.active { border-color: var(--neon); color: var(--neon); background: rgba(0,230,118,0.1); }
+        .tab-btn.gold { border-color: var(--gold); color: var(--gold); }
 
-        /* AR INPUT INTERFACE */
-        .ar-card {
-            background: rgba(20, 20, 20, 0.9);
-            border: 1px solid #333;
-            padding: 25px;
-            border-radius: 25px;
-            width: 85%;
-            max-width: 400px;
-            text-align: center;
+        .form-container { 
+            background: #111; padding: 25px; border-radius: 25px; width: 100%; max-width: 400px; 
+            border: 1px solid #222; box-shadow: 0 10px 40px rgba(0,0,0,0.5);
         }
-
-        textarea {
-            width: 100%;
-            background: #000;
-            border: 1px solid #00e676;
-            color: #fff;
-            padding: 15px;
-            border-radius: 15px;
-            margin-bottom: 20px;
-            box-sizing: border-box;
-            font-size: 1rem;
+        textarea, input[type="file"] { 
+            width: 100%; background: #050505; border: 1px solid #333; color: #fff; 
+            padding: 15px; border-radius: 12px; margin-bottom: 15px; box-sizing: border-box;
         }
-
-        /* IDENTIFY M.D. SCANNER */
-        .scan-btn {
-            background: none;
-            border: 2px solid #00e676;
-            width: 100px;
-            height: 100px;
-            border-radius: 50%;
-            cursor: pointer;
-            position: relative;
-            margin: auto;
-            display: flex;
-            align-items: center;
-            justify-content: center;
+        
+        .id-scanner {
+            width: 80px; height: 80px; border: 2px solid var(--neon); border-radius: 50%;
+            margin: 20px auto; display: flex; align-items: center; justify-content: center; cursor: pointer;
         }
-
-        .fingerprint { width: 50px; filter: invert(1) brightness(2); opacity: 0.7; }
-
-        .identity-label { font-size: 0.7rem; color: #444; margin-top: 15px; letter-spacing: 3px; }
-
-        #status { margin-top: 20px; font-size: 0.8rem; color: #00e676; }
+        .id-scanner img { width: 40px; filter: invert(1); }
+        
+        #status { font-size: 0.8rem; color: var(--neon); text-align: center; }
     </style>
 </head>
 <body>
 
-    <div class="logo-tady">TADY</div>
-    <div class="slogan">tady se děje všechno</div>
+    <div id="landing-page">
+        <div class="logo-giant">TADY</div>
+        <p style="color: #666; letter-spacing: 5px; margin-bottom: 40px;">VŠECHNO DŮLEŽITÉ JE TADY</p>
+        <button class="enter-btn" onclick="vstoupit()">VSTOUPIT DO PROSTORU</button>
+    </div>
 
-    <div class="ar-card">
-        <textarea id="message" placeholder="Zanech svou stopu v prostoru (vzkaz nebo reklamu)..."></textarea>
+    <div id="main-app">
+        <div class="logo-giant" style="font-size: 2rem;">TADY</div>
         
-        <button class="scan-btn" onclick="saveToSpace()">
-            <img src="https://cdn-icons-png.flaticon.com/512/2618/2618254.png" class="fingerprint">
-        </button>
-        
-        <div class="identity-label">IDENTIFY M.D.</div>
-        <div id="status">PŘIPRAVEN K TVORBĚ REALITY</div>
+        <div class="tabs">
+            <button class="tab-btn active" onclick="setMode('Vzkaz', this)">VZKAZ</button>
+            <button class="tab-btn gold" onclick="setMode('Reklama', this)">REKLAMA</button>
+            <button class="tab-btn" onclick="setMode('Vzpomínka', this)">VZPOMÍNKA / FOTO</button>
+        </div>
+
+        <div class="form-container">
+            <div id="mode-title" style="margin-bottom: 15px; font-weight: bold; color: var(--neon);">REŽIM: VZKAZ</div>
+            
+            <textarea id="content" placeholder="Napiš vzkaz, menu restaurace nebo vzpomínku..."></textarea>
+            
+            <div id="photo-section" style="display: none;">
+                <p style="font-size: 0.8rem; color: #888;">Nahrát fotografii místa:</p>
+                <input type="file" id="photo-input" accept="image/*">
+            </div>
+
+            <div class="id-scanner" onclick="ulozitStopu()">
+                <img src="https://cdn-icons-png.flaticon.com/512/2618/2618254.png" alt="ID">
+            </div>
+            <p style="text-align: center; font-size: 0.7rem; color: #444; letter-spacing: 2px;">IDENTIFY M.D.</p>
+            
+            <div id="status">SYSTÉM PŘIPRAVEN</div>
+        </div>
     </div>
 
     <script>
-        async function saveToSpace() {
+        let currentMode = "Vzkaz";
+
+        function vstoupit() {
+            document.getElementById('landing-page').style.opacity = '0';
+            setTimeout(() => {
+                document.getElementById('landing-page').style.display = 'none';
+                document.getElementById('main-app').style.display = 'flex';
+            }, 800);
+        }
+
+        function setMode(mode, btn) {
+            currentMode = mode;
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            document.getElementById('mode-title').innerText = "REŽIM: " + mode.toUpperCase();
+            
+            // Zobrazit nahrávání fotky jen pro Vzpomínku nebo Reklamu
+            document.getElementById('photo-section').style.display = (mode === 'Vzkaz') ? 'none' : 'block';
+        }
+
+        async function ulozitStopu() {
             const status = document.getElementById('status');
-            const msg = document.getElementById('message').value;
-
-            if (!msg) {
-                status.innerText = "❌ NAPIŠ VZKAZ PŘED ULOŽENÍM";
-                return;
-            }
-
-            status.innerText = "🛰️ UKOTVUJI VZKAZ V PROSTORU...";
+            const content = document.getElementById('content').value;
+            status.innerText = "🛰️ UKOTVUJI " + currentMode.toUpperCase() + "...";
 
             navigator.geolocation.getCurrentPosition(async (pos) => {
                 const payload = {
                     lat: pos.coords.latitude,
                     lng: pos.coords.longitude,
-                    content: msg,
-                    media: "GLOBAL_AR_v1"
+                    content: `[${currentMode}] ${content}`,
+                    media: currentMode === 'Vzpomínka' ? 'IMAGE_ATTACHED' : 'TEXT_ONLY'
                 };
 
                 try {
-                    // Volání tvého backendu na Vercelu
                     const response = await fetch('/api/save-trace', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
@@ -119,18 +125,17 @@
                     });
 
                     if (response.ok) {
-                        status.innerHTML = "✅ STOPA ÚSPĚŠNĚ ULOŽENA GLOBÁLNĚ";
-                        document.getElementById('message').value = "";
+                        status.innerHTML = "✅ STOPA BYLA ZANECHÁNA V PROSTORU";
+                        document.getElementById('content').value = "";
                     } else {
-                        status.innerText = "❌ CHYBA SERVERU";
+                        status.innerText = "❌ CHYBA UKOTVENÍ";
                     }
                 } catch (err) {
-                    status.innerText = "❌ SELHALO PŘIPOJENÍ";
+                    status.innerText = "❌ CHYBA PŘIPOJENÍ";
                 }
-            }, (error) => {
-                status.innerText = "❌ GPS CHYBA: " + error.message;
             });
         }
     </script>
 </body>
-</html>
+    </html>
+    
