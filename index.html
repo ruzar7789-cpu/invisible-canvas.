@@ -3,271 +3,155 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>TADY // UNIVERSE</title>
+    <title>TADY // NEON CONNECTED</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@200;400;600;800&display=swap');
-        :root { --p: #00f2fe; --b: #ffca2c; --c: #bf5af2; }
+        :root { --p: #00f2fe; --neon: #00ffa3; }
+        body, html { font-family: 'Plus Jakarta Sans', sans-serif; background: #000; color: white; margin: 0; padding: 0; overflow: hidden; height: 100vh; }
+
+        /* INTRO */
+        #intro { position: fixed; inset: 0; z-index: 10000; background: #000; display: flex; flex-direction: column; align-items: center; justify-content: center; transition: 1s; }
+        .logo { font-size: 5rem; font-weight: 800; font-style: italic; letter-spacing: -5px; animation: glow 2s infinite; }
+        @keyframes glow { 0%, 100% { text-shadow: 0 0 20px var(--p); } 50% { text-shadow: 0 0 40px var(--neon); } }
+
+        #map { position: fixed; inset: 0; z-index: 10; }
+        .glass { background: rgba(0,0,0,0.8); backdrop-filter: blur(20px); border: 1px solid rgba(255,255,255,0.1); border-radius: 30px; }
         
-        body, html { 
-            font-family: 'Plus Jakarta Sans', sans-serif; 
-            background: #000; color: white; margin: 0; padding: 0; 
-            overflow: hidden; height: 100vh; width: 100vw;
-        }
-
-        /* FILMOVÝ ÚVOD */
-        #intro-layer {
-            position: fixed; inset: 0; z-index: 10000; background: #000;
-            display: flex; flex-direction: column; align-items: center; justify-content: center;
-            transition: 1.5s cubic-bezier(0.9, 0, 0.1, 1);
-        }
-        .logo-main {
-            font-size: 6rem; font-weight: 800; font-style: italic; letter-spacing: -7px;
-            background: linear-gradient(to bottom, #fff 30%, var(--p));
-            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-            filter: drop-shadow(0 0 40px rgba(0,242,254,0.4));
-            animation: emerge 2.5s ease-out;
-        }
-        @keyframes emerge {
-            from { opacity: 0; transform: scale(0.8); filter: blur(20px); }
-            to { opacity: 1; transform: scale(1); filter: blur(0); }
-        }
-        .scanner-line {
-            width: 200px; height: 1px; background: linear-gradient(90deg, transparent, var(--p), transparent);
-            position: absolute; animation: scan 3s infinite;
-        }
-        @keyframes scan { 0% { top: 40%; } 100% { top: 60%; } }
-
-        /* ENGINE */
-        #map { position: fixed; inset: 0; z-index: 10; filter: contrast(1.1); }
-        #camera { position: fixed; inset: 0; width: 100%; height: 100%; object-fit: cover; z-index: 5; opacity: 0; transition: 0.7s; }
-
-        /* UI */
-        .glass-panel { background: rgba(0,0,0,0.75); backdrop-filter: blur(25px); border: 1px solid rgba(255,255,255,0.1); border-radius: 35px; }
-        .btn-circle { width: 70px; height: 70px; border-radius: 50%; display: flex; items-center justify-center; transition: 0.3s; pointer-events: auto; }
-        
-        /* MARKER CLOUD */
-        .m-cloud { width: 32px; height: 32px; border-radius: 50% 50% 50% 0; transform: rotate(-45deg); border: 3px solid #fff; box-shadow: 0 10px 20px rgba(0,0,0,0.4); }
+        /* STATUS INDICATOR */
+        #db-status { position: fixed; top: 20px; left: 50%; transform: translateX(-50%); z-index: 1000; font-size: 8px; font-weight: 800; text-transform: uppercase; letter-spacing: 2px; }
     </style>
 </head>
 <body onclick="initAudio()">
 
-    <div id="intro-layer">
-        <div class="scanner-line"></div>
-        <div class="logo-main">TADY</div>
-        <p class="text-[10px] tracking-[1em] uppercase opacity-40 mt-6 font-bold">World Mesh 2026</p>
-        <div id="load-box" class="mt-16 w-48 h-1 bg-white/5 rounded-full overflow-hidden">
-            <div id="load-progress" class="h-full bg-cyan-400 w-0 transition-all"></div>
-        </div>
-        <button id="entry-btn" onclick="enterUniverse()" class="hidden mt-12 px-14 py-4 border border-cyan-400/30 rounded-full font-black text-[10px] tracking-[0.5em] uppercase hover:bg-cyan-400 hover:text-black transition-all">Connect to Network</button>
+    <div id="intro">
+        <div class="logo">TADY</div>
+        <div class="text-[8px] tracking-[1em] opacity-30 uppercase mt-4">Database: NEON.TECH</div>
+        <button onclick="launch()" class="mt-12 px-10 py-3 border border-white/20 rounded-full text-[10px] font-bold tracking-[0.3em] uppercase">Initialize Link</button>
     </div>
 
-    <video id="camera" autoplay playsinline muted></video>
+    <div id="db-status" class="glass px-4 py-2 flex items-center gap-2">
+        <div id="status-dot" class="w-2 h-2 rounded-full bg-yellow-500 animate-pulse"></div>
+        <span id="status-text">Neon Sync: Standby</span>
+    </div>
+
     <div id="map"></div>
 
-    <div class="fixed inset-0 z-[100] pointer-events-none p-6 flex flex-col justify-between">
-        
-        <div class="flex justify-between items-start">
-            <div class="glass-panel p-6 pointer-events-auto border-t-2 border-cyan-400">
-                <h1 class="text-3xl font-black italic tracking-tighter leading-none">TADY</h1>
-                <p class="text-[7px] tracking-[0.4em] opacity-40 uppercase mt-1" id="node-status">Scanning Location...</p>
-            </div>
-            <button onclick="toggleAR()" class="w-14 h-14 glass-panel pointer-events-auto flex items-center justify-center">
-                <i id="ar-icon" class="fas fa-expand text-cyan-400"></i>
-            </button>
-        </div>
-
-        <div id="editor" class="hidden pointer-events-auto w-full max-w-md mx-auto glass-panel p-8 shadow-2xl">
-            <div class="w-full h-44 bg-white/5 rounded-3xl mb-6 overflow-hidden relative border border-white/10">
-                <img id="preview-img" class="w-full h-full object-cover hidden">
-                <div id="p-hint" class="absolute inset-0 flex flex-col items-center justify-center opacity-20">
-                    <i class="fas fa-images text-4xl mb-2"></i>
-                    <span class="text-[10px] font-black uppercase tracking-widest">Vizualizace stopy</span>
-                </div>
-            </div>
-
-            <div class="flex justify-center gap-6 mb-8">
-                <label class="w-14 h-14 rounded-2xl bg-white/5 flex items-center justify-center cursor-pointer hover:bg-white/10">
-                    <i class="fas fa-camera text-xl"></i>
-                    <input type="file" accept="image/*" capture="environment" class="hidden" onchange="loadMedia(this)">
-                </label>
-                <label class="w-14 h-14 rounded-2xl bg-white/5 flex items-center justify-center cursor-pointer hover:bg-white/10">
-                    <i class="fas fa-folder-plus text-xl"></i>
-                    <input type="file" accept="image/*" class="hidden" onchange="loadMedia(this)">
-                </label>
-                <button onclick="toggleMic()" id="mic-btn" class="w-14 h-14 rounded-2xl bg-white/5 flex items-center justify-center hover:bg-white/10">
-                    <i class="fas fa-microphone text-xl"></i>
-                </button>
-            </div>
-
-            <input type="text" id="trace-msg" placeholder="Co chceš světu zanechat?" class="w-full bg-white/5 p-5 rounded-2xl mb-8 outline-none border border-white/5 focus:border-cyan-400 font-bold transition-all">
-            
-            <div class="flex gap-4">
-                <button onclick="closeEditor()" class="flex-1 py-5 text-[9px] font-black uppercase opacity-30">Zpět</button>
-                <button onclick="sendToMesh()" class="flex-[2] bg-white text-black py-5 rounded-2xl font-black text-[9px] uppercase tracking-[0.2em]">Vyslat do sítě</button>
-            </div>
-        </div>
-
-        <div id="nav" class="w-full max-w-sm mx-auto pointer-events-auto flex flex-col items-center">
-            <button onclick="openEditor()" class="w-24 h-24 bg-white text-black rounded-full shadow-[0_0_60px_rgba(255,255,255,0.2)] flex items-center justify-center text-3xl mb-8 active:scale-90 transition-all">
-                <i class="fas fa-plus"></i>
-            </button>
-            <div class="glass-panel p-5 flex gap-12 px-14">
-                <button onclick="setMode('p')" id="m-p" class="text-cyan-400 scale-125 transition-all"><i class="fas fa-user-circle"></i></button>
-                <button onclick="setMode('b')" id="m-b" class="opacity-30 transition-all"><i class="fas fa-briefcase"></i></button>
-                <button onclick="setMode('c')" id="m-c" class="opacity-30 transition-all"><i class="fas fa-globe-americas"></i></button>
+    <div class="fixed inset-0 z-[100] pointer-events-none p-6 flex flex-col justify-end">
+        <div class="w-full max-w-md mx-auto pointer-events-auto">
+            <div class="glass p-6 mb-4">
+                <input type="text" id="trace-input" placeholder="Zanech stopu v databázi..." class="w-full bg-white/5 p-4 rounded-xl mb-4 outline-none border border-white/10 focus:border-cyan-400 font-bold">
+                <button onclick="saveToNeon()" class="w-full bg-white text-black py-5 rounded-2xl font-black text-[10px] tracking-[0.4em] uppercase">Odeslat do světa</button>
             </div>
         </div>
     </div>
 
     <script>
-        let map, traces = [], mode = 'p', isAR = false, audioCtx;
-        let activeMedia = null, micOn = false;
+        let map, traces = [], audioCtx;
 
-        // BOOT SEQUENCE
-        let p = 0;
-        const loader = setInterval(() => {
-            p += 2;
-            document.getElementById('load-progress').style.width = p + '%';
-            if(p >= 100) {
-                clearInterval(loader);
-                document.getElementById('entry-btn').classList.remove('hidden');
-            }
-        }, 30);
-
-        function enterUniverse() {
-            beep(523, 0.1);
-            const intro = document.getElementById('intro-layer');
-            intro.style.opacity = '0';
-            intro.style.transform = 'translateY(-100%)';
+        function launch() {
+            document.getElementById('intro').style.opacity = '0';
             setTimeout(() => {
-                intro.style.display = 'none';
-                initMap();
+                document.getElementById('intro').style.display = 'none';
+                initApp();
             }, 1000);
         }
 
-        function initMap() {
+        function initApp() {
             map = L.map('map', { zoomControl: false, attributionControl: false }).setView([50.912, 14.619], 16);
             L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
-            map.locate({setView: true, maxZoom: 17});
-            map.on('locationfound', () => document.getElementById('node-status').innerText = 'Live: Varnsdorf Node');
-            loadMesh();
+            
+            // NAČTENÍ DAT
+            fetchTraces();
         }
 
-        async function toggleAR() {
-            isAR = !isAR;
-            const cam = document.getElementById('camera');
-            const mapEl = document.getElementById('map');
-            if(isAR) {
-                const s = await navigator.mediaDevices.getUserMedia({video:{facingMode:'environment'}});
-                cam.srcObject = s; cam.style.opacity = '1'; mapEl.style.opacity = '0.3';
-            } else {
-                cam.style.opacity = '0'; mapEl.style.opacity = '1';
-                if(cam.srcObject) cam.srcObject.getTracks().forEach(t => t.stop());
+        // TATO FUNKCE BUDE VOLAT TVŮJ VERCEL BACKEND
+        async function fetchTraces() {
+            setStatus('Synchronizing...', 'yellow');
+            try {
+                // Tady bude URL tvé Vercel funkce, např: /api/get-traces
+                const response = await fetch('/api/traces'); 
+                if(response.ok) {
+                    const data = await response.json();
+                    data.forEach(renderMarker);
+                    setStatus('Neon Online', '#00ffa3');
+                } else {
+                    // Pokud ještě nemáš API, načteme aspoň lokální pro test
+                    loadLocal();
+                    setStatus('Neon Offline (Local Mode)', 'orange');
+                }
+            } catch(e) {
+                loadLocal();
+                setStatus('Neon Offline (Local Mode)', 'orange');
             }
-            beep(880, 0.1);
         }
 
-        function loadMedia(input) {
-            const f = input.files[0];
-            const r = new FileReader();
-            r.onload = (e) => {
-                activeMedia = e.target.result;
-                document.getElementById('preview-img').src = activeMedia;
-                document.getElementById('preview-img').style.display = 'block';
-                document.getElementById('p-hint').style.display = 'none';
-            };
-            r.readAsDataURL(f);
-            beep(1000, 0.05);
-        }
-
-        function toggleMic() {
-            micOn = !micOn;
-            document.getElementById('mic-btn').style.color = micOn ? '#ff3b30' : 'white';
-            beep(micOn ? 600 : 300, 0.1);
-        }
-
-        function openEditor() { 
-            document.getElementById('editor').classList.remove('hidden'); 
-            document.getElementById('nav').classList.add('hidden');
-        }
-
-        function closeEditor() { 
-            document.getElementById('editor').classList.add('hidden'); 
-            document.getElementById('nav').classList.remove('hidden');
-            activeMedia = null;
-            document.getElementById('preview-img').style.display = 'none';
-            document.getElementById('p-hint').style.display = 'flex';
-        }
-
-        function sendToMesh() {
-            const txt = document.getElementById('trace-msg').value || "Byl jsem TADY";
+        async function saveToNeon() {
+            const text = document.getElementById('trace-input').value;
             const pos = map.getCenter();
-            const colors = { p: '#00f2fe', b: '#ffca2c', c: '#bf5af2' };
-
-            const trace = {
-                id: Date.now(), lat: pos.lat, lng: pos.lng,
-                text: txt, media: activeMedia, audio: micOn,
-                mode: mode, color: colors[mode], user: "M.D."
+            
+            const newTrace = {
+                lat: pos.lat,
+                lng: pos.lng,
+                content: text,
+                timestamp: new Date().toISOString()
             };
 
-            traces.push(trace);
-            localStorage.setItem('tady_final_mesh', JSON.stringify(traces));
-            renderTrace(trace);
-            closeEditor();
-            document.getElementById('trace-msg').value = '';
-            beep(1200, 0.2);
+            setStatus('Uploading...', 'blue');
+
+            try {
+                // Tady bude volání tvého API pro zápis do Neonu
+                const response = await fetch('/api/save-trace', {
+                    method: 'POST',
+                    body: JSON.stringify(newTrace)
+                });
+
+                if(response.ok) {
+                    renderMarker(newTrace);
+                    setStatus('Neon Updated', '#00ffa3');
+                } else {
+                    throw new Error();
+                }
+            } catch(e) {
+                // Nouzové uložení lokálně, když nejede API
+                saveLocal(newTrace);
+                renderMarker(newTrace);
+                setStatus('Saved Locally', 'orange');
+            }
+            
+            document.getElementById('trace-input').value = '';
         }
 
-        function renderTrace(t) {
+        function renderMarker(t) {
             const icon = L.divIcon({
                 className: '',
-                html: `<div class="m-cloud" style="background:${t.color}"></div>`,
-                iconSize: [32, 32], iconAnchor: [16, 32]
+                html: `<div style="width:20px; height:20px; background:#00ffa3; border-radius:50%; border:3px solid white; box-shadow:0 0 15px rgba(0,255,163,0.5)"></div>`,
+                iconSize: [20, 20]
             });
-
-            const content = `<div class="p-3 text-black font-bold" style="min-width:180px">
-                <div class="text-[8px] uppercase opacity-40 mb-2">Author: ${t.user}</div>
-                ${t.media ? `<img src="${t.media}" class="w-full rounded-2xl mb-3 shadow-md">` : ''}
-                <div class="text-sm italic">"${t.text}"</div>
-                ${t.audio ? `<div class="mt-3 text-red-500 text-[10px] font-black uppercase flex items-center"><i class="fas fa-play mr-2 text-lg"></i> Voice Trace</div>` : ''}
-            </div>`;
-
-            L.marker([t.lat, t.lng], {icon}).addTo(map).bindPopup(content);
+            L.marker([t.lat, t.lng], {icon}).addTo(map).bindPopup(`<b style="color:black">${t.content}</b>`);
         }
 
-        function setMode(m) {
-            mode = m;
-            const colors = {p: '#00f2fe', b: '#ffca2c', c: '#bf5af2'};
-            ['p','b','c'].forEach(id => {
-                const b = document.getElementById('m-'+id);
-                b.className = (id === m) ? 'text-cyan-400 scale-125 transition-all' : 'opacity-30 transition-all';
-                if(id === m) b.style.color = colors[id];
-            });
-            beep(400, 0.05);
+        function setStatus(txt, color) {
+            document.getElementById('status-text').innerText = 'Neon: ' + txt;
+            document.getElementById('status-dot').style.backgroundColor = color;
         }
 
-        function loadMesh() {
-            const data = localStorage.getItem('tady_final_mesh');
-            if(data) { traces = JSON.parse(data); traces.forEach(renderTrace); }
-            // Demo data
-            renderTrace({ id: 0, lat: 50.913, lng: 14.620, text: "Vítejte v globální síti TADY", mode: 'b', color: '#ffca2c', user: "System" });
+        function saveLocal(t) {
+            traces.push(t);
+            localStorage.setItem('tady_neon_fallback', JSON.stringify(traces));
+        }
+
+        function loadLocal() {
+            const data = localStorage.getItem('tady_neon_fallback');
+            if(data) {
+                JSON.parse(data).forEach(renderMarker);
+            }
         }
 
         function initAudio() { if(!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)(); }
-        function beep(f, d) {
-            if(!audioCtx) return;
-            const o = audioCtx.createOscillator();
-            const g = audioCtx.createGain();
-            o.connect(g); g.connect(audioCtx.destination);
-            o.frequency.value = f;
-            g.gain.setValueAtTime(0.05, audioCtx.currentTime);
-            g.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + d);
-            o.start(); o.stop(audioCtx.currentTime + d);
-        }
     </script>
 </body>
 </html>
