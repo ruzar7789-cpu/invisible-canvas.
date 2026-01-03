@@ -1,5 +1,8 @@
 {
+  "name": "invisible-canvas",
+  "version": "1.0.0",
   "dependencies": {
-    "@neondatabase/serverless": "^0.6.0"
+    "@neondatabase/serverless": "^0.9.0",
+    "dotenv": "^16.0.0"
   }
 }
