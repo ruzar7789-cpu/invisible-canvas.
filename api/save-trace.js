@@ -1,0 +1,21 @@
+import { neon } from '@neondatabase/serverless';
+
+export default async function handler(req, res) {
+    const sql = neon(process.env.DATABASE_URL);
+    if (req.method === 'POST') {
+        try {
+            const { lat, lng, content, media } = JSON.parse(req.body);
+            await sql('INSERT INTO traces (lat, lng, content, media) VALUES ($1, $2, $3, $4)', [lat, lng, content, media]);
+            return res.status(200).json({ success: true });
+        } catch (error) {
+            return res.status(500).json({ error: error.message });
+        }
+    } else {
+        try {
+            const data = await sql('SELECT * FROM traces ORDER BY id DESC LIMIT 100');
+            return res.status(200).json(data);
+        } catch (error) {
+            return res.status(500).json({ error: error.message });
+        }
+    }
+}
