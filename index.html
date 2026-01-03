@@ -3,198 +3,191 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>INVISIBLE-CANES // 2026</title>
-    
+    <title>INVISIBLE-CANES // 2026 // M.D.</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@200;800&display=swap');
         :root { --accent: #00f2fe; --p: #00f2fe; --b: #ffca2c; --c: #bf5af2; }
         body, html { font-family: 'Plus Jakarta Sans', sans-serif; background: #000; color: white; margin: 0; padding: 0; overflow: hidden; height: 100vh; }
 
-        /* INTRO LAYER */
-        #intro {
+        /* INTRO (WOW EFFECT) */
+        #intro-layer {
             position: fixed; inset: 0; z-index: 9999; background: #000;
             display: flex; flex-direction: column; justify-content: center; align-items: center;
-            transition: 1.2s cubic-bezier(0.8, 0, 0.2, 1);
+            transition: 1.5s cubic-bezier(0.8, 0, 0.2, 1);
         }
-        .scan-bar { width: 100%; height: 2px; background: var(--accent); position: absolute; top: 0; animation: scan 2.5s infinite; }
-        @keyframes scan { 0% { top: 0; opacity: 0; } 50% { opacity: 1; } 100% { top: 100%; opacity: 0; } }
+        .scan-line { width: 100%; height: 3px; background: var(--accent); position: absolute; top: -10px; animation: scan 3s infinite; box-shadow: 0 0 20px var(--accent); }
+        @keyframes scan { 0% { top: 0; } 100% { top: 100%; } }
 
-        /* CORE LAYERS */
-        #map { position: fixed; inset: 0; z-index: 10; filter: invert(100%) hue-rotate(180deg) brightness(0.3) contrast(1.4); }
-        #camera { position: fixed; inset: 0; z-index: 5; opacity: 0; transition: 0.8s; }
-        #camera video { width: 100%; height: 100%; object-fit: cover; }
-        #ar-world { position: fixed; inset: 0; z-index: 30; pointer-events: none; }
+        /* MAPA & KAMERA */
+        #map-underlay { position: fixed; inset: 0; z-index: 10; filter: invert(100%) hue-rotate(180deg) brightness(0.3) contrast(1.5); transition: 0.5s; }
+        #camera-stream { position: fixed; inset: 0; width: 100%; height: 100%; object-fit: cover; z-index: 5; opacity: 0; transition: 1s; }
+        #ar-canvas { position: fixed; inset: 0; z-index: 30; pointer-events: none; }
 
-        /* CANE DESIGN */
-        .cane-node { 
-            width: 16px; height: 16px; border-radius: 50%; border: 2px solid white;
-            background: var(--accent); box-shadow: 0 0 20px var(--accent); animation: pulse 2s infinite;
+        /* MARKERY NA MAPĚ */
+        .cane-marker { 
+            width: 20px; height: 20px; background: var(--accent); border: 3px solid white; 
+            border-radius: 50%; box-shadow: 0 0 15px var(--accent); animation: pulse-node 2s infinite;
         }
-        @keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.3); box-shadow: 0 0 30px var(--accent); } 100% { transform: scale(1); } }
+        @keyframes pulse-node { 0% { transform: scale(1); } 50% { transform: scale(1.3); } 100% { transform: scale(1); } }
 
         /* UI HUD */
         .hud { position: fixed; z-index: 100; pointer-events: none; }
-        .hud-btn { pointer-events: all; background: rgba(10,10,10,0.8); backdrop-filter: blur(20px); border: 1px solid rgba(255,255,255,0.1); }
-        
-        /* OVERLAYS */
-        #creator { position: fixed; inset: 0; z-index: 1000; background: rgba(0,0,0,0.98); display: none; flex-direction: column; align-items: center; justify-content: center; }
-        .input-box { background: transparent; border-bottom: 2px solid var(--accent); font-size: 2.5rem; font-weight: 800; text-align: center; color: white; outline: none; text-transform: uppercase; }
+        .pointer-all { pointer-events: auto; }
+        .glass-ui { background: rgba(10,10,10,0.85); backdrop-filter: blur(20px); border: 1px solid rgba(255,255,255,0.1); }
+
+        /* CREATOR */
+        #imprint-overlay { position: fixed; inset: 0; z-index: 500; background: rgba(0,0,0,0.96); display: none; flex-direction: column; justify-content: center; align-items: center; }
+        .sys-input { background: transparent; border-bottom: 2px solid var(--accent); width: 80%; text-align: center; font-size: 2.5rem; font-weight: 800; color: white; outline: none; margin-bottom: 4rem; text-transform: uppercase; }
     </style>
 </head>
 <body onclick="unlockAudio()">
 
-    <div id="intro">
-        <div class="scan-bar"></div>
-        <h1 class="text-5xl font-black italic tracking-tighter mb-4 text-cyan-400">INVISIBLE-CANES</h1>
-        <p class="text-[9px] tracking-[0.8em] opacity-40 uppercase">Varnsdorf Terminal // Vision 2026</p>
-        <button onclick="startApp()" class="mt-24 px-12 py-4 border border-cyan-400 rounded-full text-[10px] font-black tracking-widest uppercase hover:bg-cyan-400 hover:text-black transition duration-500">
-            Initialize Core
+    <div id="intro-layer">
+        <div class="scan-line"></div>
+        <h1 class="text-5xl font-black italic tracking-tighter mb-2 text-cyan-400">INVISIBLE-CANES</h1>
+        <p class="text-[10px] tracking-[0.6em] opacity-40 uppercase">Visionary System // M.D.</p>
+        <button onclick="bootApp()" class="mt-20 px-12 py-4 border border-cyan-400 rounded-full text-[10px] font-black tracking-widest uppercase hover:bg-cyan-400 hover:text-black transition duration-700">
+            Initialize Vision
         </button>
     </div>
 
-    <div id="camera"><video id="v-stream" autoplay playsinline muted></video></div>
-    <div id="map"></div>
-    <div id="ar-world"></div>
+    <video id="camera-stream" autoplay playsinline muted></video>
+    <div id="map-underlay"></div>
+    <div id="ar-canvas"></div>
 
     <div class="hud top-10 left-10">
-        <h2 id="logo" class="text-3xl font-black italic tracking-tighter text-cyan-400">IC.26</h2>
-        <div class="flex items-center gap-2 opacity-50"><div class="w-1 h-1 bg-green-500 rounded-full animate-pulse"></div><span class="text-[7px] tracking-widest uppercase font-bold">Live Link</span></div>
+        <div class="text-4xl font-black italic tracking-tighter" id="main-logo">IC-2026</div>
+        <div class="text-[8px] tracking-[0.5em] opacity-30 mt-1 uppercase">Varnsdorf Terminal</div>
     </div>
 
-    <div class="hud bottom-12 w-full flex flex-col items-center gap-8">
-        <div class="flex gap-8 pointer-events-auto">
-            <div onclick="setMode('personal','#00f2fe')" id="dot-p" class="w-2.5 h-2.5 rounded-full bg-cyan-400 shadow-[0_0_10px_#00f2fe] transition-all"></div>
-            <div onclick="setMode('business','#ffca2c')" id="dot-b" class="w-2.5 h-2.5 rounded-full bg-white/20 transition-all"></div>
-            <div onclick="setMode('capsule','#bf5af2')" id="dot-c" class="w-2.5 h-2.5 rounded-full bg-white/20 transition-all"></div>
+    <div class="hud bottom-12 w-full flex flex-col items-center">
+        <div class="flex gap-8 mb-10 pointer-all">
+            <div onclick="setMode('personal','#00f2fe')" id="m-p" class="w-2.5 h-2.5 rounded-full bg-cyan-400 shadow-[0_0_10px_#00f2fe] cursor-pointer"></div>
+            <div onclick="setMode('business','#ffca2c')" id="m-b" class="w-2.5 h-2.5 rounded-full bg-white/20 cursor-pointer"></div>
+            <div onclick="setMode('capsule','#bf5af2')" id="m-c" class="w-2.5 h-2.5 rounded-full bg-white/20 cursor-pointer"></div>
         </div>
+        
         <div class="flex items-center gap-6">
-            <button onclick="toggleVision()" class="hud-btn w-14 h-14 rounded-full flex items-center justify-center text-cyan-400"><i id="v-icon" class="fas fa-expand"></i></button>
-            <button onclick="openCreator()" class="hud-btn w-20 h-20 rounded-full flex items-center justify-center shadow-2xl border-white/20"><i class="fas fa-plus text-2xl"></i></button>
-            <button onclick="clearAll()" class="hud-btn w-14 h-14 rounded-full flex items-center justify-center opacity-30"><i class="fas fa-trash-alt"></i></button>
+            <button onclick="toggleReality()" class="pointer-all glass-ui w-14 h-14 rounded-full flex items-center justify-center text-cyan-400"><i id="v-icon" class="fas fa-expand"></i></button>
+            <button onclick="showOverlay()" class="pointer-all glass-ui w-24 h-24 rounded-full flex items-center justify-center border-white/20 shadow-2xl">
+                <i class="fas fa-plus text-3xl"></i>
+            </button>
+            <button onclick="localStorage.clear(); location.reload();" class="pointer-all glass-ui w-14 h-14 rounded-full flex items-center justify-center opacity-20"><i class="fas fa-sync-alt"></i></button>
         </div>
     </div>
 
-    <div id="creator">
-        <input type="text" id="c-name" placeholder="NÁZEV HOLE" class="input-box w-4/5 mb-16">
-        <div class="flex gap-12 mb-20">
-            <button onclick="capture('img')" id="c-img" class="w-16 h-16 rounded-full border border-white/10 flex items-center justify-center"><i class="fas fa-camera text-xl"></i></button>
-            <button onclick="capture('aud')" id="c-aud" class="w-16 h-16 rounded-full border border-white/10 flex items-center justify-center"><i class="fas fa-microphone text-xl"></i></button>
+    <div id="imprint-overlay">
+        <input type="text" id="imprint-name" placeholder="NÁZEV HOLE" class="sys-input">
+        <div class="flex gap-16 mb-20">
+            <button onclick="triggerFile()" id="f-cam" class="w-20 h-20 rounded-full border border-white/10 flex items-center justify-center"><i class="fas fa-camera text-2xl"></i></button>
+            <button onclick="triggerAudio()" id="f-mic" class="w-20 h-20 rounded-full border border-white/10 flex items-center justify-center"><i class="fas fa-microphone text-2xl"></i></button>
         </div>
-        <div class="flex gap-6">
-            <button onclick="closeCreator()" class="px-8 py-3 text-[10px] font-bold opacity-30 uppercase">Zpět</button>
-            <button onclick="saveCane()" class="px-12 py-4 bg-white text-black font-black text-[10px] tracking-widest uppercase">Zapíchnout hůl</button>
+        <div class="flex gap-8">
+            <button onclick="hideOverlay()" class="px-8 py-3 text-[10px] font-bold opacity-30 uppercase tracking-widest">Storno</button>
+            <button onclick="commitImprint()" class="px-12 py-4 bg-white text-black font-black text-[10px] tracking-widest uppercase shadow-2xl">Zapíchnout hůl</button>
         </div>
     </div>
 
     <script>
-        let map, canes = [], mode = 'personal', accent = '#00f2fe', isAR = false;
-        let recorder, chunks = [], tmpImg = null, tmpAud = null;
+        let map, traces = [], currentMode = 'personal', isAR = false, accent = '#00f2fe';
+        let mediaRecorder, chunks = [], currentImg = null, currentAudio = null;
 
-        // 1. START
-        function startApp() {
-            document.getElementById('intro').style.transform = 'translateY(-100%)';
+        function bootApp() {
+            document.getElementById('intro-layer').style.transform = 'translateY(-100%)';
             setTimeout(() => {
-                document.getElementById('intro').style.display = 'none';
-                initMap();
-            }, 1200);
+                document.getElementById('intro-layer').style.display = 'none';
+                initSystem();
+            }, 1000);
         }
 
-        function initMap() {
-            map = L.map('map', { zoomControl: false, attributionControl: false }).setView([50.912, 14.619], 16);
+        function initSystem() {
+            map = L.map('map-underlay', { zoomControl: false, attributionControl: false }).setView([50.912, 14.619], 16);
             L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager_nolabels/{z}/{x}/{y}{r}.png').addTo(map);
-            loadCanes();
+            loadData();
             setTimeout(() => map.invalidateSize(), 500);
         }
 
-        // 2. LOGIC
         function setMode(m, col) {
-            mode = m; accent = col;
+            currentMode = m; accent = col;
             document.documentElement.style.setProperty('--accent', col);
-            document.getElementById('logo').style.color = col;
-            ['p','b','c'].forEach(i => {
-                const d = document.getElementById('dot-'+i);
-                d.style.background = (i === m[0]) ? col : 'rgba(255,255,255,0.2)';
-                d.style.boxShadow = (i === m[0]) ? `0 0 15px ${col}` : 'none';
+            document.getElementById('main-logo').style.color = col;
+            ['p','b','c'].forEach(id => {
+                const el = document.getElementById('m-'+id);
+                el.style.background = (id === m[0]) ? col : 'rgba(255,255,255,0.2)';
             });
         }
 
-        function toggleVision() {
+        function toggleReality() {
             isAR = !isAR;
-            const cam = document.getElementById('camera');
-            const mapEl = document.getElementById('map');
+            const cam = document.getElementById('camera-stream');
+            const mapEl = document.getElementById('map-underlay');
             const icon = document.getElementById('v-icon');
             if(isAR) {
-                navigator.mediaDevices.getUserMedia({video: {facingMode:'environment'}})
-                .then(s => { document.getElementById('v-stream').srcObject = s; cam.style.opacity = '1'; mapEl.style.opacity = '0'; icon.className = 'fas fa-map'; });
+                navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } })
+                .then(s => { cam.srcObject = s; cam.style.opacity = '1'; mapEl.style.opacity = '0'; icon.className = 'fas fa-map'; });
             } else {
                 cam.style.opacity = '0'; mapEl.style.opacity = '1'; icon.className = 'fas fa-expand';
-                const s = document.getElementById('v-stream').srcObject;
-                if(s) s.getTracks().forEach(t => t.stop());
+                if(cam.srcObject) cam.srcObject.getTracks().forEach(t => t.stop());
                 setTimeout(() => map.invalidateSize(), 200);
             }
         }
 
-        function openCreator() { document.getElementById('creator').style.display = 'flex'; }
-        function closeCreator() { document.getElementById('creator').style.display = 'none'; }
+        function showOverlay() { document.getElementById('imprint-overlay').style.display = 'flex'; }
+        function hideOverlay() { document.getElementById('imprint-overlay').style.display = 'none'; }
 
-        function capture(type) {
-            if(type === 'img') {
-                const i = document.createElement('input'); i.type = 'file'; i.accept = 'image/*';
-                i.onchange = e => {
-                    const r = new FileReader(); r.onload = ev => { tmpImg = ev.target.result; document.getElementById('c-img').style.color = accent; };
-                    r.readAsDataURL(e.target.files[0]);
-                };
-                i.click();
-            } else { handleAudio(); }
+        function triggerFile() {
+            const i = document.createElement('input'); i.type = 'file'; i.accept = 'image/*';
+            i.onchange = e => {
+                const r = new FileReader(); r.onload = ev => { currentImg = ev.target.result; document.getElementById('f-cam').style.color = accent; };
+                r.readAsDataURL(e.target.files[0]);
+            };
+            i.click();
         }
 
-        async function handleAudio() {
-            const btn = document.getElementById('c-aud');
-            if(!recorder || recorder.state === 'inactive') {
-                const s = await navigator.mediaDevices.getUserMedia({audio:true});
-                recorder = new MediaRecorder(s); chunks = [];
-                recorder.ondataavailable = e => chunks.push(e.data);
-                recorder.onstop = () => {
-                    const b = new Blob(chunks, {type:'audio/ogg'});
-                    const r = new FileReader(); r.onload = ev => { tmpAud = ev.target.result; btn.style.color = accent; };
+        async function triggerAudio() {
+            if(!mediaRecorder || mediaRecorder.state === 'inactive') {
+                const s = await navigator.mediaDevices.getUserMedia({ audio: true });
+                mediaRecorder = new MediaRecorder(s); chunks = [];
+                mediaRecorder.ondataavailable = e => chunks.push(e.data);
+                mediaRecorder.onstop = () => {
+                    const b = new Blob(chunks, { type: 'audio/ogg' });
+                    const r = new FileReader(); r.onload = ev => { currentAudio = ev.target.result; document.getElementById('f-mic').style.color = accent; };
                     r.readAsDataURL(b);
                 };
-                recorder.start(); btn.classList.add('text-red-500','animate-pulse');
-            } else { recorder.stop(); btn.classList.remove('text-red-500','animate-pulse'); }
+                mediaRecorder.start(); document.getElementById('f-mic').classList.add('animate-pulse','text-red-500');
+            } else { mediaRecorder.stop(); document.getElementById('f-mic').classList.remove('animate-pulse','text-red-500'); }
         }
 
-        function saveCane() {
+        function commitImprint() {
             const pos = map.getCenter();
-            const cane = { id: Date.now(), title: document.getElementById('c-name').value || 'ENTITY', lat: pos.lat, lng: pos.lng, mode: mode, col: accent, img: tmpImg, aud: tmpAud };
-            canes.push(cane);
-            localStorage.setItem('canes_2026_final', JSON.stringify(canes));
-            renderMarker(cane);
-            closeCreator();
+            const node = { id: Date.now(), title: document.getElementById('imprint-name').value || 'Entity', lat: pos.lat, lng: pos.lng, mode: currentMode, col: accent, img: currentImg, aud: currentAudio };
+            traces.push(node);
+            localStorage.setItem('ic_data_final', JSON.stringify(traces));
+            addMarker(node);
+            hideOverlay();
             // Reset
-            tmpImg = null; tmpAud = null; document.getElementById('c-name').value = '';
-            document.getElementById('c-img').style.color = 'white'; document.getElementById('c-aud').style.color = 'white';
+            document.getElementById('imprint-name').value = ''; currentImg = null; currentAudio = null;
+            document.getElementById('f-cam').style.color = 'white'; document.getElementById('f-mic').style.color = 'white';
         }
 
-        function renderMarker(c) {
-            const icon = L.divIcon({ className: 'custom-icon', html: `<div class="cane-node" style="--accent: ${c.col}"></div>`, iconSize: [16, 16] });
-            L.marker([c.lat, c.lng], {icon}).addTo(map).on('click', () => {
-                if(c.aud) new Audio(c.aud).play();
-                alert(`CANE: ${c.title}\nID: ${c.id}`);
+        function addMarker(n) {
+            const icon = L.divIcon({ className: 'custom-icon', html: `<div class="cane-marker" style="--accent: ${n.col}"></div>`, iconSize: [20, 20] });
+            L.marker([n.lat, n.lng], { icon }).addTo(map).on('click', () => {
+                if(n.aud) new Audio(n.aud).play();
+                alert(`Hůl: ${n.title}\nID: ${n.id}`);
             });
         }
 
-        function loadCanes() {
-            const data = localStorage.getItem('canes_2026_final');
-            if(data) { canes = JSON.parse(data); canes.forEach(renderMarker); }
+        function loadData() {
+            const data = localStorage.getItem('ic_data_final');
+            if(data) { traces = JSON.parse(data); traces.forEach(addMarker); }
         }
 
-        function clearAll() { if(confirm("Smazat vše?")) { localStorage.clear(); location.reload(); } }
-        function unlockAudio() { if(!window.u) { new AudioContext(); window.u = true; } }
+        function unlockAudio() { if(!window.ua) { new (window.AudioContext || window.webkitAudioContext)(); window.ua = true; } }
     </script>
 </body>
 </html>
