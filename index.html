@@ -3,14 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>TADY // UNIVERSE 2026</title>
+    <title>TADY // UNIVERSE</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@200;400;600;800&display=swap');
-        :root { --p: #00f2fe; --b: #ffca2c; --c: #bf5af2; --neon-g: #39ff14; }
+        :root { --p: #00f2fe; --b: #ffca2c; --c: #bf5af2; }
         
         body, html { 
             font-family: 'Plus Jakarta Sans', sans-serif; 
@@ -18,285 +18,245 @@
             overflow: hidden; height: 100vh; width: 100vw;
         }
 
-        /* HYPNOTICKÉ INTRO */
-        #intro-screen {
-            position: fixed; inset: 0; z-index: 10000; background: radial-gradient(circle at center, #111 0%, #000 100%);
+        /* FILMOVÝ ÚVOD */
+        #intro-layer {
+            position: fixed; inset: 0; z-index: 10000; background: #000;
             display: flex; flex-direction: column; align-items: center; justify-content: center;
-            transition: all 1.2s cubic-bezier(0.9, 0, 0.1, 1);
+            transition: 1.5s cubic-bezier(0.9, 0, 0.1, 1);
         }
-        .logo-glow {
-            font-size: 5.5rem; font-weight: 800; letter-spacing: -6px; font-style: italic;
-            background: linear-gradient(to bottom, #fff, #444); -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-            filter: drop-shadow(0 0 30px rgba(0, 242, 254, 0.5)); animation: breathe 4s infinite ease-in-out;
+        .logo-main {
+            font-size: 6rem; font-weight: 800; font-style: italic; letter-spacing: -7px;
+            background: linear-gradient(to bottom, #fff 30%, var(--p));
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+            filter: drop-shadow(0 0 40px rgba(0,242,254,0.4));
+            animation: emerge 2.5s ease-out;
         }
-        @keyframes breathe { 0%, 100% { transform: scale(1); filter: drop-shadow(0 0 20px var(--p)); } 50% { transform: scale(1.05); filter: drop-shadow(0 0 50px var(--c)); } }
+        @keyframes emerge {
+            from { opacity: 0; transform: scale(0.8); filter: blur(20px); }
+            to { opacity: 1; transform: scale(1); filter: blur(0); }
+        }
+        .scanner-line {
+            width: 200px; height: 1px; background: linear-gradient(90deg, transparent, var(--p), transparent);
+            position: absolute; animation: scan 3s infinite;
+        }
+        @keyframes scan { 0% { top: 40%; } 100% { top: 60%; } }
+
+        /* ENGINE */
+        #map { position: fixed; inset: 0; z-index: 10; filter: contrast(1.1); }
+        #camera { position: fixed; inset: 0; width: 100%; height: 100%; object-fit: cover; z-index: 5; opacity: 0; transition: 0.7s; }
+
+        /* UI */
+        .glass-panel { background: rgba(0,0,0,0.75); backdrop-filter: blur(25px); border: 1px solid rgba(255,255,255,0.1); border-radius: 35px; }
+        .btn-circle { width: 70px; height: 70px; border-radius: 50%; display: flex; items-center justify-center; transition: 0.3s; pointer-events: auto; }
         
-        /* SYSTEM CORE */
-        #map { position: fixed; inset: 0; z-index: 10; transition: 0.8s; }
-        #cam-feed { position: fixed; inset: 0; width: 100%; height: 100%; object-fit: cover; z-index: 5; opacity: 0; transition: 0.8s; pointer-events: none; }
-
-        /* UI ELEMENTS */
-        .glass-ui { background: rgba(10, 10, 10, 0.7); backdrop-filter: blur(30px); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 35px; }
-        .btn-main { width: 65px; height: 65px; display: flex; items-center justify-center; border-radius: 22px; transition: 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); pointer-events: auto; }
-        .btn-main:active { transform: scale(0.85); }
-
-        /* AR PREVIEW BOX */
-        .preview-window { 
-            width: 100%; height: 180px; background: rgba(255,255,255,0.05); 
-            border-radius: 25px; overflow: hidden; position: relative; border: 1px dashed rgba(255,255,255,0.2);
-        }
-        #img-render { width: 100%; height: 100%; object-fit: cover; display: none; }
-
-        /* MARKERS */
-        .trace-marker { 
-            width: 30px; height: 30px; border-radius: 50% 50% 50% 0; 
-            transform: rotate(-45deg); border: 3px solid #fff; box-shadow: 0 10px 20px rgba(0,0,0,0.5);
-        }
-
-        .mic-active { animation: pulse-mic 1s infinite; color: #ff3b30 !important; }
-        @keyframes pulse-mic { 0% { opacity: 1; } 50% { opacity: 0.3; } }
+        /* MARKER CLOUD */
+        .m-cloud { width: 32px; height: 32px; border-radius: 50% 50% 50% 0; transform: rotate(-45deg); border: 3px solid #fff; box-shadow: 0 10px 20px rgba(0,0,0,0.4); }
     </style>
 </head>
 <body onclick="initAudio()">
 
-    <div id="intro-screen">
-        <div class="logo-glow">TADY</div>
-        <div class="text-[9px] tracking-[0.9em] text-white/30 uppercase mt-2 font-bold">Aplikace pro digitální existenci</div>
-        <div id="loader-bar" class="w-40 h-[1px] bg-white/10 mt-12 relative overflow-hidden">
-            <div class="absolute inset-y-0 left-0 bg-cyan-400 w-0" id="progress"></div>
+    <div id="intro-layer">
+        <div class="scanner-line"></div>
+        <div class="logo-main">TADY</div>
+        <p class="text-[10px] tracking-[1em] uppercase opacity-40 mt-6 font-bold">World Mesh 2026</p>
+        <div id="load-box" class="mt-16 w-48 h-1 bg-white/5 rounded-full overflow-hidden">
+            <div id="load-progress" class="h-full bg-cyan-400 w-0 transition-all"></div>
         </div>
-        <button id="start-trigger" onclick="launch()" class="hidden mt-12 px-14 py-4 bg-white text-black rounded-full font-black text-[10px] tracking-[0.5em] uppercase hover:scale-110 transition-all">Vstoupit</button>
+        <button id="entry-btn" onclick="enterUniverse()" class="hidden mt-12 px-14 py-4 border border-cyan-400/30 rounded-full font-black text-[10px] tracking-[0.5em] uppercase hover:bg-cyan-400 hover:text-black transition-all">Connect to Network</button>
     </div>
 
-    <video id="cam-feed" autoplay playsinline muted></video>
+    <video id="camera" autoplay playsinline muted></video>
     <div id="map"></div>
 
     <div class="fixed inset-0 z-[100] pointer-events-none p-6 flex flex-col justify-between">
         
         <div class="flex justify-between items-start">
-            <div class="glass-ui p-6 pointer-events-auto border-l-4 border-cyan-400">
+            <div class="glass-panel p-6 pointer-events-auto border-t-2 border-cyan-400">
                 <h1 class="text-3xl font-black italic tracking-tighter leading-none">TADY</h1>
-                <p class="text-[7px] tracking-[0.4em] opacity-40 uppercase mt-1">Global Node: Varnsdorf</p>
+                <p class="text-[7px] tracking-[0.4em] opacity-40 uppercase mt-1" id="node-status">Scanning Location...</p>
             </div>
-            <button onclick="toggleAR()" class="btn-main glass-ui pointer-events-auto">
-                <i id="ar-icon" class="fas fa-expand text-cyan-400 text-xl"></i>
+            <button onclick="toggleAR()" class="w-14 h-14 glass-panel pointer-events-auto flex items-center justify-center">
+                <i id="ar-icon" class="fas fa-expand text-cyan-400"></i>
             </button>
         </div>
 
-        <div id="editor" class="hidden pointer-events-auto w-full max-w-md mx-auto">
-            <div class="glass-ui p-8 shadow-2xl border-t border-white/10">
-                <div class="preview-window mb-6" id="preview-area">
-                    <div id="preview-hint" class="absolute inset-0 flex flex-col items-center justify-center opacity-30">
-                        <i class="fas fa-cloud-upload-alt text-3xl mb-2"></i>
-                        <span class="text-[10px] font-black uppercase">Média nepřidána</span>
-                    </div>
-                    <img id="img-render">
+        <div id="editor" class="hidden pointer-events-auto w-full max-w-md mx-auto glass-panel p-8 shadow-2xl">
+            <div class="w-full h-44 bg-white/5 rounded-3xl mb-6 overflow-hidden relative border border-white/10">
+                <img id="preview-img" class="w-full h-full object-cover hidden">
+                <div id="p-hint" class="absolute inset-0 flex flex-col items-center justify-center opacity-20">
+                    <i class="fas fa-images text-4xl mb-2"></i>
+                    <span class="text-[10px] font-black uppercase tracking-widest">Vizualizace stopy</span>
                 </div>
+            </div>
 
-                <div class="flex justify-center gap-6 mb-8">
-                    <label class="w-14 h-14 rounded-2xl bg-white/5 flex items-center justify-center cursor-pointer hover:bg-white/10 transition-all">
-                        <i class="fas fa-camera text-lg"></i>
-                        <input type="file" accept="image/*" capture="environment" class="hidden" onchange="handleMedia(this)">
-                    </label>
-                    <label class="w-14 h-14 rounded-2xl bg-white/5 flex items-center justify-center cursor-pointer hover:bg-white/10 transition-all">
-                        <i class="fas fa-folder-open text-lg"></i>
-                        <input type="file" accept="image/*" class="hidden" onchange="handleMedia(this)">
-                    </label>
-                    <button onclick="toggleMic()" id="mic-btn" class="w-14 h-14 rounded-2xl bg-white/5 flex items-center justify-center">
-                        <i class="fas fa-microphone text-lg"></i>
-                    </button>
-                </div>
+            <div class="flex justify-center gap-6 mb-8">
+                <label class="w-14 h-14 rounded-2xl bg-white/5 flex items-center justify-center cursor-pointer hover:bg-white/10">
+                    <i class="fas fa-camera text-xl"></i>
+                    <input type="file" accept="image/*" capture="environment" class="hidden" onchange="loadMedia(this)">
+                </label>
+                <label class="w-14 h-14 rounded-2xl bg-white/5 flex items-center justify-center cursor-pointer hover:bg-white/10">
+                    <i class="fas fa-folder-plus text-xl"></i>
+                    <input type="file" accept="image/*" class="hidden" onchange="loadMedia(this)">
+                </label>
+                <button onclick="toggleMic()" id="mic-btn" class="w-14 h-14 rounded-2xl bg-white/5 flex items-center justify-center hover:bg-white/10">
+                    <i class="fas fa-microphone text-xl"></i>
+                </button>
+            </div>
 
-                <input type="text" id="trace-msg" placeholder="Co chceš světu říct?" class="w-full bg-white/5 p-5 rounded-2xl font-bold text-white mb-6 outline-none border border-white/5 focus:border-cyan-400 transition-all">
-                
-                <div class="flex gap-4">
-                    <button onclick="closeEditor()" class="flex-1 py-5 rounded-2xl font-black text-[9px] uppercase tracking-widest opacity-40">Zrušit</button>
-                    <button onclick="broadcast()" class="flex-[2] bg-white text-black py-5 rounded-2xl font-black text-[9px] uppercase tracking-widest shadow-xl">Vyslat stopu</button>
-                </div>
+            <input type="text" id="trace-msg" placeholder="Co chceš světu zanechat?" class="w-full bg-white/5 p-5 rounded-2xl mb-8 outline-none border border-white/5 focus:border-cyan-400 font-bold transition-all">
+            
+            <div class="flex gap-4">
+                <button onclick="closeEditor()" class="flex-1 py-5 text-[9px] font-black uppercase opacity-30">Zpět</button>
+                <button onclick="sendToMesh()" class="flex-[2] bg-white text-black py-5 rounded-2xl font-black text-[9px] uppercase tracking-[0.2em]">Vyslat do sítě</button>
             </div>
         </div>
 
-        <div id="nav-bar" class="w-full max-w-sm mx-auto pointer-events-auto flex flex-col items-center">
-            <button onclick="openEditor()" class="w-24 h-24 bg-white text-black rounded-full shadow-[0_0_50px_rgba(255,255,255,0.3)] flex items-center justify-center text-3xl mb-8 active:scale-90 transition-all">
+        <div id="nav" class="w-full max-w-sm mx-auto pointer-events-auto flex flex-col items-center">
+            <button onclick="openEditor()" class="w-24 h-24 bg-white text-black rounded-full shadow-[0_0_60px_rgba(255,255,255,0.2)] flex items-center justify-center text-3xl mb-8 active:scale-90 transition-all">
                 <i class="fas fa-plus"></i>
             </button>
-            <div class="glass-ui p-5 flex gap-10 px-12 border-b-2 border-white/10">
-                <button onclick="setMode('p')" id="m-p" class="text-cyan-400 scale-125 transition-all"><i class="fas fa-Street-view"></i></button>
-                <button onclick="setMode('b')" id="m-b" class="opacity-30 transition-all"><i class="fas fa-shopping-bag"></i></button>
-                <button onclick="setMode('c')" id="m-c" class="opacity-30 transition-all"><i class="fas fa-users"></i></button>
+            <div class="glass-panel p-5 flex gap-12 px-14">
+                <button onclick="setMode('p')" id="m-p" class="text-cyan-400 scale-125 transition-all"><i class="fas fa-user-circle"></i></button>
+                <button onclick="setMode('b')" id="m-b" class="opacity-30 transition-all"><i class="fas fa-briefcase"></i></button>
+                <button onclick="setMode('c')" id="m-c" class="opacity-30 transition-all"><i class="fas fa-globe-americas"></i></button>
             </div>
         </div>
     </div>
 
     <script>
-        let map, traces = [], currentMode = 'p', isAR = false, audioCtx;
-        let activeMedia = null;
-        let isMicOn = false;
+        let map, traces = [], mode = 'p', isAR = false, audioCtx;
+        let activeMedia = null, micOn = false;
 
-        // INTRO FLOW
-        const progress = document.getElementById('progress');
-        let width = 0;
-        const interval = setInterval(() => {
-            width += 2;
-            progress.style.width = width + '%';
-            if(width >= 100) {
-                clearInterval(interval);
-                document.getElementById('start-trigger').classList.remove('hidden');
+        // BOOT SEQUENCE
+        let p = 0;
+        const loader = setInterval(() => {
+            p += 2;
+            document.getElementById('load-progress').style.width = p + '%';
+            if(p >= 100) {
+                clearInterval(loader);
+                document.getElementById('entry-btn').classList.remove('hidden');
             }
         }, 30);
 
-        function launch() {
+        function enterUniverse() {
             beep(523, 0.1);
-            const intro = document.getElementById('intro-screen');
+            const intro = document.getElementById('intro-layer');
             intro.style.opacity = '0';
-            intro.style.transform = 'scale(1.5)';
+            intro.style.transform = 'translateY(-100%)';
             setTimeout(() => {
                 intro.style.display = 'none';
-                initOS();
+                initMap();
             }, 1000);
         }
 
-        function initOS() {
+        function initMap() {
             map = L.map('map', { zoomControl: false, attributionControl: false }).setView([50.912, 14.619], 16);
             L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
             map.locate({setView: true, maxZoom: 17});
-            loadDatabase();
+            map.on('locationfound', () => document.getElementById('node-status').innerText = 'Live: Varnsdorf Node');
+            loadMesh();
         }
 
-        // CAMERA SYSTEM
         async function toggleAR() {
             isAR = !isAR;
-            const feed = document.getElementById('cam-feed');
+            const cam = document.getElementById('camera');
             const mapEl = document.getElementById('map');
-            const icon = document.getElementById('ar-icon');
-            
             if(isAR) {
-                try {
-                    const stream = await navigator.mediaDevices.getUserMedia({video: {facingMode:'environment'}});
-                    feed.srcObject = stream;
-                    feed.style.opacity = '1';
-                    mapEl.style.opacity = '0.3';
-                    icon.className = 'fas fa-map text-cyan-400';
-                } catch(e) { alert("Kamera není dostupná."); isAR = false; }
+                const s = await navigator.mediaDevices.getUserMedia({video:{facingMode:'environment'}});
+                cam.srcObject = s; cam.style.opacity = '1'; mapEl.style.opacity = '0.3';
             } else {
-                feed.style.opacity = '0';
-                mapEl.style.opacity = '1';
-                icon.className = 'fas fa-expand text-cyan-400';
-                if(feed.srcObject) feed.srcObject.getTracks().forEach(t => t.stop());
+                cam.style.opacity = '0'; mapEl.style.opacity = '1';
+                if(cam.srcObject) cam.srcObject.getTracks().forEach(t => t.stop());
             }
-            beep(800, 0.1);
+            beep(880, 0.1);
         }
 
-        // MEDIA HANDLING
-        function handleMedia(input) {
-            const file = input.files[0];
-            if(file) {
-                const reader = new FileReader();
-                reader.onload = (e) => {
-                    activeMedia = e.target.result;
-                    document.getElementById('img-render').src = activeMedia;
-                    document.getElementById('img-render').style.display = 'block';
-                    document.getElementById('preview-hint').style.display = 'none';
-                };
-                reader.readAsDataURL(file);
-                beep(1000, 0.05);
-            }
+        function loadMedia(input) {
+            const f = input.files[0];
+            const r = new FileReader();
+            r.onload = (e) => {
+                activeMedia = e.target.result;
+                document.getElementById('preview-img').src = activeMedia;
+                document.getElementById('preview-img').style.display = 'block';
+                document.getElementById('p-hint').style.display = 'none';
+            };
+            r.readAsDataURL(f);
+            beep(1000, 0.05);
         }
 
         function toggleMic() {
-            isMicOn = !isMicOn;
-            const btn = document.getElementById('mic-btn');
-            if(isMicOn) {
-                btn.classList.add('mic-active');
-                beep(440, 0.2);
-            } else {
-                btn.classList.remove('mic-active');
-                beep(220, 0.2);
-            }
+            micOn = !micOn;
+            document.getElementById('mic-btn').style.color = micOn ? '#ff3b30' : 'white';
+            beep(micOn ? 600 : 300, 0.1);
         }
 
-        // UI FLOW
-        function openEditor() {
-            document.getElementById('editor').classList.remove('hidden');
-            document.getElementById('nav-bar').classList.add('hidden');
-            if(!isAR) toggleAR();
+        function openEditor() { 
+            document.getElementById('editor').classList.remove('hidden'); 
+            document.getElementById('nav').classList.add('hidden');
         }
 
-        function closeEditor() {
-            document.getElementById('editor').classList.add('hidden');
-            document.getElementById('nav-bar').classList.remove('hidden');
+        function closeEditor() { 
+            document.getElementById('editor').classList.add('hidden'); 
+            document.getElementById('nav').classList.remove('hidden');
             activeMedia = null;
-            isMicOn = false;
-            document.getElementById('img-render').style.display = 'none';
-            document.getElementById('preview-hint').style.display = 'flex';
-            document.getElementById('mic-btn').classList.remove('mic-active');
+            document.getElementById('preview-img').style.display = 'none';
+            document.getElementById('p-hint').style.display = 'flex';
         }
 
-        function broadcast() {
-            const msg = document.getElementById('trace-msg').value || "TADY JSEM";
+        function sendToMesh() {
+            const txt = document.getElementById('trace-msg').value || "Byl jsem TADY";
             const pos = map.getCenter();
-            const color = currentMode === 'p' ? varProp('--p') : (currentMode === 'b' ? varProp('--b') : varProp('--c'));
+            const colors = { p: '#00f2fe', b: '#ffca2c', c: '#bf5af2' };
 
             const trace = {
-                id: Date.now(),
-                lat: pos.lat,
-                lng: pos.lng,
-                text: msg,
-                media: activeMedia,
-                audio: isMicOn,
-                mode: currentMode,
-                color: color,
-                time: new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})
+                id: Date.now(), lat: pos.lat, lng: pos.lng,
+                text: txt, media: activeMedia, audio: micOn,
+                mode: mode, color: colors[mode], user: "M.D."
             };
 
             traces.push(trace);
-            localStorage.setItem('tady_master_db', JSON.stringify(traces));
-            renderMarker(trace);
+            localStorage.setItem('tady_final_mesh', JSON.stringify(traces));
+            renderTrace(trace);
             closeEditor();
             document.getElementById('trace-msg').value = '';
             beep(1200, 0.2);
         }
 
-        function renderMarker(t) {
+        function renderTrace(t) {
             const icon = L.divIcon({
                 className: '',
-                html: `<div class="trace-marker" style="background:${t.color}"></div>`,
-                iconSize: [30, 30],
-                iconAnchor: [15, 30]
+                html: `<div class="m-cloud" style="background:${t.color}"></div>`,
+                iconSize: [32, 32], iconAnchor: [16, 32]
             });
 
-            let popup = `<div class="p-3 text-black" style="min-width:180px">
-                <div class="text-[9px] font-black uppercase opacity-30 mb-2">${t.time}</div>
-                ${t.media ? `<img src="${t.media}" class="w-full rounded-xl mb-3 shadow-lg">` : ''}
-                <div class="text-sm font-bold leading-tight">"${t.text}"</div>
-                ${t.audio ? `<div class="mt-3 flex items-center text-red-500 font-black text-[10px] uppercase"><i class="fas fa-play-circle mr-2 text-lg"></i> Přehrát vzkaz</div>` : ''}
+            const content = `<div class="p-3 text-black font-bold" style="min-width:180px">
+                <div class="text-[8px] uppercase opacity-40 mb-2">Author: ${t.user}</div>
+                ${t.media ? `<img src="${t.media}" class="w-full rounded-2xl mb-3 shadow-md">` : ''}
+                <div class="text-sm italic">"${t.text}"</div>
+                ${t.audio ? `<div class="mt-3 text-red-500 text-[10px] font-black uppercase flex items-center"><i class="fas fa-play mr-2 text-lg"></i> Voice Trace</div>` : ''}
             </div>`;
 
-            L.marker([t.lat, t.lng], {icon}).addTo(map).bindPopup(popup);
+            L.marker([t.lat, t.lng], {icon}).addTo(map).bindPopup(content);
         }
 
         function setMode(m) {
-            currentMode = m;
+            mode = m;
             const colors = {p: '#00f2fe', b: '#ffca2c', c: '#bf5af2'};
             ['p','b','c'].forEach(id => {
-                const btn = document.getElementById('m-'+id);
-                if(id === m) {
-                    btn.classList.replace('opacity-30', 'scale-125');
-                    btn.style.color = colors[id];
-                } else {
-                    btn.classList.replace('scale-125', 'opacity-30');
-                    btn.style.color = 'white';
-                }
+                const b = document.getElementById('m-'+id);
+                b.className = (id === m) ? 'text-cyan-400 scale-125 transition-all' : 'opacity-30 transition-all';
+                if(id === m) b.style.color = colors[id];
             });
-            beep(600, 0.05);
+            beep(400, 0.05);
         }
 
-        // UTILS
-        function varProp(name) { return getComputedStyle(document.documentElement).getPropertyValue(name).trim(); }
-        function loadDatabase() {
-            const db = localStorage.getItem('tady_master_db');
-            if(db) { traces = JSON.parse(db); traces.forEach(renderMarker); }
+        function loadMesh() {
+            const data = localStorage.getItem('tady_final_mesh');
+            if(data) { traces = JSON.parse(data); traces.forEach(renderTrace); }
+            // Demo data
+            renderTrace({ id: 0, lat: 50.913, lng: 14.620, text: "Vítejte v globální síti TADY", mode: 'b', color: '#ffca2c', user: "System" });
         }
+
         function initAudio() { if(!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)(); }
         function beep(f, d) {
             if(!audioCtx) return;
