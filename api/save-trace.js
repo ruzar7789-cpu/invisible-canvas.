@@ -1,21 +1,28 @@
 import { neon } from '@neondatabase/serverless';
 
 export default async function handler(req, res) {
-    const sql = neon(process.env.DATABASE_URL);
-    if (req.method === 'POST') {
-        try {
-            const { lat, lng, content, media } = JSON.parse(req.body);
-            await sql('INSERT INTO traces (lat, lng, content, media) VALUES ($1, $2, $3, $4)', [lat, lng, content, media]);
-            return res.status(200).json({ success: true });
-        } catch (error) {
-            return res.status(500).json({ error: error.message });
-        }
-    } else {
-        try {
-            const data = await sql('SELECT * FROM traces ORDER BY id DESC LIMIT 100');
-            return res.status(200).json(data);
-        } catch (error) {
-            return res.status(500).json({ error: error.message });
-        }
-    }
+  // 1. Kontrola, zda jde o POST požadavek (odesílání dat)
+  if (req.method !== 'POST') {
+    return res.status(405).json({ error: 'Metoda není povolena' });
+  }
+
+  // 2. Připojení k databázi pomocí proměnné prostředí
+  // DATABASE_URL musíš vložit do Vercel Settings -> Environment Variables
+  const sql = neon(process.env.DATABASE_URL);
+
+  try {
+    const { lat, lng, content, media } = req.body;
+
+    // 3. Vložení dat do tabulky traces, kterou máš na fotce z Neonu
+    await sql`
+      INSERT INTO traces (lat, lng, content, media)
+      VALUES (${lat}, ${lng}, ${content}, ${media})
+    `;
+
+    return res.status(200).json({ message: 'Data byla úspěšně uložena do Neonu!' });
+  } catch (error) {
+    console.error('Chyba databáze:', error);
+    return res.status(500).json({ error: 'Chyba při ukládání: ' + error.message });
+  }
 }
+
