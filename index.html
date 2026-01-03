@@ -3,141 +3,159 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>invisible-canes</title>
+    <title>TADY // tady se děje všechno</title>
+    
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@200;800&display=swap');
-        :root { --p: #00f2fe; --b: #ffca2c; --c: #bf5af2; --accent: #00f2fe; }
-        body, html { font-family: 'Plus Jakarta Sans', sans-serif; background: #000; color: white; margin: 0; padding: 0; overflow: hidden; height: 100vh; }
+        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@200;400;800&display=swap');
         
-        #map { position: fixed; inset: 0; z-index: 10; filter: invert(100%) hue-rotate(180deg) brightness(0.25) contrast(1.6); }
-        #camera { position: fixed; inset: 0; width: 100%; height: 100%; object-fit: cover; z-index: 5; opacity: 0; transition: 1s; }
-        #ar-overlay { position: fixed; inset: 0; z-index: 30; pointer-events: none; }
+        body, html { 
+            font-family: 'Plus Jakarta Sans', sans-serif; 
+            background: #000; color: white; margin: 0; padding: 0; 
+            overflow: hidden; height: 100vh;
+        }
+
+        /* ČISTÁ MAPA PRO VIZI TADY */
+        #map { 
+            position: fixed; inset: 0; z-index: 10; 
+            background: #000;
+            filter: brightness(0.4) contrast(1.2) grayscale(0.5); /* Decentní vzhled pro byznys i lidi */
+        }
+
+        /* UI VRSTVA */
+        .hud { position: fixed; z-index: 100; pointer-events: none; width: 100%; height: 100%; }
+        .pointer-all { pointer-events: auto; }
         
-        .hud { position: fixed; z-index: 100; pointer-events: none; }
-        .btn-main { width: 80px; height: 80px; border-radius: 50%; background: rgba(10,10,10,0.8); backdrop-filter: blur(20px); border: 1px solid rgba(255,255,255,0.1); pointer-events: auto; display: flex; align-items: center; justify-content: center; transition: 0.4s; }
-        
-        #imprint { position: fixed; inset: 0; z-index: 1000; background: rgba(0,0,0,0.98); display: none; flex-direction: column; align-items: center; justify-content: center; }
-        
-        /* Styl markeru, aby byl vidět na mapě */
-        .cane-node { width: 12px; height: 12px; background: var(--accent); border-radius: 50%; box-shadow: 0 0 15px var(--accent); border: 2px solid white; }
+        .glass-card {
+            background: rgba(255, 255, 255, 0.03);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            border-radius: 30px;
+        }
+
+        /* TADY DESIGN MARKEŘI */
+        .tady-dot {
+            width: 18px; height: 18px; border-radius: 50%;
+            background: #fff; box-shadow: 0 0 20px rgba(255,255,255,0.5);
+            border: 3px solid #000;
+        }
+
+        #creator-ui {
+            position: fixed; inset: 0; z-index: 1000;
+            background: rgba(0,0,0,0.95);
+            display: none; flex-direction: column; align-items: center; justify-content: center;
+        }
     </style>
 </head>
 <body onclick="if(window.audioCtx) audioCtx.resume()">
 
-    <video id="camera" autoplay playsinline muted></video>
     <div id="map"></div>
-    <div id="ar-overlay"></div>
 
-    <div class="hud top-10 left-10">
-        <h1 class="text-4xl font-black italic tracking-tighter" id="logo">IC-2026</h1>
-        <div class="text-[8px] tracking-[0.5em] opacity-30 uppercase mt-2">Varnsdorf // M.D.</div>
+    <div class="hud flex flex-col justify-between p-10">
+        <div class="flex justify-between items-start">
+            <div class="pointer-all">
+                <h1 class="text-5xl font-black italic tracking-tighter leading-none">TADY</h1>
+                <p class="text-[10px] tracking-[0.3em] font-light uppercase mt-2 opacity-60">tady se děje všechno</p>
+            </div>
+            <button class="pointer-all w-12 h-12 glass-card flex items-center justify-center">
+                <i class="fas fa-user text-sm"></i>
+            </button>
+        </div>
+
+        <div class="flex flex-col items-center gap-8">
+            <div class="flex gap-12 pointer-all text-[9px] font-bold tracking-[0.3em] uppercase opacity-40">
+                <span onclick="setMode('all')" class="cursor-pointer hover:opacity-100 transition">Všechno</span>
+                <span onclick="setMode('biz')" class="cursor-pointer hover:opacity-100 transition">Byznys</span>
+                <span onclick="setMode('social')" class="cursor-pointer hover:opacity-100 transition">Lidé</span>
+            </div>
+
+            <div class="flex items-center gap-6 pointer-all">
+                <button onclick="openCreator()" class="w-24 h-24 glass-card flex items-center justify-center border-white/10 shadow-2xl transition hover:scale-105">
+                    <i class="fas fa-plus text-2xl"></i>
+                </button>
+            </div>
+        </div>
     </div>
 
-    <div class="hud bottom-10 left-0 width-full flex flex-col items-center w-full">
-        <div class="flex gap-8 mb-8 pointer-events-auto">
-            <div onclick="setMode('p')" id="m-p" class="w-2 h-2 rounded-full bg-cyan-400"></div>
-            <div onclick="setMode('b')" id="m-b" class="w-2 h-2 rounded-full bg-white/20"></div>
-            <div onclick="setMode('c')" id="m-c" class="w-2 h-2 rounded-full bg-white/20"></div>
+    <div id="creator-ui">
+        <h2 class="text-[10px] tracking-[0.5em] opacity-40 uppercase mb-10">Vytvořit událost / vzkaz</h2>
+        <input type="text" id="tady-input" placeholder="Co se tady děje?" class="bg-transparent border-b-2 border-white/10 text-3xl font-bold text-center text-white outline-none mb-16 w-4/5">
+        
+        <div class="flex gap-10 mb-20">
+            <button onclick="addMedia('img')" class="w-16 h-16 rounded-full border border-white/10 flex items-center justify-center opacity-60"><i class="fas fa-camera"></i></button>
+            <button onclick="addMedia('aud')" class="w-16 h-16 rounded-full border border-white/10 flex items-center justify-center opacity-60"><i class="fas fa-microphone"></i></button>
         </div>
-        <button onclick="openImprint()" class="btn-main">
-            <i class="fas fa-plus"></i>
-        </button>
-    </div>
 
-    <div id="imprint">
-        <input type="text" id="target-id" placeholder="ID HOLI" class="bg-transparent border-b border-white/20 text-4xl font-black text-center text-white outline-none mb-12 uppercase w-4/5">
-        <div class="flex gap-10 mb-12">
-            <button onclick="takePic()" id="btn-pic" class="w-16 h-16 rounded-full border border-white/10 flex items-center justify-center"><i class="fas fa-camera"></i></button>
-            <button onclick="recAud()" id="btn-aud" class="w-16 h-16 rounded-full border border-white/10 flex items-center justify-center"><i class="fas fa-microphone"></i></button>
-        </div>
-        <div class="flex gap-6">
-            <button onclick="closeImprint()" class="px-8 py-3 text-[10px] opacity-30 uppercase font-bold">Zpět</button>
-            <button onclick="saveCane()" class="px-12 py-4 bg-white text-black font-black text-[10px] tracking-widest uppercase">Zapíchnout</button>
+        <div class="flex gap-4">
+            <button onclick="closeCreator()" class="px-8 py-4 text-[10px] opacity-30 uppercase font-black">Zrušit</button>
+            <button onclick="publishTady()" class="px-12 py-4 bg-white text-black font-black text-[10px] tracking-widest uppercase rounded-full shadow-2xl">Publikovat</button>
         </div>
     </div>
 
     <script>
-        let map, canes = [], mode = 'p', currentImg = null, currentAud = null;
-        const colors = { p: '#00f2fe', b: '#ffca2c', c: '#bf5af2' };
+        let map, traces = [];
 
         window.onload = () => {
             map = L.map('map', { zoomControl: false, attributionControl: false }).setView([50.912, 14.619], 16);
+            
+            // Čistý moderní podklad
             L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager_nolabels/{z}/{x}/{y}{r}.png').addTo(map);
             
-            loadCanes();
+            loadTraces();
             setTimeout(() => map.invalidateSize(), 500);
         };
 
-        function setMode(m) {
-            mode = m;
-            document.documentElement.style.setProperty('--accent', colors[m]);
-            document.getElementById('logo').style.color = colors[m];
-            ['p','b','c'].forEach(i => {
-                document.getElementById('m-'+i).style.background = (i === m) ? colors[m] : 'rgba(255,255,255,0.2)';
-            });
-        }
+        function openCreator() { document.getElementById('creator-ui').style.display = 'flex'; }
+        function closeCreator() { document.getElementById('creator-ui').style.display = 'none'; }
 
-        function openImprint() { document.getElementById('imprint').style.display = 'flex'; }
-        function closeImprint() { document.getElementById('imprint').style.display = 'none'; }
-
-        function takePic() {
-            const i = document.createElement('input'); i.type = 'file'; i.accept = 'image/*';
-            i.onchange = e => {
-                const r = new FileReader();
-                r.onload = ev => { currentImg = ev.target.result; document.getElementById('btn-pic').style.color = colors[mode]; };
-                r.readAsDataURL(e.target.files[0]);
-            };
-            i.click();
-        }
-
-        function recAud() {
-            // Zjednodušená indikace pro mikrofon
-            document.getElementById('btn-aud').style.color = colors[mode];
-            alert("Audio připraveno k záznamu");
-        }
-
-        function saveCane() {
+        function publishTady() {
             const center = map.getCenter();
-            const newCane = {
+            const val = document.getElementById('tady-input').value;
+            
+            const trace = {
                 id: Date.now(),
-                title: document.getElementById('target-id').value || 'STŘELA',
+                text: val || "Něco se tady děje",
                 lat: center.lat,
                 lng: center.lng,
-                color: colors[mode],
-                img: currentImg
+                time: new Date().toLocaleTimeString()
             };
 
-            canes.push(newCane);
-            localStorage.setItem('ic_data_morning', JSON.stringify(canes));
-            renderCane(newCane);
-            closeImprint();
-            
-            // Reset
-            document.getElementById('target-id').value = '';
-            currentImg = null;
-            document.getElementById('btn-pic').style.color = 'white';
-            document.getElementById('btn-aud').style.color = 'white';
+            traces.push(trace);
+            localStorage.setItem('tady_v1_data', JSON.stringify(traces));
+            renderTrace(trace);
+            closeCreator();
+            document.getElementById('tady-input').value = '';
         }
 
-        function renderCane(c) {
+        function renderTrace(t) {
             const icon = L.divIcon({
-                className: 'custom-div-icon',
-                html: `<div class="cane-node" style="--accent: ${c.color}"></div>`,
-                iconSize: [12, 12]
+                className: 'custom-icon',
+                html: `<div class="tady-dot"></div>`,
+                iconSize: [18, 18]
             });
-            L.marker([c.lat, c.lng], { icon }).addTo(map).bindPopup(c.title);
+
+            L.marker([t.lat, t.lng], { icon }).addTo(map).bindPopup(`
+                <div style="color: black; font-family: 'Plus Jakarta Sans'; padding: 10px;">
+                    <b style="text-transform: uppercase; font-size: 14px;">${t.text}</b><br>
+                    <small style="opacity: 0.5;">${t.time}</small>
+                </div>
+            `);
         }
 
-        function loadCanes() {
-            const data = localStorage.getItem('ic_data_morning');
+        function loadTraces() {
+            const data = localStorage.getItem('tady_v1_data');
             if(data) {
-                canes = JSON.parse(data);
-                canes.forEach(renderCane);
+                traces = JSON.parse(data);
+                traces.forEach(renderTrace);
             }
+        }
+
+        function setMode(m) {
+            alert("Mód " + m + " aktivován. Filtruji mapu...");
         }
     </script>
 </body>
