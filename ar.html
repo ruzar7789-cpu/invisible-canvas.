@@ -2,17 +2,17 @@
 <html>
 <head>
     <meta charset="UTF-8">
-    <title>TADY - AR Interakce M.D.</title>
+    <title>TADY - AR Oslava M.D.</title>
     <script src="https://aframe.io/releases/1.3.0/aframe.min.js"></script>
     <script src="https://raw.githack.com/AR-js-org/AR.js/master/aframe/build/aframe-ar-nft.js"></script>
     <script src="https://unpkg.com/aframe-look-at-component@0.8.0/dist/aframe-look-at-component.min.js"></script>
     <style>
         #ar-status { position:fixed; top:10px; left:10px; background:rgba(0,0,0,0.85); color:#00e676; padding:15px; z-index:10000; font-family:sans-serif; border-radius:15px; border:1px solid #00e676; font-size: 14px; }
-        .crosshair { position: fixed; top: 50%; left: 50%; width: 20px; height: 20px; border: 2px solid #00e676; border-radius: 50%; transform: translate(-50%, -50%); z-index: 10000; pointer-events: none; opacity: 0.8; }
+        .crosshair { position: fixed; top: 50%; left: 50%; width: 22px; height: 22px; border: 2px solid #00e676; border-radius: 50%; transform: translate(-50%, -50%); z-index: 10000; pointer-events: none; }
     </style>
 </head>
 <body style="margin: 0; overflow: hidden;">
-    <div id="ar-status">M.D. ONLINE <br> Objekty v dosahu...</div>
+    <div id="ar-status">M.D. SYSTÉM <br> Vyhledávám vzkazy...</div>
     <div class="crosshair"></div>
 
     <a-scene vr-mode-ui="enabled: false" cursor="fuse: false; rayOrigin: mouse" raycaster="objects: .clickable" embedded arjs="sourceType: webcam; debugUIEnabled: false;">
@@ -20,7 +20,6 @@
     </a-scene>
 
     <script>
-        // Funkce pro odeslání lajku do databáze Neon
         async function poslatLajk(id) {
             try {
                 const res = await fetch('/api/like-trace', {
@@ -29,12 +28,10 @@
                     body: JSON.stringify({ id: id })
                 });
                 if (res.ok) {
-                    // Vizuální potvrzení pro uživatele
-                    console.log("Lajk odeslán pro ID:", id);
-                    alert("Stopa olajkována! ❤️");
-                    location.reload(); // Obnovení pro zobrazení nového počtu lajků
+                    alert("Úspěch! Stopa začíná žít! ❤️");
+                    location.reload(); 
                 }
-            } catch (err) { console.error("Chyba:", err); }
+            } catch (err) { console.error(err); }
         }
 
         window.onload = async () => {
@@ -43,47 +40,50 @@
                 const res = await fetch('/api/get-traces');
                 const data = await res.json();
                 const scene = document.querySelector('a-scene');
-                statusBox.innerHTML = `M.D. ONLINE <br> Objekty v dosahu: ${data.length}`;
+                statusBox.innerHTML = `M.D. ONLINE <br> Objekty: ${data.length}`;
 
                 data.forEach(stopa => {
                     const container = document.createElement('a-entity');
                     container.setAttribute('gps-entity-place', `latitude: ${stopa.lat}; longitude: ${stopa.lng};`);
                     
-                    // Barevné kódování podle typu vzkazu
-                    let barva = "#00e676"; // VEŘEJNÝ
-                    if (stopa.content.includes("[public-ad]")) barva = "#ffd700"; // REKLAMA
-                    if (stopa.content.includes("[private]")) barva = "#ff3d00"; // SOUKROMÝ
+                    let barva = "#00e676"; 
+                    if (stopa.content.includes("[public-ad]")) barva = "#ffd700"; 
+                    if (stopa.content.includes("[private]")) barva = "#ff3d00"; 
 
-                    // FOTKA S MOŽNOSTÍ KLIKNUTÍ
+                    // Pokud má vzkaz alespoň 1 lajk, začne rotovat
+                    if (stopa.likes > 0) {
+                        container.setAttribute('animation', `property: rotation; to: 0 360 0; loop: true; dur: 5000; easing: linear`);
+                    }
+
+                    // FOTKA
                     if (stopa.image_url) {
                         const img = document.createElement('a-image');
                         img.setAttribute('src', stopa.image_url);
                         img.setAttribute('scale', '15 15 15');
                         img.setAttribute('position', '0 5 0');
-                        img.setAttribute('look-at', '[gps-camera]');
+                        // Pokud nerotuje, ať se kouká na tebe, pokud rotuje, ať je vidět ze všech stran
+                        if (!stopa.likes) img.setAttribute('look-at', '[gps-camera]');
                         img.setAttribute('class', 'clickable');
                         img.addEventListener('click', () => poslatLajk(stopa.id));
                         container.appendChild(img);
                     }
 
-                    // TEXT + POČÍTADLO ❤️
+                    // TEXT S POČÍTADLEM
                     const text = document.createElement('a-text');
                     const cistyText = stopa.content.split('] ')[1] || stopa.content;
-                    const pocetLajku = stopa.likes || 0;
-                    
-                    text.setAttribute('value', `${cistyText}\n❤️ ${pocetLajku}`);
+                    text.setAttribute('value', `${cistyText}\n❤️ ${stopa.likes || 0}`);
                     text.setAttribute('align', 'center');
                     text.setAttribute('color', barva);
                     text.setAttribute('scale', '10 10 10');
                     text.setAttribute('position', '0 -3 0');
-                    text.setAttribute('look-at', '[gps-camera]');
+                    if (!stopa.likes) text.setAttribute('look-at', '[gps-camera]');
                     text.setAttribute('class', 'clickable');
                     text.addEventListener('click', () => poslatLajk(stopa.id));
 
                     container.appendChild(text);
                     scene.appendChild(container);
                 });
-            } catch (err) { statusBox.innerText = "Chyba načítání dat."; }
+            } catch (err) { statusBox.innerText = "Chyba sítě."; }
         };
     </script>
 </body>
