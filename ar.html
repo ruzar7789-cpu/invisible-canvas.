@@ -2,10 +2,12 @@
 <html>
 <head>
     <meta charset="UTF-8">
-    <title>TADY - AR Oslava M.D.</title>
+    <title>TADY - AR Profi M.D.</title>
     <script src="https://aframe.io/releases/1.3.0/aframe.min.js"></script>
     <script src="https://raw.githack.com/AR-js-org/AR.js/master/aframe/build/aframe-ar-nft.js"></script>
     <script src="https://unpkg.com/aframe-look-at-component@0.8.0/dist/aframe-look-at-component.min.js"></script>
+    <script src="https://unpkg.com/aframe-gesture-detector@1.1.0/dist/aframe-gesture-detector.min.js"></script>
+    <script src="https://unpkg.com/aframe-gesture-handler@1.0.0/dist/aframe-gesture-handler.min.js"></script>
     <style>
         #ar-status { position:fixed; top:10px; left:10px; background:rgba(0,0,0,0.85); color:#00e676; padding:15px; z-index:10000; font-family:sans-serif; border-radius:15px; border:1px solid #00e676; font-size: 14px; }
         .crosshair { position: fixed; top: 50%; left: 50%; width: 22px; height: 22px; border: 2px solid #00e676; border-radius: 50%; transform: translate(-50%, -50%); z-index: 10000; pointer-events: none; }
@@ -15,7 +17,14 @@
     <div id="ar-status">M.D. SYSTÉM <br> Vyhledávám vzkazy...</div>
     <div class="crosshair"></div>
 
-    <a-scene vr-mode-ui="enabled: false" cursor="fuse: false; rayOrigin: mouse" raycaster="objects: .clickable" embedded arjs="sourceType: webcam; debugUIEnabled: false;">
+    <a-scene 
+        vr-mode-ui="enabled: false" 
+        gesture-detector
+        cursor="fuse: false; rayOrigin: mouse" 
+        raycaster="objects: .clickable" 
+        embedded 
+        arjs="sourceType: webcam; debugUIEnabled: false;">
+        
         <a-camera gps-camera="simulateAltitude: 1.6" rotation-reader></a-camera>
     </a-scene>
 
@@ -28,7 +37,7 @@
                     body: JSON.stringify({ id: id })
                 });
                 if (res.ok) {
-                    alert("Úspěch! Stopa začíná žít! ❤️");
+                    alert("Úspěch! Stopa ožívá a pulzuje! ❤️");
                     location.reload(); 
                 }
             } catch (err) { console.error(err); }
@@ -43,16 +52,20 @@
                 statusBox.innerHTML = `M.D. ONLINE <br> Objekty: ${data.length}`;
 
                 data.forEach(stopa => {
+                    // Hlavní kontejner vzkazu s podporou gest
                     const container = document.createElement('a-entity');
                     container.setAttribute('gps-entity-place', `latitude: ${stopa.lat}; longitude: ${stopa.lng};`);
+                    container.setAttribute('class', 'clickable');
+                    container.setAttribute('gesture-handler', 'minScale: 0.5; maxScale: 20'); // Aktivuje Zoom
                     
                     let barva = "#00e676"; 
                     if (stopa.content.includes("[public-ad]")) barva = "#ffd700"; 
                     if (stopa.content.includes("[private]")) barva = "#ff3d00"; 
 
-                    // Pokud má vzkaz alespoň 1 lajk, začne rotovat
+                    // OSLAVA: Pokud má lajk, rotuje A pulzuje
                     if (stopa.likes > 0) {
-                        container.setAttribute('animation', `property: rotation; to: 0 360 0; loop: true; dur: 5000; easing: linear`);
+                        container.setAttribute('animation__rotate', `property: rotation; to: 0 360 0; loop: true; dur: 6000; easing: linear`);
+                        container.setAttribute('animation__pulse', `property: scale; to: 1.2 1.2 1.2; dir: alternate; dur: 1000; loop: true; easing: easeInOutSine`);
                     }
 
                     // FOTKA
@@ -61,9 +74,7 @@
                         img.setAttribute('src', stopa.image_url);
                         img.setAttribute('scale', '15 15 15');
                         img.setAttribute('position', '0 5 0');
-                        // Pokud nerotuje, ať se kouká na tebe, pokud rotuje, ať je vidět ze všech stran
                         if (!stopa.likes) img.setAttribute('look-at', '[gps-camera]');
-                        img.setAttribute('class', 'clickable');
                         img.addEventListener('click', () => poslatLajk(stopa.id));
                         container.appendChild(img);
                     }
@@ -77,7 +88,6 @@
                     text.setAttribute('scale', '10 10 10');
                     text.setAttribute('position', '0 -3 0');
                     if (!stopa.likes) text.setAttribute('look-at', '[gps-camera]');
-                    text.setAttribute('class', 'clickable');
                     text.addEventListener('click', () => poslatLajk(stopa.id));
 
                     container.appendChild(text);
