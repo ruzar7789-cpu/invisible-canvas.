@@ -2,14 +2,14 @@
 <html>
 <head>
     <meta charset="UTF-8">
-    <title>TADY - AR Prostor</title>
+    <title>TADY - AR Pohled</title>
     <script src="https://aframe.io/releases/1.3.0/aframe.min.js"></script>
     <script src="https://raw.githack.com/AR-js-org/AR.js/master/aframe/build/aframe-ar-nft.js"></script>
     <script src="https://unpkg.com/aframe-look-at-component@0.8.0/dist/aframe-look-at-component.min.js"></script>
 </head>
 <body style="margin: 0; overflow: hidden;">
     <div id="ar-status" style="position:fixed; top:10px; left:10px; background:rgba(0,0,0,0.8); color:#00e676; padding:12px; z-index:10000; font-family:sans-serif; border-radius:10px; border:1px solid #00e676;">
-        Skenuji okolí M.D. ...
+        Skenuji prostor...
     </div>
 
     <a-scene vr-mode-ui="enabled: false" embedded arjs="sourceType: webcam; debugUIEnabled: false; videoTexture: true;">
@@ -23,7 +23,6 @@
                 const res = await fetch('/api/get-traces');
                 const data = await res.json();
                 const scene = document.querySelector('a-scene');
-                
                 statusBox.innerText = `Nalezeno stop: ${data.length}`;
 
                 data.forEach(stopa => {
@@ -31,25 +30,21 @@
                         const container = document.createElement('a-entity');
                         container.setAttribute('gps-entity-place', `latitude: ${stopa.lat}; longitude: ${stopa.lng};`);
                         
-                        // FOTKA - Zvětšená na měřítko 15 (původně 8-10)
                         if (stopa.image_url) {
                             const img = document.createElement('a-image');
                             img.setAttribute('src', stopa.image_url);
-                            img.setAttribute('scale', '15 15 15'); 
-                            img.setAttribute('position', '0 5 0'); // Výška 5 metrů
+                            img.setAttribute('scale', '15 15 15'); // Obří měřítko pro venkovní test
+                            img.setAttribute('position', '0 5 0'); 
                             img.setAttribute('look-at', '[gps-camera]');
-                            // Přidáme záři kolem fotky
-                            img.setAttribute('material', 'shader: flat; transparent: true; opacity: 0.9;');
                             container.appendChild(img);
                         }
 
-                        // TEXT - Výraznější zelená
                         const text = document.createElement('a-text');
                         const cistyText = stopa.content.includes('] ') ? stopa.content.split('] ')[1] : stopa.content;
                         text.setAttribute('value', cistyText);
                         text.setAttribute('align', 'center');
                         text.setAttribute('color', '#00e676');
-                        text.setAttribute('scale', '10 10 10'); // Zvětšeno pro čitelnost z dálky
+                        text.setAttribute('scale', '10 10 10');
                         text.setAttribute('position', '0 -2 0');
                         text.setAttribute('look-at', '[gps-camera]');
                         container.appendChild(text);
@@ -57,9 +52,7 @@
                         scene.appendChild(container);
                     }
                 });
-            } catch (err) {
-                statusBox.innerText = "Chyba spojení s databází.";
-            }
+            } catch (err) { statusBox.innerText = "Chyba načítání."; }
         };
     </script>
 </body>
