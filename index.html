@@ -3,21 +3,28 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>TADY - Skener reality</title>
+    <title>TADY</title>
+    
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="TADY">
+    <link rel="apple-touch-icon" href="https://vzkazy-beta.vercel.app/icon.png">
+    <link rel="icon" href="https://vzkazy-beta.vercel.app/icon.png">
+
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <style>
         :root { --neon: #00e676; --gold: #ffd700; --bg: #000; }
         body { background: var(--bg); color: #fff; font-family: sans-serif; margin: 0; overflow: hidden; }
         #main-app { display: flex; flex-direction: column; height: 100vh; }
         #map { flex-grow: 1; width: 100%; z-index: 1; }
-        .ui-overlay { background: rgba(10, 10, 10, 0.95); padding: 20px; border-radius: 30px 30px 0 0; margin-top: -30px; z-index: 1000; }
+        .ui-overlay { background: rgba(10, 10, 10, 0.95); padding: 20px; border-radius: 30px 30px 0 0; margin-top: -30px; z-index: 1000; box-shadow: 0 -5px 20px rgba(0,0,0,0.5); }
         #ar-mode-btn { position: absolute; top: 20px; right: 20px; z-index: 2000; background: var(--neon); color: #000; border: none; padding: 12px 25px; border-radius: 50px; font-weight: bold; box-shadow: 0 0 15px var(--neon); }
         .photo-trigger { background: #222; border: 1px solid #444; color: #fff; padding: 12px; border-radius: 12px; margin-bottom: 10px; width: 100%; cursor: pointer; }
         #photo-preview { display: none; width: 100%; height: 120px; object-fit: cover; border-radius: 10px; margin-bottom: 10px; border: 2px solid var(--neon); }
-        textarea { width: 100%; background: #0a0a0a; border: 1px solid #333; color: #fff; padding: 15px; border-radius: 15px; margin-bottom: 15px; box-sizing: border-box; resize: none; }
-        .send-btn { width: 100%; padding: 18px; background: none; border: 3px solid var(--neon); color: var(--neon); border-radius: 50px; font-weight: 900; font-size: 1rem; cursor: pointer; transition: 0.3s; }
+        textarea { width: 100%; background: #0a0a0a; border: 1px solid #333; color: #fff; padding: 15px; border-radius: 15px; margin-bottom: 15px; box-sizing: border-box; resize: none; font-size: 16px; }
+        .send-btn { width: 100%; padding: 18px; background: none; border: 3px solid var(--neon); color: var(--neon); border-radius: 50px; font-weight: 900; font-size: 1.1rem; cursor: pointer; transition: 0.3s; text-transform: uppercase; }
         .send-btn:active { background: var(--neon); color: #000; }
-        #status { font-size: 0.7rem; color: #666; text-align: center; margin-top: 10px; letter-spacing: 2px; }
+        #status { font-size: 0.75rem; color: #666; text-align: center; margin-top: 12px; letter-spacing: 2px; font-weight: bold; }
     </style>
 </head>
 <body>
@@ -26,11 +33,11 @@
         <div id="map"></div>
         <div class="ui-overlay">
             <input type="file" id="file-input" accept="image/*" capture="environment" style="display:none" onchange="processPhoto(this)">
-            <button class="photo-trigger" onclick="document.getElementById('file-input').click()">📷 FOTIT MÍSTO PRO AR</button>
+            <button class="photo-trigger" onclick="document.getElementById('file-input').click()">📷 FOTIT MÍSTO</button>
             <img id="photo-preview">
-            <textarea id="content" rows="2" placeholder="Zanech stopu v tomto místě..."></textarea>
+            <textarea id="content" rows="2" placeholder="Zanech vzkaz v tomto místě..."></textarea>
             <button class="send-btn" onclick="ulozitStopu()">ODESLAT DO PROSTORU</button>
-            <div id="status">IDENTIFY M.D. - READY</div>
+            <div id="status">IDENTIFY M.D. - ONLINE</div>
         </div>
     </div>
 
@@ -38,7 +45,7 @@
     <script>
         let map, userMarker, tracesLayer = L.layerGroup(), base64Image = "";
 
-        // KOMPRESE: Zmenší fotku pro Neon
+        // KOMPRESE: Zmenší fotku pro databázi Neon
         function processPhoto(input) {
             const reader = new FileReader();
             reader.onload = (e) => {
@@ -50,7 +57,7 @@
                     canvas.height = img.height * (MAX_WIDTH / img.width);
                     const ctx = canvas.getContext('2d');
                     ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-                    base64Image = canvas.toDataURL('image/jpeg', 0.6);
+                    base64Image = canvas.toDataURL('image/jpeg', 0.6); // Kvalita 60%
                     document.getElementById('photo-preview').src = base64Image;
                     document.getElementById('photo-preview').style.display = 'block';
                 };
